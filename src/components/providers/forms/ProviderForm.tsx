@@ -73,6 +73,7 @@ import {
 } from "@/utils/providerConfigUtils";
 import { isNonNegativeDecimalString } from "@/types/usage";
 import { getCodexCustomTemplate } from "@/config/codexTemplates";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 import CodexConfigEditor from "./CodexConfigEditor";
 import { CommonConfigEditor } from "./CommonConfigEditor";
 import GeminiConfigEditor from "./GeminiConfigEditor";
@@ -750,37 +751,50 @@ function ProviderFormFull({
 
   const presetEntries = useMemo(() => {
     if (appId === "codex") {
-      return codexProviderPresets.map<PresetEntry>((preset, index) => ({
-        id: `codex-${index}`,
-        preset,
-      }));
+      return filterForkPresets("codex", codexProviderPresets).map<PresetEntry>(
+        (preset, index) => ({
+          id: `codex-${index}`,
+          preset,
+        }),
+      );
     } else if (appId === "gemini") {
-      return geminiProviderPresets.map<PresetEntry>((preset, index) => ({
-        id: `gemini-${index}`,
-        preset,
-      }));
+      return filterForkPresets("gemini", geminiProviderPresets).map<PresetEntry>(
+        (preset, index) => ({
+          id: `gemini-${index}`,
+          preset,
+        }),
+      );
     } else if (appId === "opencode") {
-      return opencodeProviderPresets.map<PresetEntry>((preset, index) => ({
+      return filterForkPresets(
+        "opencode",
+        opencodeProviderPresets,
+      ).map<PresetEntry>((preset, index) => ({
         id: `opencode-${index}`,
         preset,
       }));
     } else if (appId === "openclaw") {
-      return openclawProviderPresets.map<PresetEntry>((preset, index) => ({
+      return filterForkPresets(
+        "openclaw",
+        openclawProviderPresets,
+      ).map<PresetEntry>((preset, index) => ({
         id: `openclaw-${index}`,
         preset,
       }));
     } else if (appId === "hermes") {
-      return hermesProviderPresets.map<PresetEntry>((preset, index) => ({
-        id: `hermes-${index}`,
-        preset,
-      }));
+      return filterForkPresets("hermes", hermesProviderPresets).map<PresetEntry>(
+        (preset, index) => ({
+          id: `hermes-${index}`,
+          preset,
+        }),
+      );
     }
-    return providerPresets
-      .filter((p) => !p.hidden)
-      .map<PresetEntry>((preset, index) => ({
-        id: `claude-${index}`,
-        preset,
-      }));
+    return filterForkPresets(
+      "claude",
+      providerPresets.filter((p) => !p.hidden),
+    ).map<PresetEntry>((preset, index) => ({
+      id: `claude-${index}`,
+      preset,
+    }));
   }, [appId]);
 
   const selectedPresetEntry = useMemo(
