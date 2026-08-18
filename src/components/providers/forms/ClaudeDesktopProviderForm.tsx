@@ -59,6 +59,7 @@ import { resolveManagedAccountId } from "@/lib/authBinding";
 import type { ManagedAuthProvider } from "@/lib/api";
 import { useCopilotAuth, useCodexOauth, useXaiOauth } from "./hooks";
 import { isOAuthProviderType } from "@/config/constants";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 
 export type ClaudeDesktopProviderFormValues = ProviderFormData & {
   presetId?: string;
@@ -351,10 +352,12 @@ export function ClaudeDesktopProviderForm({
 
   const presetEntries = useMemo<PresetEntry[]>(
     () =>
-      claudeDesktopProviderPresets.map((preset, index) => ({
-        id: `claude-desktop-${index}`,
-        preset,
-      })),
+      filterForkPresets("claude-desktop", claudeDesktopProviderPresets).map(
+        (preset, index) => ({
+          id: `claude-desktop-${index}`,
+          preset,
+        }),
+      ),
     [],
   );
 
