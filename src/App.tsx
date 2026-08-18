@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "@/lib/toast";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ExternalLink,
@@ -202,8 +202,10 @@ function App() {
   useEffect(() => {
     // fork 构建：将 macOS Overlay 窗口标题设为 CC Switch (Fork)。
     // Windows 端由 tauri.windows.conf.json 写死 title，无需此处处理。
-    // 非 Tauri 环境（如 pnpm dev:renderer 单跑）忽略 setTitle 失败。
+    // 非 Tauri 环境（如 pnpm dev:renderer 单跑、jsdom 测试）跳过 setTitle，
+    // 避免 getCurrentWindow() 访问 window.__TAURI_INTERNALS__ 报错。
     if (!IS_FORK_BUILD) return;
+    if (!isTauri()) return;
     getCurrentWindow()
       .setTitle("CC Switch (Fork)")
       .catch((error) => {
