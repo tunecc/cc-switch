@@ -123,6 +123,9 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/vite-env.d.ts` | `__CCS_FORK_BUILD__` 全局类型声明 |
 | `src/i18n/locales/zh.json` / `en.json` | `devpanel` i18n 段 |
 | `tests/msw/tauriMocks.ts` | `isTauri` mock 导出 |
+| `src/config/forkOfficialAllowlist.ts` | fork 官方预设白名单（整文件保留） |
+| `src/config/forkPresetFilter.ts` | fork 预设过滤工具（整文件保留） |
+| `tests/setupTests.ts` | `vi.mock("@/config/forkBuild")` 段（IS_FORK_BUILD=false 上游构建语义测试隔离） |
 | `docs/HOW_TO_REBASE_UPSTREAM.md` | 本文件本身（整文件保留） |
 | `docs/openspec/` | Comet change 产物目录（整目录保留，由协调者管理） |
 | `.gitignore` 的 fork 工具产物段 | 文件末尾 `# >>> Fork: Comet/Superpowers 工具产物 ...` 段（保留，不丢忽略规则） |
