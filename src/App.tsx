@@ -29,6 +29,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { IS_FORK_BUILD } from "@/config/forkBuild";
 import type { Provider, VisibleApps } from "@/types";
 import type { EnvConflict } from "@/types/env";
 import { proxyKeys, useProvidersQuery, useSettingsQuery } from "@/lib/query";
@@ -196,6 +197,18 @@ function App() {
       isChecking: false,
       hasSkills: false,
     });
+
+  useEffect(() => {
+    // fork 构建：将 macOS Overlay 窗口标题设为 CC Switch (Fork)。
+    // Windows 端由 tauri.windows.conf.json 写死 title，无需此处处理。
+    // 非 Tauri 环境（如 pnpm dev:renderer 单跑）忽略 setTitle 失败。
+    if (!IS_FORK_BUILD) return;
+    getCurrentWindow()
+      .setTitle("CC Switch (Fork)")
+      .catch((error) => {
+        console.error("[App] Failed to set fork window title", error);
+      });
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(VIEW_STORAGE_KEY, currentView);
