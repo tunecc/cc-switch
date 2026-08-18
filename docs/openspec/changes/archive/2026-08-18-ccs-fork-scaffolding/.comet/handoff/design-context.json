@@ -1,0 +1,14 @@
+{
+  "change": "ccs-fork-scaffolding",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "60994470c0594be7d5542277f1c8752bfa7eebc28bd4710a720741eb619bcb41",
+  "files": [
+    { "path": "docs/openspec/changes/ccs-fork-scaffolding/proposal.md", "sha256": "bbb061943e9a8e551e8a55d433782851150d80b6e251c10569a1aa9dbd604263" },
+    { "path": "docs/openspec/changes/ccs-fork-scaffolding/design.md", "sha256": "3ef2d434011af74b4a8a2006b29cd2974ab9ecc44c3831d387166ccc33bab487" },
+    { "path": "docs/openspec/changes/ccs-fork-scaffolding/tasks.md", "sha256": "a71408a523e2c8da65f35455d806fe4ea3feae7723504069351502891b82686c" },
+    { "path": "docs/openspec/changes/ccs-fork-scaffolding/specs/fork-build-identity/spec.md", "sha256": "e8d05a9d3b1748a61de7654b984aa876b72941d27a675e4d23b4f792d603be5f" }
+  ]
+}
