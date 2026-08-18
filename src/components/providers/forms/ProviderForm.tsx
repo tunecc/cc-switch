@@ -74,6 +74,7 @@ import {
   setCodexModelName as setCodexModelNameInConfig,
 } from "@/utils/providerConfigUtils";
 import { getCodexCustomTemplate } from "@/config/codexTemplates";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 import CodexConfigEditor from "./CodexConfigEditor";
 import { CommonConfigEditor } from "./CommonConfigEditor";
 import GeminiConfigEditor from "./GeminiConfigEditor";
@@ -880,39 +881,63 @@ function ProviderFormFull({
     // 先编号再过滤 hidden：id 里的序号是原数组下标，AddProviderDialog /
     // useProviderCategory 按它回查预设，先过滤会让隐藏项之后的预设全部错位
     if (appId === "codex") {
+      const codexAllowed = new Set(
+        filterForkPresets("codex", codexProviderPresets),
+      );
       return codexProviderPresets
         .map<PresetEntry>((preset, index) => ({
           id: `codex-${index}`,
           preset,
         }))
-        .filter((entry) => !(entry.preset as CodexProviderPreset).hidden);
+        .filter(
+          (entry) =>
+            !(entry.preset as CodexProviderPreset).hidden &&
+            codexAllowed.has(entry.preset),
+        );
     } else if (appId === "gemini") {
-      return geminiProviderPresets.map<PresetEntry>((preset, index) => ({
-        id: `gemini-${index}`,
-        preset,
-      }));
+      return filterForkPresets("gemini", geminiProviderPresets).map<PresetEntry>(
+        (preset, index) => ({
+          id: `gemini-${index}`,
+          preset,
+        }),
+      );
     } else if (appId === "opencode") {
-      return opencodeProviderPresets.map<PresetEntry>((preset, index) => ({
+      return filterForkPresets(
+        "opencode",
+        opencodeProviderPresets,
+      ).map<PresetEntry>((preset, index) => ({
         id: `opencode-${index}`,
         preset,
       }));
     } else if (appId === "openclaw") {
-      return openclawProviderPresets.map<PresetEntry>((preset, index) => ({
+      return filterForkPresets(
+        "openclaw",
+        openclawProviderPresets,
+      ).map<PresetEntry>((preset, index) => ({
         id: `openclaw-${index}`,
         preset,
       }));
     } else if (appId === "hermes") {
-      return hermesProviderPresets.map<PresetEntry>((preset, index) => ({
-        id: `hermes-${index}`,
-        preset,
-      }));
+      return filterForkPresets("hermes", hermesProviderPresets).map<PresetEntry>(
+        (preset, index) => ({
+          id: `hermes-${index}`,
+          preset,
+        }),
+      );
     }
+    const claudeAllowed = new Set(
+      filterForkPresets("claude", providerPresets),
+    );
     return providerPresets
       .map<PresetEntry>((preset, index) => ({
         id: `claude-${index}`,
         preset,
       }))
-      .filter((entry) => !(entry.preset as ProviderPreset).hidden);
+      .filter(
+        (entry) =>
+          !(entry.preset as ProviderPreset).hidden &&
+          claudeAllowed.has(entry.preset),
+      );
   }, [appId]);
 
   const selectedPresetEntry = useMemo(

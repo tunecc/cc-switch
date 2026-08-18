@@ -60,6 +60,7 @@ import { resolveManagedAccountId } from "@/lib/authBinding";
 import type { ManagedAuthProvider } from "@/lib/api";
 import { useCopilotAuth, useCodexOauth, useXaiOauth } from "./hooks";
 import { isOAuthProviderType } from "@/config/constants";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 
 export type ClaudeDesktopProviderFormValues = ProviderFormData & {
   presetId?: string;
@@ -350,17 +351,19 @@ export function ClaudeDesktopProviderForm({
     onSubmittingChange?.(form.formState.isSubmitting || isFetchingModels);
   }, [form.formState.isSubmitting, isFetchingModels, onSubmittingChange]);
 
-  const presetEntries = useMemo<PresetEntry[]>(
-    () =>
-      // 先编号再过滤 hidden：AddProviderDialog 按 id 里的原数组下标回查预设
-      claudeDesktopProviderPresets
-        .map((preset, index) => ({
-          id: `claude-desktop-${index}`,
-          preset,
-        }))
-        .filter((entry) => !entry.preset.hidden),
-    [],
-  );
+  const presetEntries = useMemo<PresetEntry[]>(() => {
+    // 先按原数组下标编号，再过滤 hidden 与 fork 白名单：
+    // AddProviderDialog 按 id 里的原数组下标回查预设
+    const forkAllowed = new Set(
+      filterForkPresets("claude-desktop", claudeDesktopProviderPresets),
+    );
+    return claudeDesktopProviderPresets
+      .map((preset, index) => ({
+        id: `claude-desktop-${index}`,
+        preset,
+      }))
+      .filter((entry) => !entry.preset.hidden && forkAllowed.has(entry.preset));
+  }, []);
 
   const presetCategoryLabels: Record<string, string> = useMemo(
     () => ({
