@@ -41,6 +41,8 @@ export interface OpenClawProviderPreset {
   isCustomTemplate?: boolean;
   /** Suggested default model configuration */
   suggestedDefaults?: OpenClawSuggestedDefaults;
+  // 是否在 UI 中隐藏该预设（预设仍存在，仅不在列表中显示）
+  hidden?: boolean;
 }
 
 function rebaseOpenClawModelRef(modelRef: string, providerKey: string): string {
