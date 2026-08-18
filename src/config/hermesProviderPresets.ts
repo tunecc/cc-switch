@@ -127,6 +127,8 @@ export interface HermesProviderPreset extends PresetFamilyFields {
    * `model.provider` to the built-in, ignoring a same-named custom_provider.
    */
   providerKey?: string;
+  // 是否在 UI 中隐藏该预设（预设仍存在，仅不在列表中显示）
+  hidden?: boolean;
 }
 
 export interface HermesProviderSettingsConfig {
