@@ -117,6 +117,12 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `vite.config.ts` | `define` 中的 `__CCS_FORK_BUILD__` 等 fork 编译期常量 |
 | `src/config/forkBuild.ts` | fork 构建配置（整文件保留） |
 | `src/components/devpanel/` | fork 专属 devpanel 组件目录（整目录保留） |
+| `src-tauri/tauri.windows.conf.json` | Windows 平台 title（fork 标识 "CC Switch (Fork)"） |
+| `src/App.tsx` | `IS_FORK_BUILD` + `isTauri` 双守卫下的 `setTitle` useEffect |
+| `src/components/settings/SettingsPage.tsx` | `IS_FORK_BUILD` 守卫下的 DevPanel 入口与挂载 |
+| `src/vite-env.d.ts` | `__CCS_FORK_BUILD__` 全局类型声明 |
+| `src/i18n/locales/zh.json` / `en.json` | `devpanel` i18n 段 |
+| `tests/msw/tauriMocks.ts` | `isTauri` mock 导出 |
 | `docs/HOW_TO_REBASE_UPSTREAM.md` | 本文件本身（整文件保留） |
 | `docs/openspec/` | Comet change 产物目录（整目录保留，由协调者管理） |
 | `.gitignore` 的 fork 工具产物段 | 文件末尾 `# >>> Fork: Comet/Superpowers 工具产物 ...` 段（保留，不丢忽略规则） |
