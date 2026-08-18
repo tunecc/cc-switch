@@ -3,6 +3,18 @@
     "title": "CC Switch",
     "description": "Claude Code / Codex / Gemini CLI 全方位辅助工具"
   },
+  "devpanel": {
+    "title": "Fork 开发面板",
+    "description": "fork 版 cc-switch 魔改功能集中预览",
+    "badge": "Fork 开发面板",
+    "version": "Fork 版本",
+    "buildMode": "构建模式",
+    "forkBuild": "Fork 构建",
+    "upstreamSync": "上游同步状态",
+    "upstreamSyncPending": "待实现",
+    "upcomingFeatures": "后续魔改功能",
+    "upcomingFeaturesHint": "预设精简、表单布局、模型搜索、主页模型切换、侧边面板显隐等将在此面板集成"
+  },
   "common": {
     "add": "添加",
     "edit": "编辑",
