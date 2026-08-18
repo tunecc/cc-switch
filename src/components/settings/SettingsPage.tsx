@@ -46,6 +46,8 @@ import {
   SettingsCard,
   SettingsRow,
 } from "@/components/settings/SettingsLayout";
+import { IS_FORK_BUILD, DEV_PANEL_ENABLED } from "@/config/forkBuild";
+import { DevPanel } from "@/components/devpanel/DevPanel";
 import { useSettings } from "@/hooks/useSettings";
 import { useImportExport } from "@/hooks/useImportExport";
 import type { SettingsFormState } from "@/hooks/useSettings";
@@ -119,6 +121,8 @@ export function SettingsPage({
 
   const [showRestartPrompt, setShowRestartPrompt] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // fork 构建：DevPanel 开关状态（IS_FORK_BUILD && DEV_PANEL_ENABLED 下可用）
+  const [devPanelOpen, setDevPanelOpen] = useState(false);
 
   useEffect(() => {
     resetStatus();
@@ -368,7 +372,23 @@ export function SettingsPage({
           </>
         );
       case "about":
-        return <AboutSection isPortable={isPortable} />;
+        return (
+          <>
+            <AboutSection isPortable={isPortable} />
+            {IS_FORK_BUILD && DEV_PANEL_ENABLED && (
+              <div className="mt-4 flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDevPanelOpen(true)}
+                  title={t("devpanel.badge")}
+                >
+                  <span className="text-[10px] font-semibold">Fork</span>
+                </Button>
+              </div>
+            )}
+          </>
+        );
     }
   };
 
@@ -423,6 +443,10 @@ export function SettingsPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {IS_FORK_BUILD && DEV_PANEL_ENABLED && (
+        <DevPanel open={devPanelOpen} onOpenChange={setDevPanelOpen} />
+      )}
     </>
   );
 }
