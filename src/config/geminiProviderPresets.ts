@@ -30,6 +30,8 @@ export interface GeminiProviderPreset {
   // 图标配置
   icon?: string; // 图标名称
   iconColor?: string; // 图标颜色
+  // 是否在 UI 中隐藏该预设（预设仍存在，仅不在列表中显示）
+  hidden?: boolean;
 }
 
 export const geminiProviderPresets: GeminiProviderPreset[] = [
