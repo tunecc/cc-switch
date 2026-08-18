@@ -57,6 +57,8 @@ import { useSettings } from "@/hooks/useSettings";
 import { useImportExport } from "@/hooks/useImportExport";
 import { useTranslation } from "react-i18next";
 import type { SettingsFormState } from "@/hooks/useSettings";
+import { IS_FORK_BUILD } from "@/config/forkBuild";
+import { DevPanel } from "@/components/devpanel/DevPanel";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -109,6 +111,7 @@ export function SettingsPage({
 
   const [activeTab, setActiveTab] = useState<string>("general");
   const [showRestartPrompt, setShowRestartPrompt] = useState(false);
+  const [devPanelOpen, setDevPanelOpen] = useState(false);
   const tabScrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -508,6 +511,19 @@ export function SettingsPage({
 
               <TabsContent value="about" className="mt-0">
                 <AboutSection isPortable={isPortable} />
+                {IS_FORK_BUILD && (
+                  <div className="mt-4 flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDevPanelOpen(true)}
+                      className="text-muted-foreground hover:text-foreground"
+                      title={t("devpanel.badge")}
+                    >
+                      <span className="text-[10px] font-semibold">Fork</span>
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="usage" className="mt-0">
@@ -576,6 +592,8 @@ export function SettingsPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {IS_FORK_BUILD && <DevPanel open={devPanelOpen} onOpenChange={setDevPanelOpen} />}
     </div>
   );
 }
