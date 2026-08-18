@@ -54,6 +54,7 @@ import {
 import { resolveProviderIcon } from "@/utils/providerIcon";
 import { useDraftEditorProjection } from "./hooks/useDraftEditorProjection";
 import { GROKBUILD_OFFICIAL_PROVIDER_ID } from "@/utils/providerCapabilities";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 
 type GrokBuildProviderFormProps = Omit<ProviderFormProps, "appId">;
 
@@ -64,10 +65,12 @@ const grokPresetEntries: Array<{
   preset: GrokBuildProviderPreset;
 }> = [
   { id: GROKBUILD_OFFICIAL_PROVIDER_ID, preset: grokBuildOfficialPreset },
-  ...grokBuildProviderPresets.map((preset, index) => ({
-    id: `grokbuild-${index}`,
-    preset,
-  })),
+  ...filterForkPresets("grokbuild", grokBuildProviderPresets).map(
+    (preset, index) => ({
+      id: `grokbuild-${index}`,
+      preset,
+    }),
+  ),
 ];
 
 export function GrokBuildProviderForm({
