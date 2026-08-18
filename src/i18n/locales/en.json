@@ -3,6 +3,18 @@
     "title": "CC Switch",
     "description": "All-in-One Assistant for Claude Code, Codex & Gemini CLI"
   },
+  "devpanel": {
+    "title": "Fork Dev Panel",
+    "description": "Centralized preview of fork modifications",
+    "badge": "Fork Dev Panel",
+    "version": "Fork Version",
+    "buildMode": "Build Mode",
+    "forkBuild": "Fork Build",
+    "upstreamSync": "Upstream Sync",
+    "upstreamSyncPending": "Not implemented",
+    "upcomingFeatures": "Upcoming Modifications",
+    "upcomingFeaturesHint": "Preset trimming, form layout, model search, home model switching, sidebar panel visibility will be integrated here"
+  },
   "common": {
     "add": "Add",
     "edit": "Edit",
