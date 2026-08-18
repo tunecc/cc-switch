@@ -77,6 +77,7 @@ import {
   type PiThinkingLevel,
   type PiThinkingLevelMap,
 } from "@/config/piThinkingProfiles";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 import {
   fetchModelsForConfig,
   showFetchModelsError,
@@ -948,11 +949,11 @@ export function PiProviderForm({
 
   const presetEntries = useMemo(
     () =>
-      presets.map((preset, index) => ({
+      filterForkPresets(isOmp ? "omp" : "pi", presets).map((preset, index) => ({
         id: `pi-${index}`,
         preset,
       })),
-    [presets],
+    [presets, isOmp],
   );
 
   const selectPreset = (id: string) => {
