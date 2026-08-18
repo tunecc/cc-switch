@@ -63,6 +63,7 @@ import {
   type PiThinkingLevel,
   type PiThinkingLevelMap,
 } from "@/config/piThinkingProfiles";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 import {
   fetchModelsForConfig,
   showFetchModelsError,
@@ -848,7 +849,7 @@ export function PiProviderForm({
 
   const presetEntries = useMemo(
     () =>
-      piProviderPresets.map((preset, index) => ({
+      filterForkPresets("pi", piProviderPresets).map((preset, index) => ({
         id: `pi-${index}`,
         preset,
       })),
