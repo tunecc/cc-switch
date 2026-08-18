@@ -14,6 +14,8 @@ globalThis.Request = CrossFetchRequest as typeof Request;
 globalThis.Response = CrossFetchResponse as typeof Response;
 
 vi.mock("@tauri-apps/api/core", () => ({
+  // jsdom 测试环境不是真实 Tauri，返回 false 以跳过 setTitle 等仅 Tauri 可用的调用。
+  isTauri: () => false,
   invoke: async (command: string, payload: Record<string, unknown> = {}) => {
     const response = await fetch(`${TAURI_ENDPOINT}/${command}`, {
       method: "POST",
