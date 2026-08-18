@@ -28,5 +28,8 @@ export default defineConfig(({ command }) => ({
   },
   clearScreen: false,
   envPrefix: ["VITE_", "TAURI_"],
+  define: {
+    __CCS_FORK_BUILD__: JSON.stringify(true),
+  },
 }));
 
