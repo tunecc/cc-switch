@@ -1851,6 +1851,14 @@
     "requiredFields": "Please fill in provider name, API endpoint, API Key and model"
 >>>>>>> e0302059 (feat(i18n): add model search picker keys for all locales)
   },
+  "providerModel": {
+    "title": "Quick Model Switch",
+    "currentModel": "Current Model",
+    "applyOneM": "Apply 1M Marker",
+    "applied": "Switched to {{model}}",
+    "applyFailed": "Failed to apply model",
+    "noCredentials": "Please configure the API Key and endpoint in the edit form first"
+  },
   "copilot": {
     "automaticFormat": "Selected automatically by routing",
     "automaticFormatHint": "Routing selects the Copilot upstream format per model; manual format settings are ignored.",
