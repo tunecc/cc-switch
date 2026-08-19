@@ -1351,6 +1351,8 @@
     "fetchModelsNotSupported": "該供應商不支援取得模型清單",
     "fetchModelsEndpointNotFound": "未找到可用的模型清單端點，請檢查 Base URL 或確認供應商是否開放該 API",
     "fetchModelsTimeout": "請求逾時，請檢查網路連線",
+    "searchModels": "搜尋模型...",
+    "noModelsFound": "未找到符合模型",
     "requiredFields": "請填寫供應商名稱、API 位址、API Key 和模型"
   },
   "copilot": {

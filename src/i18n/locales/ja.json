@@ -1350,6 +1350,8 @@
     "fetchModelsNotSupported": "このプロバイダーはモデル一覧の取得に対応していません",
     "fetchModelsEndpointNotFound": "利用可能なモデル一覧エンドポイントが見つかりません。Base URL を確認するか、プロバイダーが該当 API を公開しているかご確認ください",
     "fetchModelsTimeout": "リクエストがタイムアウトしました。ネットワーク接続を確認してください",
+    "searchModels": "モデルを検索...",
+    "noModelsFound": "一致するモデルが見つかりません",
     "requiredFields": "プロバイダー名、API エンドポイント、API Key、モデルを入力してください"
   },
   "copilot": {
