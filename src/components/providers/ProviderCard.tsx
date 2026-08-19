@@ -41,7 +41,10 @@ import { useUsageQuery } from "@/lib/query/queries";
 import { resolveProviderIcon } from "@/utils/providerIcon";
 import { ProviderStatusBadge } from "@/components/providers/ProviderStatusBadge";
 import { isAdditiveAppId, isProxyAppId } from "@/config/appConfig";
-import { getCurrentModel, isModelCapableApp } from "@/utils/providerModelUtils";
+import {
+  extractModelBadgeForProvider,
+  isModelCapableApp,
+} from "@/utils/providerModelUtils";
 import { ModelQuickSwitchDialog } from "@/components/providers/ModelQuickSwitch/ModelQuickSwitchDialog";
 
 interface DragHandleProps {
@@ -332,11 +335,8 @@ export function ProviderCard({
 
   const [modelDialogOpen, setModelDialogOpen] = useState(false);
 
-  const currentModelText = useMemo(
-    () =>
-      isModelCapableApp(appId)
-        ? getCurrentModel(appId, provider.settingsConfig)
-        : "",
+  const modelBadge = useMemo(
+    () => extractModelBadgeForProvider(appId, provider.settingsConfig),
     [appId, provider.settingsConfig],
   );
 
@@ -446,12 +446,14 @@ export function ProviderCard({
                 {provider.name}
               </h3>
 
-              {isModelCapableApp(appId) && currentModelText && (
+              {modelBadge && (
                 <span
-                  className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground max-w-[140px] truncate"
-                  title={currentModelText}
+                  className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground"
+                  title={modelBadge.title}
                 >
-                  {currentModelText}
+                  <span className="truncate max-w-[200px]">
+                    {modelBadge.label}
+                  </span>
                 </span>
               )}
 
