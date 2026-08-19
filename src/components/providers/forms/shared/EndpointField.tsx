@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ interface EndpointFieldProps {
   showManageButton?: boolean;
   onManageClick?: () => void;
   manageButtonLabel?: string;
+  rightSlot?: ReactNode;
 }
 
 export function EndpointField({
@@ -30,6 +32,7 @@ export function EndpointField({
   showManageButton = true,
   onManageClick,
   manageButtonLabel,
+  rightSlot,
 }: EndpointFieldProps) {
   const { t } = useTranslation();
 
@@ -59,15 +62,19 @@ export function EndpointField({
           </button>
         ) : null}
       </div>
-      <Input
-        id={id}
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete="off"
-        aria-required="true"
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          id={id}
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete="off"
+          aria-required="true"
+          className="min-w-0 flex-1"
+        />
+        {rightSlot}
+      </div>
       {hint ? (
         <p className="text-caption text-fg-2">{hint.replace(/^💡\s*/u, "")}</p>
       ) : null}
