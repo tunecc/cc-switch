@@ -978,7 +978,7 @@ export function ClaudeFormFields({
                     defaultValue: "实际请求模型",
                   })}
                 </span>
-                <span className="flex items-center gap-1.5">
+                <span className="-ml-1 flex items-center gap-1.5">
                   <Checkbox
                     checked={
                       allOneMEnabled
