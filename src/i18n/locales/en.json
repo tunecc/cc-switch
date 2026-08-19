@@ -1731,12 +1731,18 @@
     "fetchModelsNotSupported": "This provider does not support fetching model list",
     "fetchModelsEndpointNotFound": "No reachable models endpoint found. Please check the Base URL or confirm whether the provider exposes this API.",
     "fetchModelsTimeout": "Request timed out, please check network connection",
+<<<<<<< HEAD
     "requiredFields": "Please fill in provider name, API endpoint, API Key and model",
     "customUserAgentHelp": "Replaces the User-Agent of requests forwarded to the provider.",
     "localProxyRequestOverridesHelp": "Applies to the upstream request after format conversion.",
     "apiFormatHelp": "Pick the protocol the provider supports natively: Anthropic Messages is forwarded as is without conversion; routing converts the other three to Anthropic Messages.",
     "directModeFormatInUse": "This card is in use in direct mode: saving it with this format makes requests fail. Switch to routing or Aggregation first.",
     "directModeFormatSwitch": "This format doesn't work in direct mode; switch to routing or Aggregation to use this card."
+=======
+    "searchModels": "Search models...",
+    "noModelsFound": "No models found",
+    "requiredFields": "Please fill in provider name, API endpoint, API Key and model"
+>>>>>>> e0302059 (feat(i18n): add model search picker keys for all locales)
   },
   "copilot": {
     "authSection": "GitHub Copilot Authentication",
