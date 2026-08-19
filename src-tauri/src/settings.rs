@@ -83,6 +83,28 @@ impl VisibleApps {
     }
 }
 
+/// 主页面侧边面板入口的可见性配置
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VisibleSidebarPanels {
+    #[serde(default = "default_true")]
+    pub skills: bool,
+    #[serde(default = "default_true")]
+    pub sessions: bool,
+    #[serde(default = "default_true")]
+    pub mcp: bool,
+}
+
+impl Default for VisibleSidebarPanels {
+    fn default() -> Self {
+        Self {
+            skills: true,
+            sessions: true,
+            mcp: true,
+        }
+    }
+}
+
 /// WebDAV 同步状态（持久化同步进度信息）
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -411,6 +433,10 @@ pub struct AppSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub visible_apps: Option<VisibleApps>,
 
+    // ===== 主页面侧边面板入口 =====
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visible_sidebar_panels: Option<VisibleSidebarPanels>,
+
     // ===== 设备级目录覆盖 =====
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub claude_config_dir: Option<String>,
@@ -532,6 +558,7 @@ impl Default for AppSettings {
             common_config_confirmed: None,
             language: None,
             visible_apps: None,
+            visible_sidebar_panels: None,
             claude_config_dir: None,
             codex_config_dir: None,
             gemini_config_dir: None,
