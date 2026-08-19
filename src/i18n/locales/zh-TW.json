@@ -1752,6 +1752,14 @@
     "directModeFormatInUse": "這張卡正在直連使用：改成這種格式後儲存，請求會失敗。請先切到路由或聚合。",
     "directModeFormatSwitch": "直連模式下用不了這種格式，切到路由或聚合後才能用這張卡。"
   },
+  "providerModel": {
+    "title": "模型快捷切換",
+    "currentModel": "目前模型",
+    "applyOneM": "套用 1M 標記",
+    "applied": "已切換為 {{model}}",
+    "applyFailed": "套用模型失敗",
+    "noCredentials": "請先在編輯表單配置 API Key 與請求位址"
+  },
   "copilot": {
     "authSection": "GitHub Copilot 驗證",
     "authStatus": "驗證狀態",
