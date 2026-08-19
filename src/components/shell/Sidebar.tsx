@@ -296,7 +296,7 @@ function MainDirectory({
   ].filter(
     (item) =>
       visibleSidebarPanels?.[
-        item.page as "mcp" | "skills" | "sessions"
+        item.page as "mcp" | "skills" | "sessions" | "prompts"
       ] !== false,
   );
 
