@@ -721,6 +721,13 @@
       "showProfileSwitcher": "顯示專案切換",
       "showProfileSwitcherDescription": "在主頁面頂部顯示專案切換入口"
     },
+    "sidebarPanels": {
+      "title": "側邊面板",
+      "description": "控制主頁頂欄右側面板入口的顯示",
+      "skills": "Skills",
+      "sessions": "會話記錄",
+      "mcp": "MCP 伺服器"
+    },
     "skillStorage": {
       "title": "Skills 儲存位置",
       "description": "選擇 CC Switch 存放 Skills 主副本的目錄",

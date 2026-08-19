@@ -2,12 +2,16 @@ import { useTranslation } from "react-i18next";
 import { FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleRow } from "@/components/ui/toggle-row";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import type { SettingsFormState } from "@/hooks/useSettings";
-import type { VisibleApps } from "@/types";
+import type { VisibleApps, VisibleSidebarPanels } from "@/types";
 import type { AppId } from "@/lib/api";
-import { DEFAULT_VISIBLE_APPS } from "@/config/appConfig";
+import {
+  DEFAULT_VISIBLE_APPS,
+  DEFAULT_VISIBLE_SIDEBAR_PANELS,
+} from "@/config/appConfig";
 
 interface AppVisibilitySettingsProps {
   settings: SettingsFormState;
@@ -42,6 +46,9 @@ export function AppVisibilitySettings({
 
   const visibleApps: VisibleApps = settings.visibleApps ?? DEFAULT_VISIBLE_APPS;
 
+  const visibleSidebarPanels: VisibleSidebarPanels =
+    settings.visibleSidebarPanels ?? DEFAULT_VISIBLE_SIDEBAR_PANELS;
+
   // Count how many apps are currently visible
   const visibleCount = Object.values(visibleApps).filter(Boolean).length;
 
@@ -54,6 +61,15 @@ export function AppVisibilitySettings({
       visibleApps: {
         ...visibleApps,
         [appId]: !isCurrentlyVisible,
+      },
+    });
+  };
+
+  const handleSidebarToggle = (key: keyof VisibleSidebarPanels) => {
+    onChange({
+      visibleSidebarPanels: {
+        ...visibleSidebarPanels,
+        [key]: !visibleSidebarPanels[key],
       },
     });
   };
@@ -95,6 +111,35 @@ export function AppVisibilitySettings({
         checked={settings.showProfileSwitcher ?? true}
         onCheckedChange={(value) => onChange({ showProfileSwitcher: value })}
       />
+
+      <section className="space-y-2 pt-4">
+        <header className="space-y-1">
+          <h3 className="text-sm font-medium">
+            {t("settings.sidebarPanels.title")}
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            {t("settings.sidebarPanels.description")}
+          </p>
+        </header>
+        <div className="flex flex-col gap-2">
+          {([
+            ["skills", t("settings.sidebarPanels.skills")],
+            ["sessions", t("settings.sidebarPanels.sessions")],
+            ["mcp", t("settings.sidebarPanels.mcp")],
+          ] as [keyof VisibleSidebarPanels, string][]).map(([key, label]) => (
+            <label
+              key={key}
+              className="flex items-center justify-between gap-2 text-sm"
+            >
+              <span>{label}</span>
+              <Switch
+                checked={visibleSidebarPanels[key]}
+                onCheckedChange={() => handleSidebarToggle(key)}
+              />
+            </label>
+          ))}
+        </div>
+      </section>
     </section>
   );
 }

@@ -733,6 +733,13 @@
       "showProfileSwitcher": "Show project switcher",
       "showProfileSwitcherDescription": "Show the project switcher in the main page header"
     },
+    "sidebarPanels": {
+      "title": "Sidebar Panels",
+      "description": "Control toolbar panel entries visibility",
+      "skills": "Skills",
+      "sessions": "Sessions",
+      "mcp": "MCP Servers"
+    },
     "skillStorage": {
       "title": "Skill Storage Location",
       "description": "Choose where CC Switch stores the master copies of your skills",
