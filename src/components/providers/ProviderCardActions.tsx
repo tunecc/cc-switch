@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import {
   ArrowDown,
   ArrowUp,
+  Boxes,
+  ChevronDown,
   ChevronRight,
   CircleDot,
   ListMinus,
@@ -78,6 +80,7 @@ interface ProviderCardActionsProps {
   openTerminalIsolated?: boolean;
   /** 卡片终端打不通时的原因（只能经路由用的卡，见 terminalNeedsRoute）：按钮仍在、置灰 */
   openTerminalDisabledReason?: string;
+  onQuickModel?: () => void;
 }
 
 /**
@@ -98,6 +101,7 @@ export function ProviderCardActions({
   onOpenTerminal,
   openTerminalIsolated,
   openTerminalDisabledReason,
+  onQuickModel,
 }: ProviderCardActionsProps) {
   const { t } = useTranslation();
   const { status, buttons, move, menuItems = [] } = presentation;
@@ -216,6 +220,12 @@ export function ProviderCardActions({
               {t("provider.duplicate")}
             </DropdownMenuItem>
           )}
+          {onQuickModel && (
+            <DropdownMenuItem onSelect={onQuickModel}>
+              <Boxes className="h-3.5 w-3.5" />
+              {t("providerModel.title")}
+            </DropdownMenuItem>
+          )}
           {onTest && (
             <DropdownMenuItem disabled={isTesting} onSelect={onTest}>
               {isTesting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
@@ -227,7 +237,7 @@ export function ProviderCardActions({
               {t("provider.configureUsage")}
             </DropdownMenuItem>
           )}
-          {(onDuplicate || onTest || onConfigureUsage) && (
+          {(onDuplicate || onQuickModel || onTest || onConfigureUsage) && (
             <DropdownMenuSeparator />
           )}
           <DropdownMenuItem
