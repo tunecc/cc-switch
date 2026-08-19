@@ -831,7 +831,7 @@ export function ClaudeFormFields({
                 >
                   <SelectTrigger
                     id="apiFormat"
-                    className="w-[150px] shrink-0 mt-[26px]"
+                    className="w-[280px] shrink-0 mt-[26px]"
                     aria-label={t("providerForm.apiFormat", {
                       defaultValue: "上游格式",
                     })}
