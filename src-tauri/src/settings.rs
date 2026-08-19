@@ -104,6 +104,8 @@ pub struct VisibleSidebarPanels {
     pub sessions: bool,
     #[serde(default = "default_true")]
     pub mcp: bool,
+    #[serde(default = "default_true")]
+    pub prompts: bool,
 }
 
 impl Default for VisibleSidebarPanels {
@@ -112,6 +114,7 @@ impl Default for VisibleSidebarPanels {
             skills: true,
             sessions: true,
             mcp: true,
+            prompts: true,
         }
     }
 }
