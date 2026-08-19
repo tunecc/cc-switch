@@ -844,6 +844,13 @@
       "showProviderSearch": "Show provider search",
       "showProviderSearchDescription": "Show a search button at the top of the provider page to find providers by name, notes, website, or API address. When hidden, ⌘F / Ctrl+F still opens search"
     },
+    "sidebarPanels": {
+      "title": "Sidebar Panels",
+      "description": "Control toolbar panel entries visibility",
+      "skills": "Skills",
+      "sessions": "Sessions",
+      "mcp": "MCP Servers"
+    },
     "terminal": {
       "title": "Preferred Terminal",
       "description": "Choose which terminal app to use when clicking the terminal button",
