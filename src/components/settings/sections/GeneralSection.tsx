@@ -125,6 +125,54 @@ export function GeneralSection({
               void onAutoSave({ showProfileSwitcher: value })
             }
           />
+          <SettingsSwitchRow
+            label={t("settings.sidebarPanels.skills")}
+            checked={settings.visibleSidebarPanels?.skills ?? true}
+            onCheckedChange={(value) =>
+              void onAutoSave({
+                visibleSidebarPanels: {
+                  ...(settings.visibleSidebarPanels ?? {
+                    skills: true,
+                    sessions: true,
+                    mcp: true,
+                  }),
+                  skills: value,
+                },
+              })
+            }
+          />
+          <SettingsSwitchRow
+            label={t("settings.sidebarPanels.sessions")}
+            checked={settings.visibleSidebarPanels?.sessions ?? true}
+            onCheckedChange={(value) =>
+              void onAutoSave({
+                visibleSidebarPanels: {
+                  ...(settings.visibleSidebarPanels ?? {
+                    skills: true,
+                    sessions: true,
+                    mcp: true,
+                  }),
+                  sessions: value,
+                },
+              })
+            }
+          />
+          <SettingsSwitchRow
+            label={t("settings.sidebarPanels.mcp")}
+            checked={settings.visibleSidebarPanels?.mcp ?? true}
+            onCheckedChange={(value) =>
+              void onAutoSave({
+                visibleSidebarPanels: {
+                  ...(settings.visibleSidebarPanels ?? {
+                    skills: true,
+                    sessions: true,
+                    mcp: true,
+                  }),
+                  mcp: value,
+                },
+              })
+            }
+          />
         </SettingsCard>
       </SettingsBlock>
 
