@@ -98,6 +98,82 @@ export function getCurrentModel(
   }
 }
 
+// ---------- 徽章（与上游 ProviderCard 的 extractModelBadge 家族语义一致） ----------
+
+/** 徽章展示用的模型信息（label 为短标签，title 为悬停完整说明） */
+export interface ModelBadgeInfo {
+  label: string;
+  title: string;
+}
+
+const CLAUDE_ROLE_MODEL_FIELDS: { role: string; field: string }[] = [
+  { role: "Opus", field: "ANTHROPIC_DEFAULT_OPUS_MODEL" },
+  { role: "Sonnet", field: "ANTHROPIC_DEFAULT_SONNET_MODEL" },
+  { role: "Haiku", field: "ANTHROPIC_DEFAULT_HAIKU_MODEL" },
+];
+
+/**
+ * 徽章展示用的模型提取（与上游 ProviderCard 的 extractModelBadge 语义一致，
+ * claude 走 Opus/Sonnet/Haiku 三角色聚合）。
+ *
+ * - claude: 三角色 env 字段 → strip [1M] → 过滤空；有角色模型时 title 为
+ *   "Opus: x / Sonnet: y / Haiku: z"，全 3 角色且唯一 → label=该模型，
+ *   否则 label=第一个角色模型；无角色模型 → 回退 ANTHROPIC_MODEL（strip [1M]）
+ * - gemini: env.GEMINI_MODEL（trim 非空）
+ * - codex/grokbuild: settingsConfig.config（TOML 文本）顶层 model（与
+ *   getCurrentModel 同一 extractCodexModelName 读取）
+ * - 其余 app → null
+ */
+export function extractModelBadgeForProvider(
+  appId: string,
+  settingsConfig: unknown,
+): ModelBadgeInfo | null {
+  const config = isPlainObject(settingsConfig) ? settingsConfig : {};
+  const env = asEnvRecord(config.env);
+
+  switch (appId) {
+    case "claude": {
+      const roleModels = CLAUDE_ROLE_MODEL_FIELDS.map(({ role, field }) => {
+        const raw = envString(env, field).trim();
+        return { role, model: raw ? stripClaudeOneMMarker(raw).trim() : "" };
+      }).filter(
+        (item): item is { role: string; model: string } => item.model !== "",
+      );
+
+      if (roleModels.length === 0) {
+        const fallback = envString(env, "ANTHROPIC_MODEL").trim();
+        if (!fallback) return null;
+        const label = stripClaudeOneMMarker(fallback).trim();
+        return { label, title: label };
+      }
+
+      const title = roleModels
+        .map(({ role, model }) => `${role}: ${model}`)
+        .join(" / ");
+      const hasAllRoleModels = roleModels.length === 3;
+      const uniqueModels = new Set(roleModels.map(({ model }) => model));
+
+      if (hasAllRoleModels && uniqueModels.size === 1) {
+        return { label: roleModels[0].model, title };
+      }
+      return { label: roleModels[0].model, title };
+    }
+    case "gemini": {
+      const model = envString(env, "GEMINI_MODEL").trim();
+      return model ? { label: model, title: model } : null;
+    }
+    case "codex":
+    case "grokbuild": {
+      // extractCodexModelName 对非字符串/空文本/无 model 行一律 undefined，
+      // 已覆盖坏形状输入；与 getCurrentModel 同一读取路径。
+      const model = extractCodexModelName(config.config);
+      return model ? { label: model, title: model } : null;
+    }
+    default:
+      return null;
+  }
+}
+
 /**
  * 把所选模型不可变写回 settingsConfig（深拷贝，原对象不变）。
  *
