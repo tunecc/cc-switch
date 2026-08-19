@@ -33,6 +33,7 @@ import {
   FullUrlToggle,
   ModelDropdown,
   ModelInputWithFetch,
+  SearchableModelPicker,
   type DirectModeFormatNotice,
 } from "./shared";
 import { CopilotAuthSection } from "./CopilotAuthSection";
@@ -561,7 +562,11 @@ export function ClaudeFormFields({
             autoComplete="off"
             className="flex-1"
           />
-          <ModelDropdown models={copilotFetchedModels} onSelect={updateValue} />
+          <SearchableModelPicker
+            models={copilotFetchedModels}
+            value={value}
+            onSelect={updateValue}
+          />
         </div>
       );
     }
