@@ -261,7 +261,6 @@ export function ClaudeFormFields({
     defaultOpusModel ||
     defaultFableModel ||
     subagentModel ||
-    (!isXaiOauthPreset && !isCodexOauthPreset && apiFormat !== "anthropic") ||
     apiKeyField !== "ANTHROPIC_AUTH_TOKEN" ||
     isFullUrl ||
     customUserAgent ||
@@ -805,67 +804,34 @@ export function ClaudeFormFields({
 
   const endpointSection = (
     <>
-      {/* Base URL 输入框；Codex / xAI 托管账号卡的上游地址由后端固定，不显示 */}
+      {/* Base URL 输入框 + 上游格式选择（仅非云服务商显示） */}
       {shouldShowSpeedTest && !isCodexOauthPreset && !isXaiOauthPreset && (
-        <EndpointField
-          id="baseUrl"
-          label={t("providerForm.apiEndpoint")}
-          value={baseUrl}
-          onChange={onBaseUrlChange}
-          placeholder={t("providerForm.apiEndpointPlaceholder")}
-          help={endpointHint}
-          showManageButton={showEndpointTools}
-          onManageClick={
-            showEndpointTools ? () => onEndpointModalToggle(true) : undefined
-          }
-        />
-      )}
-    </>
-  );
-
-  const speedTestModal = (
-    <>
-      {/* 端点测速弹窗 */}
-      {shouldShowSpeedTest && showEndpointTools && isEndpointModalOpen && (
-        <EndpointSpeedTest
-          appId="claude"
-          providerId={providerId}
-          value={baseUrl}
-          onChange={onBaseUrlChange}
-          initialEndpoints={speedTestEndpoints}
-          visible={isEndpointModalOpen}
-          onClose={() => onEndpointModalToggle(false)}
-          autoSelect={autoSelect}
-          onAutoSelectChange={onAutoSelectChange}
-          onCustomEndpointsChange={onCustomEndpointsChange}
-        />
-      )}
-    </>
-  );
-
-  // 上游格式、认证字段：经典布局放在高级选项里，Stack 布局放在连接区。
-  const apiFormatLabel = t("providerForm.apiFormat", {
-    defaultValue: "上游格式",
-  });
-
-  const apiFormatField = (
-    <>
-      {/* 上游格式选择（仅非云服务商显示；xAI、Codex 托管账号卡的格式由后端固定） */}
-      {category !== "cloud_provider" &&
-        !isXaiOauthPreset &&
-        !isCodexOauthPreset && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-0.5">
-              <FormLabel htmlFor="apiFormat">{apiFormatLabel}</FormLabel>
-              <HelpTip title={apiFormatLabel}>
-                {t("providerForm.apiFormatHelp", {
-                  defaultValue:
-                    "看供应商原生支持哪种协议：Anthropic Messages 原样转发、不转换格式；其余三种由路由转成 Anthropic Messages。",
+        <>
+        <div className="flex flex-wrap items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <EndpointField
+              id="baseUrl"
+              label={t("providerForm.apiEndpoint")}
+              value={baseUrl}
+              onChange={onBaseUrlChange}
+              placeholder={t("providerForm.apiEndpointPlaceholder")}
+              help={endpointHint}
+              showManageButton={showEndpointTools}
+              onManageClick={
+                showEndpointTools ? () => onEndpointModalToggle(true) : undefined
+              }
+            />
+          </div>
+          {category !== "cloud_provider" && (
+            <div className="flex items-end gap-1">
+              <Select value={apiFormat} onValueChange={onApiFormatChange}>
+              <SelectTrigger
+                id="apiFormat"
+                className="w-[150px] shrink-0 mt-[26px]"
+                aria-label={t("providerForm.apiFormat", {
+                  defaultValue: "上游格式",
                 })}
-              </HelpTip>
-            </div>
-            <Select value={apiFormat} onValueChange={onApiFormatChange}>
-              <SelectTrigger id="apiFormat" className="w-full">
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -890,16 +856,49 @@ export function ClaudeFormFields({
                   })}
                 </SelectItem>
               </SelectContent>
-            </Select>
-            {directModeFormatNotice && apiFormat !== "anthropic" && (
-              <DirectModeFormatWarning notice={directModeFormatNotice} />
-            )}
-          </div>
+              </Select>
+              <HelpTip
+                title={t("providerForm.apiFormat", {
+                  defaultValue: "上游格式",
+                })}
+              >
+                {t("providerForm.apiFormatHelp", {
+                  defaultValue:
+                    "看供应商原生支持哪种协议：Anthropic Messages 原样转发、不转换格式；其余三种由路由转成 Anthropic Messages。",
+                })}
+              </HelpTip>
+            </div>
+          )}
+        </div>
+        {directModeFormatNotice && apiFormat !== "anthropic" && (
+          <DirectModeFormatWarning notice={directModeFormatNotice} />
         )}
+        </>
+      )}
     </>
   );
 
-  // 认证字段选择器
+  const speedTestModal = (
+    <>
+      {/* 端点测速弹窗 */}
+      {shouldShowSpeedTest && showEndpointTools && isEndpointModalOpen && (
+        <EndpointSpeedTest
+          appId="claude"
+          providerId={providerId}
+          value={baseUrl}
+          onChange={onBaseUrlChange}
+          initialEndpoints={speedTestEndpoints}
+          visible={isEndpointModalOpen}
+          onClose={() => onEndpointModalToggle(false)}
+          autoSelect={autoSelect}
+          onAutoSelectChange={onAutoSelectChange}
+          onCustomEndpointsChange={onCustomEndpointsChange}
+        />
+      )}
+    </>
+  );
+
+  // 认证字段选择器：经典布局放在高级选项里，Stack 布局放在 Key 旁边。
   const authFieldLabel = t("providerForm.authField", {
     defaultValue: "认证字段",
   });
@@ -1009,7 +1008,6 @@ export function ClaudeFormFields({
     return (
       <>
         {oauthSections}
-        {apiFormatField}
         {apiKeySection}
         {showAuthField && authFieldSelect}
         {templateSection}
@@ -1093,8 +1091,6 @@ export function ClaudeFormFields({
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-4 pt-2">
-            {apiFormatField}
-
             {fullUrlToggle}
 
             {/* 认证字段只决定 Anthropic 格式上游的认证头（OpenAI 格式一律 Bearer）；Copilot
