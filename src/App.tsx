@@ -131,7 +131,11 @@ import {
 } from "@/lib/query/omo";
 import { invalidatePiProviderCaches, usePiCurrentState } from "@/lib/query/pi";
 import OpenClawHealthBanner from "@/components/openclaw/OpenClawHealthBanner";
-import { DEFAULT_VISIBLE_APPS, orderAppIds } from "@/config/appConfig";
+import {
+  DEFAULT_VISIBLE_APPS,
+  DEFAULT_VISIBLE_SIDEBAR_PANELS,
+  orderAppIds,
+} from "@/config/appConfig";
 import { EditProviderHost } from "@/components/providers/EditProviderHost";
 import { preloadOnIdle } from "@/lib/preloadOnIdle";
 import { useCreateEditProviderStore } from "@/components/providers/editProviderStore";
@@ -311,6 +315,11 @@ function App() {
     }),
     [settingsData?.visibleApps],
   );
+
+  const visibleSidebarPanels = {
+    ...DEFAULT_VISIBLE_SIDEBAR_PANELS,
+    ...settingsData?.visibleSidebarPanels,
+  };
 
   const getFirstVisibleApp = (): AppId => {
     return (
@@ -1937,6 +1946,7 @@ function App() {
           activeApp={activeApp}
           view={currentView}
           visibleApps={visibleApps}
+          visibleSidebarPanels={visibleSidebarPanels}
           settingsSection={settingsSection}
           onSelectApp={selectApp}
           onSelectPage={openPageFromNav}
