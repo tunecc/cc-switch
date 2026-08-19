@@ -1959,6 +1959,7 @@
     "modelNoDisplayName": "不显示在 /model 菜单",
     "requestModelLabel": "实际请求模型",
     "modelOneMHeader": "声明支持 1M",
+    "modelOneMToggleAll": "一键全选 1M",
     "modelOneMLabel": "1M",
     "copilotOneMUnavailable": "Copilot 没有这个模型的 1M 版本",
     "copilotOneMMismatch": "Copilot 没有 {{models}} 的 1M 版本：请求会退回普通版本，但 Claude Code 仍按 1M 规划上下文，长会话可能超出上限。建议取消勾选 1M。",
