@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { FolderOpen } from "lucide-react";
+import { Boxes, FolderOpen, History, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleRow } from "@/components/ui/toggle-row";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import type { SettingsFormState } from "@/hooks/useSettings";
@@ -121,23 +120,25 @@ export function AppVisibilitySettings({
             {t("settings.sidebarPanels.description")}
           </p>
         </header>
-        <div className="flex flex-col gap-2">
-          {([
-            ["skills", t("settings.sidebarPanels.skills")],
-            ["sessions", t("settings.sidebarPanels.sessions")],
-            ["mcp", t("settings.sidebarPanels.mcp")],
-          ] as [keyof VisibleSidebarPanels, string][]).map(([key, label]) => (
-            <label
-              key={key}
-              className="flex items-center justify-between gap-2 text-sm"
-            >
-              <span>{label}</span>
-              <Switch
-                checked={visibleSidebarPanels[key]}
-                onCheckedChange={() => handleSidebarToggle(key)}
-              />
-            </label>
-          ))}
+        <div className="flex flex-wrap gap-1 rounded-md border border-border-default bg-background p-1">
+          <SidebarPanelButton
+            active={visibleSidebarPanels.skills}
+            onClick={() => handleSidebarToggle("skills")}
+            icon={<Wrench className="h-3.5 w-3.5" />}
+            label={t("settings.sidebarPanels.skills")}
+          />
+          <SidebarPanelButton
+            active={visibleSidebarPanels.sessions}
+            onClick={() => handleSidebarToggle("sessions")}
+            icon={<History className="h-3.5 w-3.5" />}
+            label={t("settings.sidebarPanels.sessions")}
+          />
+          <SidebarPanelButton
+            active={visibleSidebarPanels.mcp}
+            onClick={() => handleSidebarToggle("mcp")}
+            icon={<Boxes className="h-3.5 w-3.5" />}
+            label={t("settings.sidebarPanels.mcp")}
+          />
         </div>
       </section>
     </section>
@@ -177,6 +178,38 @@ function AppButton({
     >
       <ProviderIcon icon={icon} name={name} size={14} />
       {children}
+    </Button>
+  );
+}
+
+interface SidebarPanelButtonProps {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}
+
+function SidebarPanelButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: SidebarPanelButtonProps) {
+  return (
+    <Button
+      type="button"
+      onClick={onClick}
+      size="sm"
+      variant={active ? "default" : "ghost"}
+      className={cn(
+        "min-w-[90px] w-auto gap-1.5 px-3",
+        active
+          ? "shadow-sm"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted",
+      )}
+    >
+      {icon}
+      {label}
     </Button>
   );
 }
