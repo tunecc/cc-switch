@@ -1696,6 +1696,7 @@
     "modelNoDisplayName": "不顯示於 /model 選單",
     "requestModelLabel": "實際請求模型",
     "modelOneMHeader": "聲明支援 1M",
+    "modelOneMToggleAll": "一鍵全選 1M",
     "modelOneMLabel": "1M",
     "fallbackModelLabel": "備用模型",
     "fallbackModelHelpDirect": "寫進 ANTHROPIC_MODEL，是 Claude Code 啟動時使用的主模型。背景任務另用 Haiku 那一檔。",
