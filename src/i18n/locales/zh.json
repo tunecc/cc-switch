@@ -1739,6 +1739,14 @@
     "directModeFormatInUse": "这张卡正在直连使用：改成这种格式后保存，请求会失败。请先切到路由或聚合。",
     "directModeFormatSwitch": "直连模式下用不了这种格式，切到路由或聚合后才能用这张卡。"
   },
+  "providerModel": {
+    "title": "模型快捷切换",
+    "currentModel": "当前模型",
+    "applyOneM": "应用 1M 标记",
+    "applied": "已切换为 {{model}}",
+    "applyFailed": "应用模型失败",
+    "noCredentials": "请先在编辑表单配置 API Key 与请求地址"
+  },
   "copilot": {
     "authSection": "GitHub Copilot 认证",
     "authStatus": "认证状态",
