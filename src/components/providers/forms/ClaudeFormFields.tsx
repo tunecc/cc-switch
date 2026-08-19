@@ -759,6 +759,19 @@ export function ClaudeFormFields({
     defaultValue: "Copilot 没有这个模型的 1M 版本",
   });
 
+  // fork 保留「表头一键勾选 1M」：范围是全部角色行 + 兜底模型。上游 v4.0.13 起
+  // Haiku 也可声明 1M，不再按 supportsOneM 过滤。
+  const oneMToggleValues = [
+    ...modelRoleRows.map((row) => row.model),
+    claudeModel,
+  ];
+  const allOneMEnabled = oneMToggleValues.every((model) =>
+    hasClaudeOneMMarker(model),
+  );
+  const someOneMEnabled = oneMToggleValues.some((model) =>
+    hasClaudeOneMMarker(model),
+  );
+
   const oauthSections = (
     <>
       {/* GitHub Copilot OAuth 认证 */}
@@ -1294,7 +1307,33 @@ export function ClaudeFormFields({
                     defaultValue: "实际请求模型",
                   })}
                 </span>
-                <span>
+                <span className="flex items-center gap-1.5">
+                  <Checkbox
+                    checked={
+                      allOneMEnabled
+                        ? true
+                        : someOneMEnabled
+                          ? "indeterminate"
+                          : false
+                    }
+                    onCheckedChange={() => {
+                      for (const row of modelRoleRows) {
+                        onModelChange(
+                          row.modelField,
+                          setClaudeOneMMarker(row.model, !allOneMEnabled),
+                        );
+                      }
+                      if (claudeModel.trim()) {
+                        onModelChange(
+                          "ANTHROPIC_MODEL",
+                          setClaudeOneMMarker(claudeModel, !allOneMEnabled),
+                        );
+                      }
+                    }}
+                    aria-label={t("providerForm.modelOneMToggleAll", {
+                      defaultValue: "一键全选 1M",
+                    })}
+                  />
                   {t("providerForm.modelOneMHeader", {
                     defaultValue: "声明支持 1M",
                   })}
