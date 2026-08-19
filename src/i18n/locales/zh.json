@@ -1336,6 +1336,7 @@
     "modelNoDisplayName": "不显示在 /model 菜单",
     "requestModelLabel": "实际请求模型",
     "modelOneMHeader": "声明支持 1M",
+    "modelOneMToggleAll": "一键全选 1M",
     "modelOneMLabel": "1M",
     "fallbackModelLabel": "默认兜底模型",
     "fallbackModelHint": "用于未明确落到 Sonnet、Opus、Fable、Haiku 角色的请求。使用第三方/中转端点时建议填写：否则这些请求（含 Haiku 后台子任务）会以原始 Claude 模型名透传给上游，可能因上游无此模型而报错。官方端点可留空。",

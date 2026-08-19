@@ -645,6 +645,14 @@ export function ClaudeFormFields({
     handleRoleModelChange(row, setClaudeOneMMarker(row.model, enabled));
   };
 
+  const oneMRows = modelRoleRows.filter((row) => row.supportsOneM);
+  const allOneMEnabled = oneMRows.every((row) =>
+    hasClaudeOneMMarker(row.model),
+  );
+  const someOneMEnabled = oneMRows.some((row) =>
+    hasClaudeOneMMarker(row.model),
+  );
+
   return (
     <>
       {/* GitHub Copilot OAuth 认证 */}
@@ -972,7 +980,27 @@ export function ClaudeFormFields({
                     defaultValue: "实际请求模型",
                   })}
                 </span>
-                <span>
+                <span className="flex items-center gap-1.5">
+                  <Checkbox
+                    checked={
+                      allOneMEnabled
+                        ? true
+                        : someOneMEnabled
+                          ? "indeterminate"
+                          : false
+                    }
+                    onCheckedChange={() => {
+                      for (const row of oneMRows) {
+                        onModelChange(
+                          row.modelField,
+                          setClaudeOneMMarker(row.model, !allOneMEnabled),
+                        );
+                      }
+                    }}
+                    aria-label={t("providerForm.modelOneMToggleAll", {
+                      defaultValue: "一键全选 1M",
+                    })}
+                  />
                   {t("providerForm.modelOneMHeader", {
                     defaultValue: "声明支持 1M",
                   })}
