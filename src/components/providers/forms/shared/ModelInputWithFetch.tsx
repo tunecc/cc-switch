@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download, Loader2 } from "lucide-react";
 import type { FetchedModel } from "@/lib/api/model-fetch";
-import { ModelDropdown } from "./ModelDropdown";
+import { SearchableModelPicker } from "./SearchableModelPicker";
 
 interface ModelInputWithFetchProps {
   id: string;
@@ -40,7 +40,11 @@ export function ModelInputWithFetch({
           autoComplete="off"
           className="flex-1"
         />
-        <ModelDropdown models={fetchedModels} onSelect={onChange} />
+        <SearchableModelPicker
+          models={fetchedModels}
+          value={value}
+          onSelect={onChange}
+        />
       </div>
     );
   }
