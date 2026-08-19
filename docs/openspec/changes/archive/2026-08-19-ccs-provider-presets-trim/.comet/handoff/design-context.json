@@ -1,0 +1,14 @@
+{
+  "change": "ccs-provider-presets-trim",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "8501189117e73a9bd6a063c2e9e35719409c31226c45e3f6b2283950ebb88310",
+  "files": [
+    { "path": "docs/openspec/changes/ccs-provider-presets-trim/proposal.md", "sha256": "f6c301408a0b7724fb01327860c41671916c4334ed471913e2d6e2d83738ec9a" },
+    { "path": "docs/openspec/changes/ccs-provider-presets-trim/design.md", "sha256": "01c3a7080296e0676acd87afa1c835c62dbee0ee3d8b744dbb57937e458196fe" },
+    { "path": "docs/openspec/changes/ccs-provider-presets-trim/tasks.md", "sha256": "6f94a3b6d1e01375ec9fe9141da95fa6e38e0f0b2b926d56c3e3ddca75f6a373" },
+    { "path": "docs/openspec/changes/ccs-provider-presets-trim/specs/provider-presets-visibility/spec.md", "sha256": "ebc6a6f4fbd3606894a75bfcc9c3e28b2d2b75ac87accf68698cf37fb5b08abb" }
+  ]
+}
