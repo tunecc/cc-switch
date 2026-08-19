@@ -726,7 +726,8 @@
       "description": "メインページ上部パネル入口の表示を制御",
       "skills": "Skills",
       "sessions": "セッション履歴",
-      "mcp": "MCP サーバー"
+      "mcp": "MCP サーバー",
+      "prompts": "プロンプト管理"
     },
     "skillStorage": {
       "title": "スキル保存場所",

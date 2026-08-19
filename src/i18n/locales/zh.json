@@ -738,7 +738,8 @@
       "description": "控制主页顶栏右侧面板入口的显示",
       "skills": "Skills",
       "sessions": "会话记录",
-      "mcp": "MCP 服务器"
+      "mcp": "MCP 服务器",
+      "prompts": "提示词管理"
     },
     "skillStorage": {
       "title": "Skills 存储位置",

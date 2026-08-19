@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Boxes, FolderOpen, History, Wrench } from "lucide-react";
+import { Boxes, Book, FolderOpen, History, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { cn } from "@/lib/utils";
@@ -138,6 +138,12 @@ export function AppVisibilitySettings({
             onClick={() => handleSidebarToggle("mcp")}
             icon={<Boxes className="h-3.5 w-3.5" />}
             label={t("settings.sidebarPanels.mcp")}
+          />
+          <SidebarPanelButton
+            active={visibleSidebarPanels.prompts}
+            onClick={() => handleSidebarToggle("prompts")}
+            icon={<Book className="h-3.5 w-3.5" />}
+            label={t("settings.sidebarPanels.prompts")}
           />
         </div>
       </section>

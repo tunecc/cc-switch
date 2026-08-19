@@ -738,7 +738,8 @@
       "description": "Control toolbar panel entries visibility",
       "skills": "Skills",
       "sessions": "Sessions",
-      "mcp": "MCP Servers"
+      "mcp": "MCP Servers",
+      "prompts": "Prompts"
     },
     "skillStorage": {
       "title": "Skill Storage Location",
