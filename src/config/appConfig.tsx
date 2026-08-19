@@ -1,6 +1,6 @@
 import React from "react";
 import type { AppId } from "@/lib/api/types";
-import type { VisibleApps } from "@/types";
+import type { VisibleApps, VisibleSidebarPanels } from "@/types";
 import { APP_IDS } from "./appSpecs";
 import {
   ClaudeIcon,
@@ -43,6 +43,12 @@ export function orderAppIds(saved: readonly string[] | undefined): AppId[] {
   });
   return ordered;
 }
+
+export const DEFAULT_VISIBLE_SIDEBAR_PANELS: VisibleSidebarPanels = {
+  skills: true,
+  sessions: true,
+  mcp: true,
+};
 
 export function usesGeminiStyleForm(appId: string): boolean {
   return appId === "gemini" || appId === "agy";
