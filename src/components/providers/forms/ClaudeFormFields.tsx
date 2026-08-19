@@ -28,8 +28,8 @@ import EndpointSpeedTest from "./EndpointSpeedTest";
 import {
   ApiKeySection,
   EndpointField,
-  ModelDropdown,
   ModelInputWithFetch,
+  SearchableModelPicker,
 } from "./shared";
 import { CopilotAuthSection } from "./CopilotAuthSection";
 import { CodexOAuthSection } from "./CodexOAuthSection";
@@ -512,7 +512,11 @@ export function ClaudeFormFields({
             autoComplete="off"
             className="flex-1"
           />
-          <ModelDropdown models={copilotFetchedModels} onSelect={updateValue} />
+          <SearchableModelPicker
+            models={copilotFetchedModels}
+            value={value}
+            onSelect={updateValue}
+          />
         </div>
       );
     }
