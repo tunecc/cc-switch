@@ -67,7 +67,10 @@ import {
 } from "./OpenTerminalDialog";
 import type { CardChip, CardPresentation, CardTone } from "./presentation";
 import { appHas } from "@/config/appSpecs";
-import { getCurrentModel, isModelCapableApp } from "@/utils/providerModelUtils";
+import {
+  extractModelBadgeForProvider,
+  isModelCapableApp,
+} from "@/utils/providerModelUtils";
 import { ModelQuickSwitchDialog } from "@/components/providers/ModelQuickSwitch/ModelQuickSwitchDialog";
 
 const copilotPlan = (data: unknown) => (data as CopilotQuota).plan;
@@ -83,8 +86,9 @@ interface ProviderCardProps {
   appId: AppId;
   /** 卡片怎么画：模式色、状态 / 按钮、徽标（由列表按模式算好） */
   presentation: CardPresentation;
-  /** 用来决定官方订阅 / OAuth 额度是否自动查询 */
+  /** 用来决定额度是否自动查询（共存式应用看 isInConfig） */
   isCurrent: boolean;
+  isInConfig?: boolean;
   onEdit: (provider: Provider) => void;
   onDelete: (provider: Provider) => void;
   onConfigureUsage: (provider: Provider) => void;
@@ -226,6 +230,7 @@ export function ProviderCard({
   appId,
   presentation,
   isCurrent,
+  isInConfig = true,
   onEdit,
   onDelete,
   onConfigureUsage,
@@ -423,8 +428,12 @@ export function ProviderCard({
     subtitlePlan ? (
       <span className={cn("shrink-0", className)}>· {subtitlePlan}</span>
     ) : null;
-  // 获取用量数据以判断是否有多套餐，按用户配置刷新，不依赖供应商启用状态。
-  const autoQueryInterval = provider.meta?.usage_script?.autoQueryInterval ?? 0;
+  // 获取用量数据以判断是否有多套餐
+  // 累加模式应用：使用 isInConfig 代替 isCurrent
+  const shouldAutoQuery = appHas(appId, "additive") ? isInConfig : isCurrent;
+  const autoQueryInterval = shouldAutoQuery
+    ? provider.meta?.usage_script?.autoQueryInterval || 0
+    : 0;
 
   // 脚本用量只在「已启用 + 非官方 + 非官方订阅模板」时才查询；展开判定必须复用同一谓词，
   // 因为禁用的 React Query observer 仍会返回同 key 的旧缓存。
@@ -452,11 +461,8 @@ export function ProviderCard({
 
   const [modelDialogOpen, setModelDialogOpen] = useState(false);
 
-  const currentModelText = useMemo(
-    () =>
-      isModelCapableApp(appId)
-        ? getCurrentModel(appId, provider.settingsConfig)
-        : "",
+  const modelBadge = useMemo(
+    () => extractModelBadgeForProvider(appId, provider.settingsConfig),
     [appId, provider.settingsConfig],
   );
 
@@ -524,12 +530,14 @@ export function ProviderCard({
             >
               {provider.name}
             </h3>
-            {isModelCapableApp(appId) && currentModelText && (
+            {modelBadge && (
               <span
-                className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground max-w-[140px] truncate"
-                title={currentModelText}
+                className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground"
+                title={modelBadge.title}
               >
-                {currentModelText}
+                <span className="truncate max-w-[200px]">
+                  {modelBadge.label}
+                </span>
               </span>
             )}
             {presentation.chips.map((chip) => (
@@ -780,6 +788,8 @@ export function ProviderCard({
                   providerId={provider.id}
                   appId={appId}
                   usageEnabled={usageEnabled}
+                  isCurrent={isCurrent}
+                  isInConfig={isInConfig}
                   inline={true}
                 />
               )}
@@ -836,9 +846,7 @@ export function ProviderCard({
                 : () => onConfigureUsage(provider)
             }
             onOpenTerminal={
-              onOpenTerminal && terminalAvailable(provider, appId, isCurrent)
-                ? () => onOpenTerminal(provider)
-                : undefined
+              onOpenTerminal ? () => onOpenTerminal(provider) : undefined
             }
             openTerminalIsolated={terminalIsIsolated(provider, appId)}
             openTerminalDisabledReason={
@@ -862,6 +870,8 @@ export function ProviderCard({
             providerId={provider.id}
             appId={appId}
             usageEnabled={usageEnabled}
+            isCurrent={isCurrent}
+            isInConfig={isInConfig}
             inline={false}
           />
         </div>
