@@ -46,6 +46,7 @@ export const DEFAULT_VISIBLE_SIDEBAR_PANELS: VisibleSidebarPanels = {
   skills: true,
   sessions: true,
   mcp: true,
+  prompts: true,
 };
 
 /** App IDs shown in Skills panels. */
