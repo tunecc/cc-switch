@@ -1,0 +1,14 @@
+{
+  "change": "ccs-claude-form-layout",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "86a5cedf9636ee3b3a03624f8d3b430478df5469b0c3b3c2e09cb92d78d47464",
+  "files": [
+    { "path": "docs/openspec/changes/ccs-claude-form-layout/proposal.md", "sha256": "a3fc0c2f358ac41752d52377d2bce329a6d1f484fe190ee21474249b8300193b" },
+    { "path": "docs/openspec/changes/ccs-claude-form-layout/design.md", "sha256": "74d36b789f50ffef68ef172aa920c48352b2ef29de350d87a62d6efe16a84498" },
+    { "path": "docs/openspec/changes/ccs-claude-form-layout/tasks.md", "sha256": "4bfd4969d305dca7556ab590d92cd84c16e4c1efca98543c42e77aedb410a602" },
+    { "path": "docs/openspec/changes/ccs-claude-form-layout/specs/claude-form-layout/spec.md", "sha256": "212c7c3bd5302aacc241cddbce425b41e85dbf19c8d89822cd5a76583e90bc88" }
+  ]
+}
