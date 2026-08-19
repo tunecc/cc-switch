@@ -300,6 +300,13 @@ export interface VisibleApps {
   pi: boolean;
 }
 
+// 主页面顶栏侧边面板入口的显示设置
+export interface VisibleSidebarPanels {
+  skills: boolean;
+  sessions: boolean;
+  mcp: boolean;
+}
+
 // WebDAV 同步状态
 export interface WebDavSyncStatus {
   lastSyncAt?: number | null;
@@ -401,6 +408,9 @@ export interface Settings {
 
   // 主页面显示的应用（默认全部显示）
   visibleApps?: VisibleApps;
+
+  // 主页面顶栏侧边面板入口（Skills/Sessions/MCP）显示设置（默认全部显示）
+  visibleSidebarPanels?: VisibleSidebarPanels;
 
   // ===== 设备级目录覆盖 =====
   // 覆盖 Claude Code 配置目录（可选）

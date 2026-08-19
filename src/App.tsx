@@ -111,6 +111,7 @@ import HermesMemoryPanel from "@/components/hermes/HermesMemoryPanel";
 import {
   APP_IDS,
   DEFAULT_VISIBLE_APPS,
+  DEFAULT_VISIBLE_SIDEBAR_PANELS,
   isProxyAppId,
 } from "@/config/appConfig";
 
@@ -228,6 +229,11 @@ function App() {
     }),
     [settingsData?.visibleApps],
   );
+
+  const visibleSidebarPanels = {
+    ...DEFAULT_VISIBLE_SIDEBAR_PANELS,
+    ...settingsData?.visibleSidebarPanels,
+  };
 
   const getFirstVisibleApp = (): AppId => {
     return APP_IDS.find((app) => visibleApps[app]) ?? "claude";
@@ -1624,7 +1630,7 @@ function App() {
                               >
                                 <LayoutDashboard className="w-4 h-4" />
                               </Button>
-                              {hasMcpSupport && (
+                              {(hasMcpSupport && visibleSidebarPanels.mcp) && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -1674,15 +1680,17 @@ function App() {
                               >
                                 <Cpu className="w-4 h-4" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setCurrentView("sessions")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("sessionManager.title")}
-                              >
-                                <History className="w-4 h-4" />
-                              </Button>
+                              {visibleSidebarPanels.sessions && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setCurrentView("sessions")}
+                                  className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
+                                  title={t("sessionManager.title")}
+                                >
+                                  <History className="w-4 h-4" />
+                                </Button>
+                              )}
                             </>
                           ) : (
                             <>
@@ -1693,7 +1701,7 @@ function App() {
                                 className={cn(
                                   "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5",
                                   "transition-all duration-200 ease-in-out overflow-hidden",
-                                  hasSkillsSupport
+                                  (hasSkillsSupport && visibleSidebarPanels.skills)
                                     ? "opacity-100 w-8 scale-100 px-2"
                                     : "opacity-0 w-0 scale-75 pointer-events-none px-0 -ml-1",
                                 )}
@@ -1717,7 +1725,7 @@ function App() {
                                 className={cn(
                                   "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5",
                                   "transition-all duration-200 ease-in-out overflow-hidden",
-                                  hasSessionSupport
+                                  (hasSessionSupport && visibleSidebarPanels.sessions)
                                     ? "opacity-100 w-8 scale-100 px-2"
                                     : "opacity-0 w-0 scale-75 pointer-events-none px-0 -ml-1",
                                 )}
@@ -1725,7 +1733,7 @@ function App() {
                               >
                                 <History className="flex-shrink-0 w-4 h-4" />
                               </Button>
-                              {hasMcpSupport && (
+                              {(hasMcpSupport && visibleSidebarPanels.mcp) && (
                                 <Button
                                   variant="ghost"
                                   size="sm"

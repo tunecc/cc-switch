@@ -1,6 +1,6 @@
 import React from "react";
 import type { AppId } from "@/lib/api/types";
-import type { VisibleApps } from "@/types";
+import type { VisibleApps, VisibleSidebarPanels } from "@/types";
 import {
   ClaudeIcon,
   CodexIcon,
@@ -38,6 +38,12 @@ export const DEFAULT_VISIBLE_APPS: VisibleApps = {
   openclaw: true,
   hermes: true,
   pi: true,
+};
+
+export const DEFAULT_VISIBLE_SIDEBAR_PANELS: VisibleSidebarPanels = {
+  skills: true,
+  sessions: true,
+  mcp: true,
 };
 
 /** App IDs shown in Skills panels. */
