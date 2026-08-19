@@ -253,7 +253,6 @@ export function ClaudeFormFields({
     defaultOpusModel ||
     defaultFableModel ||
     subagentModel ||
-    (!isXaiOauthPreset && apiFormat !== "anthropic") ||
     apiKeyField !== "ANTHROPIC_AUTH_TOKEN" ||
     customUserAgent ||
     hasRequestOverrides
@@ -767,36 +766,75 @@ export function ClaudeFormFields({
 
   const endpointSection = (
     <>
-      {/* Base URL 输入框 */}
+      {/* Base URL 输入框 + 上游格式选择（仅非云服务商显示） */}
       {shouldShowSpeedTest && (
-        <EndpointField
-          id="baseUrl"
-          label={t("providerForm.apiEndpoint")}
-          value={baseUrl}
-          onChange={onBaseUrlChange}
-          placeholder={t("providerForm.apiEndpointPlaceholder")}
-          hint={
-            apiFormat === "openai_responses"
-              ? t("providerForm.apiHintResponses")
-              : apiFormat === "openai_chat"
-                ? t("providerForm.apiHintOAI")
-                : apiFormat === "gemini_native"
-                  ? t("providerForm.apiHintGeminiNative")
-                  : t("providerForm.apiHint")
-          }
-          fullUrlHint={
-            apiFormat === "gemini_native"
-              ? t("providerForm.fullUrlHintGeminiNative")
-              : undefined
-          }
-          showManageButton={showEndpointTools}
-          onManageClick={
-            showEndpointTools ? () => onEndpointModalToggle(true) : undefined
-          }
-          showFullUrlToggle={showEndpointTools && !isXaiOauthPreset}
-          isFullUrl={isFullUrl}
-          onFullUrlChange={onFullUrlChange}
-        />
+        <div className="flex flex-wrap items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <EndpointField
+              id="baseUrl"
+              label={t("providerForm.apiEndpoint")}
+              value={baseUrl}
+              onChange={onBaseUrlChange}
+              placeholder={t("providerForm.apiEndpointPlaceholder")}
+              hint={
+                apiFormat === "openai_responses"
+                  ? t("providerForm.apiHintResponses")
+                  : apiFormat === "openai_chat"
+                    ? t("providerForm.apiHintOAI")
+                    : apiFormat === "gemini_native"
+                      ? t("providerForm.apiHintGeminiNative")
+                      : t("providerForm.apiHint")
+              }
+              fullUrlHint={
+                apiFormat === "gemini_native"
+                  ? t("providerForm.fullUrlHintGeminiNative")
+                  : undefined
+              }
+              showManageButton={showEndpointTools}
+              onManageClick={
+                showEndpointTools ? () => onEndpointModalToggle(true) : undefined
+              }
+              showFullUrlToggle={showEndpointTools && !isXaiOauthPreset}
+              isFullUrl={isFullUrl}
+              onFullUrlChange={onFullUrlChange}
+            />
+          </div>
+          {category !== "cloud_provider" && !isXaiOauthPreset && (
+            <Select value={apiFormat} onValueChange={onApiFormatChange}>
+              <SelectTrigger
+                id="apiFormat"
+                className="w-[150px] shrink-0 mt-[26px]"
+                aria-label={t("providerForm.apiFormat", {
+                  defaultValue: "上游格式",
+                })}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="anthropic">
+                  {t("providerForm.apiFormatAnthropic", {
+                    defaultValue: "Anthropic Messages (原生)",
+                  })}
+                </SelectItem>
+                <SelectItem value="openai_chat">
+                  {t("providerForm.apiFormatOpenAIChat", {
+                    defaultValue: "OpenAI Chat Completions (需转换)",
+                  })}
+                </SelectItem>
+                <SelectItem value="openai_responses">
+                  {t("providerForm.apiFormatOpenAIResponses", {
+                    defaultValue: "OpenAI Responses API (需转换)",
+                  })}
+                </SelectItem>
+                <SelectItem value="gemini_native">
+                  {t("providerForm.apiFormatGeminiNative", {
+                    defaultValue: "Gemini Native generateContent (需转换)",
+                  })}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       )}
     </>
   );
@@ -821,54 +859,7 @@ export function ClaudeFormFields({
     </>
   );
 
-  // 上游格式、认证字段：经典布局放在高级选项里，Stack 布局放在连接区。
-  const apiFormatField = (
-    <>
-      {/* 上游格式选择（仅非云服务商显示） */}
-      {category !== "cloud_provider" && !isXaiOauthPreset && (
-        <div className="space-y-2">
-          <FormLabel htmlFor="apiFormat">
-            {t("providerForm.apiFormat", { defaultValue: "上游格式" })}
-          </FormLabel>
-          <Select value={apiFormat} onValueChange={onApiFormatChange}>
-            <SelectTrigger id="apiFormat" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="anthropic">
-                {t("providerForm.apiFormatAnthropic", {
-                  defaultValue: "Anthropic Messages (原生)",
-                })}
-              </SelectItem>
-              <SelectItem value="openai_chat">
-                {t("providerForm.apiFormatOpenAIChat", {
-                  defaultValue: "OpenAI Chat Completions (需转换)",
-                })}
-              </SelectItem>
-              <SelectItem value="openai_responses">
-                {t("providerForm.apiFormatOpenAIResponses", {
-                  defaultValue: "OpenAI Responses API (需转换)",
-                })}
-              </SelectItem>
-              <SelectItem value="gemini_native">
-                {t("providerForm.apiFormatGeminiNative", {
-                  defaultValue: "Gemini Native generateContent (需转换)",
-                })}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs leading-relaxed text-fg-2">
-            {t("providerForm.apiFormatHint", {
-              defaultValue:
-                "供应商原生为 Anthropic Messages API 就选 Anthropic Messages（直连，不转换格式）；使用 Chat Completions 协议就选 Chat；使用 Responses API 就选 Responses；使用 Gemini generateContent 协议就选 Gemini Native。Chat、Responses 与 Gemini Native 均需开启路由接管才能转换为 Anthropic Messages。",
-            })}
-          </p>
-        </div>
-      )}
-    </>
-  );
-
-  // 认证字段选择器
+  // 认证字段选择器：经典布局放在高级选项里，Stack 布局放在 Key 旁边。
   const authFieldSelect = (
     <div className="space-y-2">
       <FormLabel>
@@ -922,7 +913,6 @@ export function ClaudeFormFields({
     return (
       <>
         {oauthSections}
-        {apiFormatField}
         {apiKeySection}
         {showAuthField && authFieldSelect}
         {templateSection}
@@ -1021,8 +1011,6 @@ export function ClaudeFormFields({
             </p>
           )}
           <CollapsibleContent className="space-y-4 pt-2">
-            {apiFormatField}
-
             {authFieldSelect}
 
             {/* 模型映射 */}
