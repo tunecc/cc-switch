@@ -1923,6 +1923,7 @@
     "modelNoDisplayName": "/model には表示されません",
     "requestModelLabel": "リクエストモデル",
     "modelOneMHeader": "1M 対応を宣言",
+    "modelOneMToggleAll": "1M を一括選択",
     "modelOneMLabel": "1M",
     "copilotOneMUnavailable": "Copilot にはこのモデルの 1M 版がありません",
     "copilotOneMMismatch": "Copilot には {{models}} の 1M 版がありません。リクエストは通常版にフォールバックしますが、Claude Code は 1M のコンテキストを前提にするため、長いセッションで上限を超える可能性があります。1M のチェックを外してください。",
