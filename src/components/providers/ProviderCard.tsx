@@ -71,6 +71,8 @@ import {
 } from "./OpenTerminalDialog";
 import type { CardChip, CardPresentation, CardTone } from "./presentation";
 import { appHas } from "@/config/appSpecs";
+import { getCurrentModel, isModelCapableApp } from "@/utils/providerModelUtils";
+import { ModelQuickSwitchDialog } from "@/components/providers/ModelQuickSwitch/ModelQuickSwitchDialog";
 
 const copilotPlan = (data: unknown) => (data as CopilotQuota).plan;
 
@@ -446,6 +448,16 @@ export function ProviderCard({
     ? t("usage.collapse", { defaultValue: "收起" })
     : t("usage.expand", { defaultValue: "展开" });
 
+  const [modelDialogOpen, setModelDialogOpen] = useState(false);
+
+  const currentModelText = useMemo(
+    () =>
+      isModelCapableApp(appId)
+        ? getCurrentModel(appId, provider.settingsConfig)
+        : "",
+    [appId, provider.settingsConfig],
+  );
+
   useEffect(() => {
     if (hasMultiplePlans) {
       setIsExpanded(true);
@@ -568,6 +580,14 @@ export function ProviderCard({
             >
               {provider.name}
             </h3>
+            {isModelCapableApp(appId) && currentModelText && (
+              <span
+                className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground max-w-[140px] truncate"
+                title={currentModelText}
+              >
+                {currentModelText}
+              </span>
+            )}
             {presentation.chips.map((chip) => (
               <CardChipBadge key={chip.key} chip={chip} />
             ))}
@@ -783,6 +803,11 @@ export function ProviderCard({
                 ? () => onDuplicate(provider)
                 : undefined
             }
+            onQuickModel={
+              isModelCapableApp(appId)
+                ? () => setModelDialogOpen(true)
+                : undefined
+            }
             onTest={
               onTest && supportsConnectivityCheck(appId, provider)
                 ? () => onTest(provider)
@@ -829,6 +854,15 @@ export function ProviderCard({
             inline={false}
           />
         </div>
+      )}
+
+      {isModelCapableApp(appId) && provider && (
+        <ModelQuickSwitchDialog
+          provider={provider}
+          appId={appId}
+          open={modelDialogOpen}
+          onOpenChange={setModelDialogOpen}
+        />
       )}
     </div>
   );
