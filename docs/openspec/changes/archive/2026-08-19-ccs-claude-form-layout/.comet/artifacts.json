@@ -1,0 +1,9 @@
+{
+  "openspec_proposal": "docs/openspec/changes/ccs-claude-form-layout/proposal.md",
+  "openspec_design": "docs/openspec/changes/ccs-claude-form-layout/design.md",
+  "openspec_tasks": "docs/openspec/changes/ccs-claude-form-layout/tasks.md",
+  "openspec_delta_spec": "docs/openspec/changes/ccs-claude-form-layout/specs/claude-form-layout/spec.md",
+  "handoff_context": "docs/openspec/changes/archive/2026-08-19-ccs-claude-form-layout/.comet/handoff/design-context.json",
+  "handoff_markdown": "docs/openspec/changes/archive/2026-08-19-ccs-claude-form-layout/.comet/handoff/design-context.md",
+  "archive_directory": "docs/openspec/changes/archive/2026-08-19-ccs-claude-form-layout"
+}
