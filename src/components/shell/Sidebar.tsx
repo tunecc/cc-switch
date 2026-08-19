@@ -22,7 +22,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import type { AppId } from "@/lib/api";
-import type { VisibleApps } from "@/types";
+import type { VisibleApps, VisibleSidebarPanels } from "@/types";
 import { APP_IDS } from "@/config/appConfig";
 import type { GlobalPage, SettingsSection, View } from "@/lib/navigation";
 import { isAppPage } from "@/lib/navigation";
@@ -45,6 +45,8 @@ interface SidebarProps {
   activeApp: AppId;
   view: View;
   visibleApps: VisibleApps;
+  /** fork：侧边栏全局项（MCP / Skills / 会话）的可见性，未传时全部显示 */
+  visibleSidebarPanels?: VisibleSidebarPanels;
   settingsSection: SettingsSection;
   onSelectApp: (app: AppId) => void;
   onSelectPage: (page: GlobalPage | "settings") => void;
@@ -202,6 +204,7 @@ function MainDirectory({
   activeApp,
   view,
   visibleApps,
+  visibleSidebarPanels,
   onSelectApp,
   onSelectPage,
   appsUpdateAvailable = false,
@@ -240,7 +243,12 @@ function MainDirectory({
       icon: ChartColumn,
       trailing: todayLabel,
     },
-  ];
+  ].filter(
+    (item) =>
+      visibleSidebarPanels?.[
+        item.page as "mcp" | "skills" | "sessions"
+      ] !== false,
+  );
 
   const isGlobalSelected = (page: GlobalPage) =>
     view === page || (page === "skills" && view === "skillsDiscovery");
