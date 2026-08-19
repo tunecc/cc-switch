@@ -1671,6 +1671,7 @@
     "modelNoDisplayName": "/model には表示されません",
     "requestModelLabel": "リクエストモデル",
     "modelOneMHeader": "1M 対応を宣言",
+    "modelOneMToggleAll": "1M を一括選択",
     "modelOneMLabel": "1M",
     "fallbackModelLabel": "既定フォールバックモデル",
     "fallbackModelHelpDirect": "ANTHROPIC_MODEL に書き込まれ、Claude Code の起動時のメインモデルになります。バックグラウンドタスクは Haiku の枠を使います。",
