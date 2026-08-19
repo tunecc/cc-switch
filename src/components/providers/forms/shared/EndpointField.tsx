@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ interface EndpointFieldProps {
   showFullUrlToggle?: boolean;
   isFullUrl?: boolean;
   onFullUrlChange?: (value: boolean) => void;
+  rightSlot?: ReactNode;
 }
 
 export function EndpointField({
@@ -34,6 +36,7 @@ export function EndpointField({
   showFullUrlToggle = false,
   isFullUrl = false,
   onFullUrlChange,
+  rightSlot,
 }: EndpointFieldProps) {
   const { t } = useTranslation();
 
@@ -92,14 +95,18 @@ export function EndpointField({
           </button>
         ) : null}
       </div>
-      <Input
-        id={id}
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete="off"
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          id={id}
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="min-w-0 flex-1"
+        />
+        {rightSlot}
+      </div>
       {effectiveHint ? (
         <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
           <p className="text-xs text-amber-600 dark:text-amber-400">
