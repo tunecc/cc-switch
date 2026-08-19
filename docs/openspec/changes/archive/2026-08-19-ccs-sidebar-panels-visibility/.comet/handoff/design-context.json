@@ -1,0 +1,14 @@
+{
+  "change": "ccs-sidebar-panels-visibility",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "101d7753117ec051ddf3e4873b6a6c2a3f913721b47190323845faff2a2e86b9",
+  "files": [
+    { "path": "docs/openspec/changes/ccs-sidebar-panels-visibility/proposal.md", "sha256": "e8930d67d0c347e70a60f048bd451d16d5b2b37dfed3619644424dc1bab87719" },
+    { "path": "docs/openspec/changes/ccs-sidebar-panels-visibility/design.md", "sha256": "c6918674287d403167233ac2a16df2926972de1d1fe3b8b303fe817454f7efb5" },
+    { "path": "docs/openspec/changes/ccs-sidebar-panels-visibility/tasks.md", "sha256": "452a7ae43570c94858d45b7848242602096f6c556e236fceef6a82ad4c8393fb" },
+    { "path": "docs/openspec/changes/ccs-sidebar-panels-visibility/specs/sidebar-panels-visibility/spec.md", "sha256": "c9212638e2d8a039709479b6e151b538aad93d8fe110c94c6eac0f7c72fe4c21" }
+  ]
+}
