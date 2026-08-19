@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Monitor, Moon, Sun } from "lucide-react";
+import { Boxes, ChevronRight, History, Monitor, Moon, Sun, Wrench } from "lucide-react";
 import type { SettingsFormState } from "@/hooks/useSettings";
 import { useTheme } from "@/components/theme-provider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { isLinux } from "@/lib/platform";
+import { cn } from "@/lib/utils";
 import { TerminalSelect } from "@/components/settings/TerminalSettings";
 import {
   SettingsBlock,
@@ -125,54 +126,7 @@ export function GeneralSection({
               void onAutoSave({ showProfileSwitcher: value })
             }
           />
-          <SettingsSwitchRow
-            label={t("settings.sidebarPanels.skills")}
-            checked={settings.visibleSidebarPanels?.skills ?? true}
-            onCheckedChange={(value) =>
-              void onAutoSave({
-                visibleSidebarPanels: {
-                  ...(settings.visibleSidebarPanels ?? {
-                    skills: true,
-                    sessions: true,
-                    mcp: true,
-                  }),
-                  skills: value,
-                },
-              })
-            }
-          />
-          <SettingsSwitchRow
-            label={t("settings.sidebarPanels.sessions")}
-            checked={settings.visibleSidebarPanels?.sessions ?? true}
-            onCheckedChange={(value) =>
-              void onAutoSave({
-                visibleSidebarPanels: {
-                  ...(settings.visibleSidebarPanels ?? {
-                    skills: true,
-                    sessions: true,
-                    mcp: true,
-                  }),
-                  sessions: value,
-                },
-              })
-            }
-          />
-          <SettingsSwitchRow
-            label={t("settings.sidebarPanels.mcp")}
-            checked={settings.visibleSidebarPanels?.mcp ?? true}
-            onCheckedChange={(value) =>
-              void onAutoSave({
-                visibleSidebarPanels: {
-                  ...(settings.visibleSidebarPanels ?? {
-                    skills: true,
-                    sessions: true,
-                    mcp: true,
-                  }),
-                  mcp: value,
-                },
-              })
-            }
-          />
+          <SidebarPanelPillRow settings={settings} onAutoSave={onAutoSave} />
         </SettingsCard>
       </SettingsBlock>
 
@@ -257,5 +211,88 @@ export function GeneralSection({
         </SettingsCard>
       </SettingsBlock>
     </>
+  );
+}
+
+interface SidebarPanelButtonProps {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}
+
+function SidebarPanelButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: SidebarPanelButtonProps) {
+  return (
+    <Button
+      type="button"
+      onClick={onClick}
+      size="sm"
+      variant={active ? "default" : "ghost"}
+      className={cn(
+        "min-w-[90px] w-auto gap-1.5 px-3",
+        active ? "shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted",
+      )}
+    >
+      {icon}
+      {label}
+    </Button>
+  );
+}
+
+/** fork：侧边面板入口可见性的紧凑 pill 开关行 */
+function SidebarPanelPillRow({
+  settings,
+  onAutoSave,
+}: {
+  settings: GeneralSectionProps["settings"];
+  onAutoSave: GeneralSectionProps["onAutoSave"];
+}) {
+  const { t } = useTranslation();
+  const panels = settings.visibleSidebarPanels ?? {
+    skills: true,
+    sessions: true,
+    mcp: true,
+  };
+  const toggle = (key: keyof typeof panels) =>
+    void onAutoSave({
+      visibleSidebarPanels: { ...panels, [key]: !panels[key] },
+    });
+
+  return (
+    <section className="space-y-2">
+      <header className="space-y-1">
+        <h3 className="text-sm font-medium">
+          {t("settings.sidebarPanels.title")}
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          {t("settings.sidebarPanels.description")}
+        </p>
+      </header>
+      <div className="flex flex-wrap gap-1 rounded-md border border-border-default bg-background p-1">
+        <SidebarPanelButton
+          active={panels.skills}
+          onClick={() => toggle("skills")}
+          icon={<Wrench className="h-3.5 w-3.5" />}
+          label={t("settings.sidebarPanels.skills")}
+        />
+        <SidebarPanelButton
+          active={panels.sessions}
+          onClick={() => toggle("sessions")}
+          icon={<History className="h-3.5 w-3.5" />}
+          label={t("settings.sidebarPanels.sessions")}
+        />
+        <SidebarPanelButton
+          active={panels.mcp}
+          onClick={() => toggle("mcp")}
+          icon={<Boxes className="h-3.5 w-3.5" />}
+          label={t("settings.sidebarPanels.mcp")}
+        />
+      </div>
+    </section>
   );
 }
