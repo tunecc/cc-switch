@@ -1935,6 +1935,7 @@
     "modelNoDisplayName": "Not shown in /model",
     "requestModelLabel": "Requested model",
     "modelOneMHeader": "Declare 1M",
+    "modelOneMToggleAll": "Toggle all 1M",
     "modelOneMLabel": "1M",
     "copilotOneMUnavailable": "Copilot has no 1M version of this model",
     "copilotOneMMismatch": "Copilot has no 1M version of {{models}}: requests fall back to the regular model, but Claude Code still plans for a 1M context, so long sessions may exceed the limit. Uncheck 1M.",
