@@ -136,6 +136,7 @@ import HermesMemoryPanel, {
 import {
   APP_IDS,
   DEFAULT_VISIBLE_APPS,
+  DEFAULT_VISIBLE_SIDEBAR_PANELS,
   isProxyAppId,
 } from "@/config/appConfig";
 
@@ -229,6 +230,11 @@ function App() {
     }),
     [settingsData?.visibleApps],
   );
+
+  const visibleSidebarPanels = {
+    ...DEFAULT_VISIBLE_SIDEBAR_PANELS,
+    ...settingsData?.visibleSidebarPanels,
+  };
 
   const getFirstVisibleApp = (): AppId => {
     return APP_IDS.find((app) => visibleApps[app]) ?? "claude";
@@ -1559,6 +1565,7 @@ function App() {
           activeApp={activeApp}
           view={currentView}
           visibleApps={visibleApps}
+          visibleSidebarPanels={visibleSidebarPanels}
           settingsSection={settingsSection}
           onSelectApp={selectApp}
           onSelectPage={openPageFromNav}
