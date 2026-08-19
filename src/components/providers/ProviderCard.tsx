@@ -33,14 +33,12 @@ import { useProviderHealth } from "@/lib/query/failover";
 import { useUsageQuery } from "@/lib/query/queries";
 import { resolveProviderIcon } from "@/utils/providerIcon";
 import { isAdditiveAppId, isProxyAppId } from "@/config/appConfig";
-<<<<<<< HEAD
 import { ProviderCardActions } from "./ProviderCardActions";
 import type { CardChip, CardPresentation, CardTone } from "./presentation";
 import {
   extractModelBadgeForProvider,
   isModelCapableApp,
 } from "@/utils/providerModelUtils";
->>>>>>> c4b8e0e3 (feat(fork): align model badge with upstream extractModelBadge)
 import { ModelQuickSwitchDialog } from "@/components/providers/ModelQuickSwitch/ModelQuickSwitchDialog";
 
 interface DragHandleProps {
@@ -640,67 +638,6 @@ export function ProviderCard({
               onOpenTerminal ? () => onOpenTerminal(provider) : undefined
             }
           />
-=======
-
-          <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 group-hover:pointer-events-auto group-focus-within:pointer-events-auto transition-opacity duration-200">
-            <ProviderActions
-              appId={appId}
-              isCurrent={isCurrent}
-              isInConfig={isInConfig}
-              isTesting={isTesting}
-              isProxyTakeover={isProxyTakeover}
-              isOfficialBlockedByProxy={isOfficialBlockedByProxy}
-              isReadOnly={isHermesReadOnly}
-              isOmo={isAnyOmo}
-              onQuickModel={
-                isModelCapableApp(appId)
-                  ? () => setModelDialogOpen(true)
-                  : undefined
-              }
-              onSwitch={() => onSwitch(provider)}
-              onEdit={() => onEdit(provider)}
-              onDuplicate={() => onDuplicate(provider)}
-              onTest={
-                // 连通检测对第三方/自定义/Copilot/Codex-OAuth 供应商开放（这些正是旧的
-                // 真实请求探测会误报、而可达性探测能正确处理的对象）。官方供应商
-                // (category === "official") 一律隐藏：它们 base_url 故意留空、走客户端
-                // 默认/OAuth 端点，cc-switch 没有可靠的探测目标（尤其 Claude Desktop
-                // 官方是原生 1P 模式，根本不在请求路径上）。
-                onTest && appId !== "mcode" && provider.category !== "official"
-                  ? () => onTest(provider)
-                  : undefined
-              }
-              onConfigureUsage={
-                (isOfficial && !supportsOfficialSubscription) ||
-                isCopilot ||
-                (isCodexOauth && !isBoundCodexOfficial) ||
-                isXaiOauth
-                  ? undefined
-                  : () => onConfigureUsage(provider)
-              }
-              onDelete={() => onDelete(provider)}
-              onRemoveFromConfig={
-                onRemoveFromConfig
-                  ? () => onRemoveFromConfig(provider)
-                  : undefined
-              }
-              onDisableOmo={handleDisableAnyOmo}
-              onOpenTerminal={
-                onOpenTerminal ? () => onOpenTerminal(provider) : undefined
-              }
-              isAutoFailoverEnabled={isAutoFailoverEnabled}
-              isInFailoverQueue={isInFailoverQueue}
-              onToggleFailover={
-                supportsOfficialRouting ? undefined : onToggleFailover
-              }
-              // OpenClaw: default model
-              isDefaultModel={isDefaultModel}
-              isRemovalProtected={isRemovalProtected}
-              isStateChangeProtected={isStateChangeProtected}
-              defaultModelOptions={openclawDefaultModelOptions}
-              onSetAsDefault={onSetAsDefault}
-            />
-          </div>
         </div>
       </div>
 
