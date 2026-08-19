@@ -133,7 +133,13 @@ import OpenClawHealthBanner from "@/components/openclaw/OpenClawHealthBanner";
 import HermesMemoryPanel, {
   HermesMemorySaveButton,
 } from "@/components/hermes/HermesMemoryPanel";
-import { APP_IDS, DEFAULT_VISIBLE_APPS, isModeAppId } from "@/config/appConfig";
+import {
+  APP_IDS,
+  DEFAULT_VISIBLE_APPS,
+  DEFAULT_VISIBLE_SIDEBAR_PANELS,
+  isModeAppId,
+  isProxyAppId,
+} from "@/config/appConfig";
 
 interface SyncStatusUpdatedPayload {
   source?: string;
@@ -227,6 +233,11 @@ function App() {
     }),
     [settingsData?.visibleApps],
   );
+
+  const visibleSidebarPanels = {
+    ...DEFAULT_VISIBLE_SIDEBAR_PANELS,
+    ...settingsData?.visibleSidebarPanels,
+  };
 
   const getFirstVisibleApp = (): AppId => {
     return APP_IDS.find((app) => visibleApps[app]) ?? "claude";
@@ -1546,6 +1557,7 @@ function App() {
           activeApp={activeApp}
           view={currentView}
           visibleApps={visibleApps}
+          visibleSidebarPanels={visibleSidebarPanels}
           settingsSection={settingsSection}
           onSelectApp={selectApp}
           onSelectPage={openPageFromNav}
