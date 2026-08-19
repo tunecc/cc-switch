@@ -28,7 +28,7 @@ import {
   extractCodexBaseUrl,
   extractCodexExperimentalBearerToken,
 } from "@/utils/providerConfigUtils";
-import { extractGrokBuildBaseUrl } from "@/utils/grokBuildConfig";
+import { parseGrokBuildConfig } from "@/utils/grokBuildConfig";
 import { extractErrorMessage } from "@/utils/errorUtils";
 import { SearchableModelPicker } from "@/components/providers/forms/shared/SearchableModelPicker";
 import { Button } from "@/components/ui/button";
@@ -95,13 +95,18 @@ function extractCredentials(
           extractCodexExperimentalBearerToken(configText)?.trim() ||
           "",
       };
-    case "grokbuild":
+    case "grokbuild": {
+      // grokbuild 供应商的 settingsConfig 是 { config: <TOML> }（无 auth 字段），
+      // api_key 在 [model.<default>].api_key / env_key 里；env_key 只是变量名拿不到值。
+      const parsed = configText ? parseGrokBuildConfig(configText) : null;
       return {
-        baseUrl: configText
-          ? extractGrokBuildBaseUrl(configText).trim()
-          : "",
-        apiKey: asTrimmedString(auth.OPENAI_API_KEY),
+        baseUrl: parsed?.baseUrl?.trim() ?? "",
+        apiKey:
+          asTrimmedString(parsed?.apiKey) ||
+          asTrimmedString(auth.OPENAI_API_KEY) ||
+          "",
       };
+    }
     case "gemini":
       return {
         baseUrl: asTrimmedString(env.GOOGLE_GEMINI_BASE_URL),
