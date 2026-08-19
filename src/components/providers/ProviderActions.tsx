@@ -1,6 +1,7 @@
 import {
   Activity,
   BarChart3,
+  Boxes,
   Check,
   ChevronDown,
   Copy,
@@ -43,6 +44,7 @@ interface ProviderActionsProps {
   onDuplicate?: () => void;
   onTest?: () => void;
   onConfigureUsage?: () => void;
+  onQuickModel?: () => void;
   onDelete: () => void;
   onRemoveFromConfig?: () => void;
   onDisableOmo?: () => void;
@@ -85,6 +87,7 @@ export function ProviderActions({
   onDuplicate,
   onTest,
   onConfigureUsage,
+  onQuickModel,
   onDelete,
   onRemoveFromConfig,
   onDisableOmo,
@@ -443,6 +446,18 @@ export function ProviderActions({
         >
           <BarChart3 className="h-4 w-4" />
         </Button>
+
+        {onQuickModel && (
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onQuickModel}
+            title={t("providerModel.title")}
+            className={iconButtonClass}
+          >
+            <Boxes className="h-4 w-4" />
+          </Button>
+        )}
 
         {onOpenTerminal && (
           <Button

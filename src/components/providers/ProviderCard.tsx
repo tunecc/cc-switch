@@ -41,6 +41,8 @@ import { useUsageQuery } from "@/lib/query/queries";
 import { resolveProviderIcon } from "@/utils/providerIcon";
 import { ProviderStatusBadge } from "@/components/providers/ProviderStatusBadge";
 import { isAdditiveAppId, isProxyAppId } from "@/config/appConfig";
+import { getCurrentModel, isModelCapableApp } from "@/utils/providerModelUtils";
+import { ModelQuickSwitchDialog } from "@/components/providers/ModelQuickSwitch/ModelQuickSwitchDialog";
 
 interface DragHandleProps {
   attributes: DraggableAttributes;
@@ -328,6 +330,16 @@ export function ProviderCard({
 
   const [isExpanded, setIsExpanded] = useState(false);
 
+  const [modelDialogOpen, setModelDialogOpen] = useState(false);
+
+  const currentModelText = useMemo(
+    () =>
+      isModelCapableApp(appId)
+        ? getCurrentModel(appId, provider.settingsConfig)
+        : "",
+    [appId, provider.settingsConfig],
+  );
+
   useEffect(() => {
     if (hasMultiplePlans) {
       setIsExpanded(true);
@@ -433,6 +445,15 @@ export function ProviderCard({
               >
                 {provider.name}
               </h3>
+
+              {isModelCapableApp(appId) && currentModelText && (
+                <span
+                  className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground max-w-[140px] truncate"
+                  title={currentModelText}
+                >
+                  {currentModelText}
+                </span>
+              )}
 
               {isOmo && (
                 <span className="inline-flex items-center rounded-md bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
@@ -690,6 +711,11 @@ export function ProviderCard({
               isOfficialBlockedByProxy={isOfficialBlockedByProxy}
               isReadOnly={isHermesReadOnly}
               isOmo={isAnyOmo}
+              onQuickModel={
+                isModelCapableApp(appId)
+                  ? () => setModelDialogOpen(true)
+                  : undefined
+              }
               onSwitch={() => onSwitch(provider)}
               onEdit={() => onEdit(provider)}
               onDuplicate={() => onDuplicate(provider)}
@@ -749,6 +775,15 @@ export function ProviderCard({
             inline={false}
           />
         </div>
+      )}
+
+      {isModelCapableApp(appId) && provider && (
+        <ModelQuickSwitchDialog
+          provider={provider}
+          appId={appId}
+          open={modelDialogOpen}
+          onOpenChange={setModelDialogOpen}
+        />
       )}
     </div>
   );
