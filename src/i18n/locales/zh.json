@@ -852,6 +852,13 @@
       "showProviderSearch": "显示供应商搜索",
       "showProviderSearchDescription": "在供应商页顶部显示搜索按钮，可按名称、备注、官网和请求地址查找。关掉后仍可用 ⌘F / Ctrl+F 打开搜索"
     },
+    "sidebarPanels": {
+      "title": "侧边面板",
+      "description": "控制主页顶栏右侧面板入口的显示",
+      "skills": "Skills",
+      "sessions": "会话记录",
+      "mcp": "MCP 服务器"
+    },
     "terminal": {
       "title": "首选终端",
       "description": "选择点击终端按钮时使用的终端应用",

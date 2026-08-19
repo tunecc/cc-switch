@@ -840,6 +840,13 @@
       "showProviderSearch": "顯示供應商搜尋",
       "showProviderSearchDescription": "在供應商頁頂部顯示搜尋按鈕，可依名稱、備註、官網和請求位址查找。關閉後仍可用 ⌘F / Ctrl+F 開啟搜尋"
     },
+    "sidebarPanels": {
+      "title": "側邊面板",
+      "description": "控制主頁頂欄右側面板入口的顯示",
+      "skills": "Skills",
+      "sessions": "會話記錄",
+      "mcp": "MCP 伺服器"
+    },
     "terminal": {
       "title": "首選終端機",
       "description": "選擇點擊終端機按鈕時使用的終端機應用程式",

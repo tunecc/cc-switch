@@ -840,6 +840,13 @@
       "showProviderSearch": "プロバイダー検索を表示",
       "showProviderSearchDescription": "プロバイダー画面の上部に検索ボタンを表示し、名前・メモ・公式サイト・API アドレスで検索できます。非表示にしても ⌘F / Ctrl+F で検索を開けます"
     },
+    "sidebarPanels": {
+      "title": "サイドバーパネル",
+      "description": "メインページ上部パネル入口の表示を制御",
+      "skills": "Skills",
+      "sessions": "セッション履歴",
+      "mcp": "MCP サーバー"
+    },
     "terminal": {
       "title": "優先ターミナル",
       "description": "ターミナルボタンをクリックした時に使用するターミナルアプリを選択",
