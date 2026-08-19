@@ -1354,6 +1354,14 @@
     "noModelsFound": "一致するモデルが見つかりません",
     "requiredFields": "プロバイダー名、API エンドポイント、API Key、モデルを入力してください"
   },
+  "providerModel": {
+    "title": "モデルクイック切替",
+    "currentModel": "現在のモデル",
+    "applyOneM": "1M マークを適用",
+    "applied": "{{model}} に切り替えました",
+    "applyFailed": "モデルの適用に失敗しました",
+    "noCredentials": "先に編集フォームで API Key とエンドポイントを設定してください"
+  },
   "copilot": {
     "authSection": "GitHub Copilot 認証",
     "authStatus": "認証状態",

@@ -1366,6 +1366,14 @@
     "noModelsFound": "No models found",
     "requiredFields": "Please fill in provider name, API endpoint, API Key and model"
   },
+  "providerModel": {
+    "title": "Quick Model Switch",
+    "currentModel": "Current Model",
+    "applyOneM": "Apply 1M Marker",
+    "applied": "Switched to {{model}}",
+    "applyFailed": "Failed to apply model",
+    "noCredentials": "Please configure the API Key and endpoint in the edit form first"
+  },
   "copilot": {
     "authSection": "GitHub Copilot Authentication",
     "authStatus": "Authentication Status",

@@ -1366,6 +1366,14 @@
     "noModelsFound": "未找到匹配模型",
     "requiredFields": "请填写供应商名称、API 地址、API Key 和模型"
   },
+  "providerModel": {
+    "title": "模型快捷切换",
+    "currentModel": "当前模型",
+    "applyOneM": "应用 1M 标记",
+    "applied": "已切换为 {{model}}",
+    "applyFailed": "应用模型失败",
+    "noCredentials": "请先在编辑表单配置 API Key 与请求地址"
+  },
   "copilot": {
     "authSection": "GitHub Copilot 认证",
     "authStatus": "认证状态",
