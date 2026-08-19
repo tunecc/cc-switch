@@ -1,0 +1,14 @@
+{
+  "change": "ccs-home-model-display",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "7799a2ef03d949727eda21d5d9979487fae60ac8b8a649e0cf0116f3b7ebd14e",
+  "files": [
+    { "path": "docs/openspec/changes/ccs-home-model-display/proposal.md", "sha256": "61de28f2611691f9dee1aa50ac7328a393ef6dccdc674cec76300a6c0b8f1b73" },
+    { "path": "docs/openspec/changes/ccs-home-model-display/design.md", "sha256": "eae8fde1f274b07090d7b8adc0c92e1877636ba81d0bdbb51916ea7493518d51" },
+    { "path": "docs/openspec/changes/ccs-home-model-display/tasks.md", "sha256": "891298e9b7d7cafe597e672f705bcb014db39294a40645d7551c26ec88b108c8" },
+    { "path": "docs/openspec/changes/ccs-home-model-display/specs/provider-model-quick-view-switch/spec.md", "sha256": "1a026fc530c00e9066d4ac1ff7a94577c16b56bd1e2e17b9bf73021485c207a9" }
+  ]
+}
