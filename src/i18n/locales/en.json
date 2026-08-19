@@ -752,6 +752,13 @@
       "showProfileSwitcher": "Show project switcher",
       "showProfileSwitcherDescription": "Show the project switcher in the main page header"
     },
+    "sidebarPanels": {
+      "title": "Sidebar Panels",
+      "description": "Control toolbar panel entries visibility",
+      "skills": "Skills",
+      "sessions": "Sessions",
+      "mcp": "MCP Servers"
+    },
     "terminal": {
       "title": "Preferred Terminal",
       "description": "Choose which terminal app to use when clicking the terminal button",

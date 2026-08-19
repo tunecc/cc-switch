@@ -752,6 +752,13 @@
       "showProfileSwitcher": "显示项目切换",
       "showProfileSwitcherDescription": "在主页面顶部显示项目切换入口"
     },
+    "sidebarPanels": {
+      "title": "侧边面板",
+      "description": "控制主页顶栏右侧面板入口的显示",
+      "skills": "Skills",
+      "sessions": "会话记录",
+      "mcp": "MCP 服务器"
+    },
     "terminal": {
       "title": "首选终端",
       "description": "选择点击终端按钮时使用的终端应用",

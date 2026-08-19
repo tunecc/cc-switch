@@ -740,6 +740,13 @@
       "showProfileSwitcher": "プロジェクト切り替えを表示",
       "showProfileSwitcherDescription": "メイン画面上部にプロジェクト切り替えを表示します"
     },
+    "sidebarPanels": {
+      "title": "サイドバーパネル",
+      "description": "メインページ上部パネル入口の表示を制御",
+      "skills": "Skills",
+      "sessions": "セッション履歴",
+      "mcp": "MCP サーバー"
+    },
     "terminal": {
       "title": "優先ターミナル",
       "description": "ターミナルボタンをクリックした時に使用するターミナルアプリを選択",
