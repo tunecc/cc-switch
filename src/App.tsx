@@ -138,8 +138,10 @@ import HermesMemoryPanel, {
 import {
   APP_IDS,
   DEFAULT_VISIBLE_APPS,
+  DEFAULT_VISIBLE_SIDEBAR_PANELS,
   isModeAppId,
   isPiFamilyApp,
+  isProxyAppId,
   orderAppIds,
 } from "@/config/appConfig";
 import type { PiFamilyAppId } from "@/lib/api/pi";
@@ -236,6 +238,11 @@ function App() {
     }),
     [settingsData?.visibleApps],
   );
+
+  const visibleSidebarPanels = {
+    ...DEFAULT_VISIBLE_SIDEBAR_PANELS,
+    ...settingsData?.visibleSidebarPanels,
+  };
 
   const getFirstVisibleApp = (): AppId => {
     return (
@@ -1770,6 +1777,7 @@ function App() {
           activeApp={activeApp}
           view={currentView}
           visibleApps={visibleApps}
+          visibleSidebarPanels={visibleSidebarPanels}
           settingsSection={settingsSection}
           onSelectApp={selectApp}
           onSelectPage={openPageFromNav}
