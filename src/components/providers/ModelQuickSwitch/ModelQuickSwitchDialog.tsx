@@ -143,7 +143,10 @@ export function ModelQuickSwitchDialog({
   }, [open]);
 
   const currentModel = useMemo(
-    () => (isModelCapableApp(appId) ? getCurrentModel(appId, provider.settingsConfig) : ""),
+    () =>
+      isModelCapableApp(appId)
+        ? getCurrentModel(appId, provider.settingsConfig)
+        : "",
     [appId, provider.settingsConfig],
   );
 
@@ -186,13 +189,13 @@ export function ModelQuickSwitchDialog({
     setIsSaving(true);
     try {
       // applyModelToSettings 深拷贝后写回，provider 原对象不被修改
-      const next = applyModelToSettings(
-        appId,
-        provider.settingsConfig,
-        model,
-        { withOneM: oneMEnabled },
+      const next = applyModelToSettings(appId, provider.settingsConfig, model, {
+        withOneM: oneMEnabled,
+      });
+      await providersApi.update(
+        { ...provider, settingsConfig: next },
+        appId as AppId,
       );
-      await providersApi.update({ ...provider, settingsConfig: next }, appId as AppId);
       await queryClient.invalidateQueries({ queryKey: ["providers", appId] });
       toast.success(t("providerModel.applied", { model }));
       onOpenChange(false);
