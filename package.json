@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm tauri dev",
-    "dev:fork": "CC_SWITCH_TEST_HOME=\"$HOME/.cc-switch-fork-dev\" pnpm tauri dev -c src-tauri/tauri.dev.conf.json",
+    "dev:fork": "CCS_DEV_PANEL=1 CC_SWITCH_TEST_HOME=\"$HOME/.cc-switch-fork-dev\" pnpm tauri dev -c src-tauri/tauri.dev.conf.json",
     "build": "pnpm tauri build",
     "tauri": "tauri",
     "dev:renderer": "vite",
