@@ -30,6 +30,9 @@ export default defineConfig(({ command }) => ({
   envPrefix: ["VITE_", "TAURI_"],
   define: {
     __CCS_FORK_BUILD__: JSON.stringify(true),
+    __CCS_DEV_PANEL__: JSON.stringify(
+      Boolean(process.env.CCS_DEV_PANEL === "1"),
+    ),
   },
 }));
 
