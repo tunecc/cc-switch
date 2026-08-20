@@ -7,6 +7,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { DEV_PANEL_ENABLED } from "@/config/forkBuild";
 
 // fork 仓库版本号（与 package.json/Cargo.toml/tauri.conf.json 三处保持一致）
 const FORK_VERSION = "3.19.2-fork.1";
@@ -17,11 +18,13 @@ interface DevPanelProps {
 }
 
 /**
- * Fork 开发预览面板。仅 fork 构建可用（由调用方在 IS_FORK_BUILD 守卫下挂载）。
+ * Fork 开发预览面板。仅 fork 构建且开发模式下可见（由调用方在
+ * IS_FORK_BUILD && DEV_PANEL_ENABLED 守卫下挂载）。
  * 本轮为占位：集中展示 fork 信息与后续魔改功能入口。
  */
 export function DevPanel({ open, onOpenChange }: DevPanelProps) {
   const { t } = useTranslation();
+  if (!DEV_PANEL_ENABLED) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
