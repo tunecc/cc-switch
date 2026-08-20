@@ -3,7 +3,6 @@ mod agy_config;
 mod agy_smoke_tests;
 mod app_config;
 mod app_store;
-mod app_update;
 mod auto_launch;
 mod claude_desktop_config;
 mod claude_mcp;
@@ -632,18 +631,6 @@ pub fn run() {
 
             #[cfg(target_os = "windows")]
             set_windows_app_user_model_id(app.handle());
-
-            // 注册 Updater 插件（桌面端）；放在 logger 之后，确保失败可诊断。
-            #[cfg(desktop)]
-            {
-                if let Err(e) = app
-                    .handle()
-                    .plugin(tauri_plugin_updater::Builder::new().build())
-                {
-                    // 若配置不完整（如缺少 pubkey），跳过 Updater 而不中断应用
-                    log::warn!("初始化 Updater 插件失败，已跳过：{e}");
-                }
-            }
 
             // 注入 AppHandle 给 usage_events，让无 AppHandle 持有的写日志路径
             // 也能向前端推送 `usage-log-recorded`。
@@ -1382,9 +1369,6 @@ pub fn run() {
                 }
             }
 
-            // 自动更新：开关打开时后台定时检查并下载新版本（装不装由用户确认）
-            crate::app_update::spawn_background_loop(app.handle().clone());
-
             // 异常退出恢复 + 代理状态自动恢复
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
@@ -1598,8 +1582,6 @@ pub fn run() {
             commands::set_log_config,
             commands::restart_app,
             commands::install_update_and_restart,
-            commands::get_auto_update_status,
-            commands::download_app_update,
             commands::check_app_update_available,
             commands::check_for_updates,
             commands::open_portable_update_download,

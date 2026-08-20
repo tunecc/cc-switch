@@ -542,11 +542,7 @@ export function SettingsPage({
       case "about":
         return (
           <>
-            <AboutSection
-              isPortable={isPortable}
-              autoUpdateEnabled={settings?.autoUpdateEnabled ?? false}
-              onAutoSave={handleAutoSave}
-            />
+            <AboutSection isPortable={isPortable} />
             {IS_FORK_BUILD && DEV_PANEL_ENABLED && (
               <div className="mt-4 flex justify-end">
                 <Button
