@@ -1,0 +1,7 @@
+{
+  "openspec_proposal": "docs/openspec/changes/ccs-fork-app-name-cc-switch/proposal.md",
+  "openspec_design": "docs/openspec/changes/ccs-fork-app-name-cc-switch/design.md",
+  "openspec_tasks": "docs/openspec/changes/ccs-fork-app-name-cc-switch/tasks.md",
+  "openspec_delta_spec": "docs/openspec/changes/ccs-fork-app-name-cc-switch/specs/fork-build-identity/spec.md",
+  "archive_directory": "docs/openspec/changes/archive/2026-08-20-ccs-fork-app-name-cc-switch"
+}

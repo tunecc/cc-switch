@@ -200,14 +200,15 @@ function App() {
     });
 
   useEffect(() => {
-    // fork 构建：将 macOS Overlay 窗口标题设为 CC Switch (Fork)。
-    // Windows 端由 tauri.windows.conf.json 写死 title，无需此处处理。
-    // 非 Tauri 环境（如 pnpm dev:renderer 单跑、jsdom 测试）跳过 setTitle，
-    // 避免 getCurrentWindow() 访问 window.__TAURI_INTERNALS__ 报错。
+    // fork 构建：将 macOS Overlay 窗口标题设为 CC Switch。
+    // 应用名与窗口标题与上游一致（CC Switch），fork 仅通过版本号后缀与
+    // IS_FORK_BUILD 行为区分；Windows 端由 tauri.windows.conf.json 写死 title，
+    // 无需此处处理。非 Tauri 环境（如 pnpm dev:renderer 单跑、jsdom 测试）
+    // 跳过 setTitle，避免 getCurrentWindow() 访问 window.__TAURI_INTERNALS__ 报错。
     if (!IS_FORK_BUILD) return;
     if (!isTauri()) return;
     getCurrentWindow()
-      .setTitle("CC Switch (Fork)")
+      .setTitle("CC Switch")
       .catch((error) => {
         console.error("[App] Failed to set fork window title", error);
       });
