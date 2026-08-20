@@ -57,7 +57,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useImportExport } from "@/hooks/useImportExport";
 import { useTranslation } from "react-i18next";
 import type { SettingsFormState } from "@/hooks/useSettings";
-import { IS_FORK_BUILD } from "@/config/forkBuild";
+import { IS_FORK_BUILD, DEV_PANEL_ENABLED } from "@/config/forkBuild";
 import { DevPanel } from "@/components/devpanel/DevPanel";
 
 interface SettingsDialogProps {
@@ -511,7 +511,7 @@ export function SettingsPage({
 
               <TabsContent value="about" className="mt-0">
                 <AboutSection isPortable={isPortable} />
-                {IS_FORK_BUILD && (
+                {IS_FORK_BUILD && DEV_PANEL_ENABLED && (
                   <div className="mt-4 flex justify-end">
                     <Button
                       variant="ghost"
@@ -593,7 +593,7 @@ export function SettingsPage({
         </DialogContent>
       </Dialog>
 
-      {IS_FORK_BUILD && <DevPanel open={devPanelOpen} onOpenChange={setDevPanelOpen} />}
+      {IS_FORK_BUILD && DEV_PANEL_ENABLED && <DevPanel open={devPanelOpen} onOpenChange={setDevPanelOpen} />}
     </div>
   );
 }
