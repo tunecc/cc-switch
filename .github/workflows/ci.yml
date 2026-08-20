@@ -5,10 +5,7 @@ on:
     branches: [main]
   push:
     branches: [main]
-  # 每周一次全量：push 到 main 也按路径过滤后，靠它在缓存被淘汰后重新建起来
-  schedule:
-    - cron: "41 19 * * 0" # 周一 03:41（北京时间）
-  workflow_dispatch:
+  # fork：不保留定时全量与手动触发（上游靠它重建缓存；fork 的 push 到 main 本来就全量跑）。
 
 concurrency:
   # PR：同一个 PR 连推几次只跑最新一次，旧的直接取消。
@@ -70,9 +67,8 @@ jobs:
     name: Frontend Checks
     runs-on: ubuntu-latest
     needs: changes
-    # PR 和 push 到 main 都按路径过滤。缓存 key 精确命中时不会重存，main 全量跑并不能
-    # 预热什么；缓存被淘汰后由每周的定时全量重建。
-    if: needs.changes.outputs.frontend == 'true'
+    # fork：push 到 main 全量跑（无定时全量），保住 PR 恢复的缓存；PR 仍按路径过滤。
+    if: github.event_name != 'pull_request' || needs.changes.outputs.frontend == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -105,7 +101,7 @@ jobs:
     name: Frontend Tests (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+    if: github.event_name != 'pull_request' || needs.changes.outputs.frontend == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -134,7 +130,7 @@ jobs:
     name: Backend Checks
     runs-on: ${{ matrix.os }}
     needs: changes
-    if: needs.changes.outputs.backend == 'true'
+    if: github.event_name != 'pull_request' || needs.changes.outputs.backend == 'true'
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -209,7 +205,13 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 45
     needs: changes
-    if: needs.changes.outputs.backend == 'true'
+    # fork note: this job intermittently fails with LNK1327 / mt.exe c1010070
+    # when the Windows runner image's mt.exe cannot parse a manifest temp file
+    # on the WSL2 UNC TEMP path (\\wsl.localhost\...). The same flaky failure
+    # occurs upstream and is unrelated to fork changes. Don't let it block
+    # main; the result stays visible in the Actions UI.
+    continue-on-error: true
+    if: github.event_name != 'pull_request' || needs.changes.outputs.backend == 'true'
     permissions:
       contents: read
     steps:
