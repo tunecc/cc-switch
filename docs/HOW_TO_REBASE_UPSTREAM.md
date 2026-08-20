@@ -111,13 +111,13 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 
 | 文件 | 保留字段 / 范围 |
 | --- | --- |
-| `tauri.conf.json` | `productName`、`version` 等 fork 标识字段 |
+| `tauri.conf.json` | `productName`（`CC Switch`，与上游一致；fork 仅靠版本号后缀区分）、`version` 等 fork 标识字段 |
 | `package.json` | `version`（fork 版本号） |
 | `src-tauri/Cargo.toml` | `version`（与 `package.json` 对齐的 fork 版本号） |
 | `vite.config.ts` | `define` 中的 `__CCS_FORK_BUILD__` 等 fork 编译期常量 |
 | `src/config/forkBuild.ts` | fork 构建配置（整文件保留） |
 | `src/components/devpanel/` | fork 专属 devpanel 组件目录（整目录保留） |
-| `src-tauri/tauri.windows.conf.json` | Windows 平台 title（fork 标识 "CC Switch (Fork)"） |
+| `src-tauri/tauri.windows.conf.json` | Windows 平台 title（`CC Switch`，与上游一致） |
 | `src/App.tsx` | `IS_FORK_BUILD` + `isTauri` 双守卫下的 `setTitle` useEffect |
 | `src/components/settings/SettingsPage.tsx` | `IS_FORK_BUILD` 守卫下的 DevPanel 入口与挂载 |
 | `src/vite-env.d.ts` | `__CCS_FORK_BUILD__` 全局类型声明 |
