@@ -10,6 +10,7 @@ import {
   setCodexModelName,
 } from "@/utils/providerConfigUtils";
 import {
+  hasClaudeOneMMarker,
   setClaudeOneMMarker,
   stripClaudeOneMMarker,
 } from "@/components/providers/forms/hooks/useModelState";
@@ -104,6 +105,7 @@ export function getCurrentModel(
 export interface ModelBadgeInfo {
   label: string;
   title: string;
+  oneM?: boolean;
 }
 
 const CLAUDE_ROLE_MODEL_FIELDS: { role: string; field: string }[] = [
@@ -133,6 +135,10 @@ export function extractModelBadgeForProvider(
 
   switch (appId) {
     case "claude": {
+      const primaryRaw =
+        envString(env, "ANTHROPIC_DEFAULT_SONNET_MODEL").trim() ||
+        envString(env, "ANTHROPIC_MODEL").trim();
+      const oneM = primaryRaw ? hasClaudeOneMMarker(primaryRaw) : false;
       const roleModels = CLAUDE_ROLE_MODEL_FIELDS.map(({ role, field }) => {
         const raw = envString(env, field).trim();
         return { role, model: raw ? stripClaudeOneMMarker(raw).trim() : "" };
@@ -144,7 +150,7 @@ export function extractModelBadgeForProvider(
         const fallback = envString(env, "ANTHROPIC_MODEL").trim();
         if (!fallback) return null;
         const label = stripClaudeOneMMarker(fallback).trim();
-        return { label, title: label };
+        return { label, title: label, oneM };
       }
 
       const title = roleModels
@@ -154,9 +160,9 @@ export function extractModelBadgeForProvider(
       const uniqueModels = new Set(roleModels.map(({ model }) => model));
 
       if (hasAllRoleModels && uniqueModels.size === 1) {
-        return { label: roleModels[0].model, title };
+        return { label: roleModels[0].model, title, oneM };
       }
-      return { label: roleModels[0].model, title };
+      return { label: roleModels[0].model, title, oneM };
     }
     case "gemini": {
       const model = envString(env, "GEMINI_MODEL").trim();
