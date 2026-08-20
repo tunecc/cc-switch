@@ -1034,12 +1034,13 @@ function ProviderFormFull({
         preset,
       }));
     } else if (appId === "hermes") {
-      return filterForkPresets("hermes", hermesProviderPresets).map<PresetEntry>(
-        (preset, index) => ({
-          id: `hermes-${index}`,
-          preset,
-        }),
-      );
+      return filterForkPresets(
+        "hermes",
+        hermesProviderPresets,
+      ).map<PresetEntry>((preset, index) => ({
+        id: `hermes-${index}`,
+        preset,
+      }));
     }
     const claudeAllowed = new Set(
       filterForkPresets("claude", providerPresets),
