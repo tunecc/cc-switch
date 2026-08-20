@@ -895,12 +895,13 @@ function ProviderFormFull({
             codexAllowed.has(entry.preset),
         );
     } else if (appId === "gemini") {
-      return filterForkPresets("gemini", geminiProviderPresets).map<PresetEntry>(
-        (preset, index) => ({
-          id: `gemini-${index}`,
-          preset,
-        }),
-      );
+      return filterForkPresets(
+        "gemini",
+        geminiProviderPresets,
+      ).map<PresetEntry>((preset, index) => ({
+        id: `gemini-${index}`,
+        preset,
+      }));
     } else if (appId === "opencode") {
       return filterForkPresets(
         "opencode",
@@ -918,12 +919,13 @@ function ProviderFormFull({
         preset,
       }));
     } else if (appId === "hermes") {
-      return filterForkPresets("hermes", hermesProviderPresets).map<PresetEntry>(
-        (preset, index) => ({
-          id: `hermes-${index}`,
-          preset,
-        }),
-      );
+      return filterForkPresets(
+        "hermes",
+        hermesProviderPresets,
+      ).map<PresetEntry>((preset, index) => ({
+        id: `hermes-${index}`,
+        preset,
+      }));
     }
     const claudeAllowed = new Set(
       filterForkPresets("claude", providerPresets),
