@@ -80,7 +80,6 @@ import {
 } from "@/lib/navigation";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { useUpdate } from "@/contexts/UpdateContext";
-import { AutoUpdatePrompt } from "@/components/AutoUpdatePrompt";
 import { NewLayoutDialog } from "@/components/shell/NewLayoutDialog";
 import {
   AppPageHeader,
@@ -2014,7 +2013,6 @@ function App() {
           >
             <Suspense fallback={<PageLoading />}>{renderContent()}</Suspense>
           </div>
-          <AutoUpdatePrompt />
         </main>
       </div>
 

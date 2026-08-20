@@ -1689,27 +1689,6 @@ fn texts_of(entries: &[TrayEntry]) -> Vec<String> {
     entries.iter().map(text_of).collect()
 }
 
-#[test]
-fn downloaded_update_adds_install_item_right_below_open_main() {
-    let status = MenuStatus {
-        update_ready: Some("4.1.0".to_string()),
-        ..Default::default()
-    };
-    let entries = build_menu_model(&zh(), &status, &[], false, now());
-    let texts = texts_of(&entries);
-    assert_eq!(texts[0], "打开 CC Switch");
-    assert_eq!(texts[1], "重启并更新到 v4.1.0");
-    assert!(matches!(
-        &entries[1],
-        TrayEntry::Item { id, .. } if id == INSTALL_UPDATE_ID
-    ));
-
-    let without = build_menu_model(&zh(), &MenuStatus::default(), &[], false, now());
-    assert!(!without
-        .iter()
-        .any(|entry| matches!(entry, TrayEntry::Item { id, .. } if id == INSTALL_UPDATE_ID)));
-}
-
 fn children_of(menu: &[TrayEntry], app: &AppType) -> Vec<TrayEntry> {
     menu.iter()
         .find_map(|entry| match entry {
@@ -2226,7 +2205,6 @@ fn feedback_row_is_a_grey_line_after_the_problems() {
             name: "DeepSeek".to_string(),
         }),
         routing_in_use: false,
-        update_ready: None,
         ..Default::default()
     };
     let menu = build_menu_model(&zh(), &status, &[], false, now());
