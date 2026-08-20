@@ -30,7 +30,10 @@ export function DevPanel({ open, onOpenChange }: DevPanelProps) {
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20">
+            <Badge
+              variant="outline"
+              className="bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20"
+            >
               Fork
             </Badge>
             {t("devpanel.title")}
@@ -40,20 +43,28 @@ export function DevPanel({ open, onOpenChange }: DevPanelProps) {
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <div className="text-muted-foreground">{t("devpanel.version")}</div>
+              <div className="text-muted-foreground">
+                {t("devpanel.version")}
+              </div>
               <div className="font-medium font-mono">{FORK_VERSION}</div>
             </div>
             <div>
-              <div className="text-muted-foreground">{t("devpanel.buildMode")}</div>
+              <div className="text-muted-foreground">
+                {t("devpanel.buildMode")}
+              </div>
               <div className="font-medium">{t("devpanel.forkBuild")}</div>
             </div>
           </div>
           <div className="rounded-md border border-border/50 bg-muted/20 p-3 text-sm">
-            <div className="text-muted-foreground mb-1">{t("devpanel.upstreamSync")}</div>
+            <div className="text-muted-foreground mb-1">
+              {t("devpanel.upstreamSync")}
+            </div>
             <div>{t("devpanel.upstreamSyncPending")}</div>
           </div>
           <div className="rounded-md border border-dashed border-border/50 p-3 text-sm text-muted-foreground">
-            <div className="font-medium text-foreground mb-1">{t("devpanel.upcomingFeatures")}</div>
+            <div className="font-medium text-foreground mb-1">
+              {t("devpanel.upcomingFeatures")}
+            </div>
             {t("devpanel.upcomingFeaturesHint")}
           </div>
         </div>
