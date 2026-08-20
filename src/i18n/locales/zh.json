@@ -1380,7 +1380,9 @@
     "applyOneM": "应用 1M 标记",
     "applied": "已切换为 {{model}}",
     "applyFailed": "应用模型失败",
-    "noCredentials": "请先在编辑表单配置 API Key 与请求地址"
+    "noCredentials": "请先在编辑表单配置 API Key 与请求地址",
+    "oneMBadge": "1M",
+    "oneMEnabledHint": "1M 已开启"
   },
   "copilot": {
     "authSection": "GitHub Copilot 认证",

@@ -220,7 +220,7 @@ export function ModelQuickSwitchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-sm" zIndex="alert">
         <DialogHeader>
           <DialogTitle>
             {t("providerModel.title", { defaultValue: "模型快捷切换" })}
@@ -228,33 +228,20 @@ export function ModelQuickSwitchDialog({
           <DialogDescription>{provider.name}</DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-6 py-4 space-y-3">
           {/* 当前模型行 */}
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground shrink-0">
-              {t("providerModel.currentModel", { defaultValue: "当前模型" })}
-            </span>
-            <span
-              className="font-medium truncate"
-              title={currentModel || undefined}
-            >
-              {currentModel || "—"}
-            </span>
-          </div>
-
-          {/* 凭据缺失提示：拉取依赖 base_url + api_key，缺失时禁用按钮 */}
-          {!hasCredentials && (
-            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                {t("providerModel.noCredentials", {
-                  defaultValue: "请先在编辑表单配置 API Key 与请求地址",
-                })}
-              </p>
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="text-muted-foreground shrink-0">
+                {t("providerModel.currentModel", { defaultValue: "当前模型" })}
+              </span>
+              <span
+                className="font-medium truncate min-w-0"
+                title={currentModel || undefined}
+              >
+                {currentModel || "—"}
+              </span>
             </div>
-          )}
-
-          {/* 拉取按钮 + 已选模型展示 */}
-          <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
@@ -272,22 +259,35 @@ export function ModelQuickSwitchDialog({
                 ? t("providerForm.fetchingModels")
                 : t("providerForm.fetchModels")}
             </Button>
-            {models.length > 0 && (
-              <div className="flex items-center gap-1 min-w-0 flex-1">
-                <span
-                  className="text-sm truncate min-w-0"
-                  title={selectedModel || undefined}
-                >
-                  {selectedModel || "—"}
-                </span>
-                <SearchableModelPicker
-                  models={models}
-                  value={selectedModel}
-                  onSelect={setSelectedModel}
-                />
-              </div>
-            )}
           </div>
+
+          {/* 凭据缺失提示：拉取依赖 base_url + api_key，缺失时禁用按钮 */}
+          {!hasCredentials && (
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                {t("providerModel.noCredentials", {
+                  defaultValue: "请先在编辑表单配置 API Key 与请求地址",
+                })}
+              </p>
+            </div>
+          )}
+
+          {/* 已选模型展示 */}
+          {models.length > 0 && (
+            <div className="flex items-center gap-1 min-w-0">
+              <span
+                className="text-sm truncate min-w-0 flex-1"
+                title={selectedModel || undefined}
+              >
+                {selectedModel || "—"}
+              </span>
+              <SearchableModelPicker
+                models={models}
+                value={selectedModel}
+                onSelect={setSelectedModel}
+              />
+            </div>
+          )}
 
           {/* 1M 开关：仅 claude，写回语义已封装在 applyModelToSettings */}
           {appId === "claude" && (

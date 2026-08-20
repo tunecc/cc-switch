@@ -1369,7 +1369,9 @@
     "applyOneM": "套用 1M 標記",
     "applied": "已切換為 {{model}}",
     "applyFailed": "套用模型失敗",
-    "noCredentials": "請先在編輯表單配置 API Key 與請求位址"
+    "noCredentials": "請先在編輯表單配置 API Key 與請求位址",
+    "oneMBadge": "1M",
+    "oneMEnabledHint": "1M 已啟用"
   },
   "copilot": {
     "authSection": "GitHub Copilot 驗證",

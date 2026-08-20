@@ -1380,7 +1380,9 @@
     "applyOneM": "Apply 1M Marker",
     "applied": "Switched to {{model}}",
     "applyFailed": "Failed to apply model",
-    "noCredentials": "Please configure the API Key and endpoint in the edit form first"
+    "noCredentials": "Please configure the API Key and endpoint in the edit form first",
+    "oneMBadge": "1M",
+    "oneMEnabledHint": "1M enabled"
   },
   "copilot": {
     "authSection": "GitHub Copilot Authentication",

@@ -1,8 +1,7 @@
-# provider-model-quick-view-switch Specification
+# provider-model-quick-view-switch Delta
 
-## Purpose
-主页供应商卡片的模型快捷查看与切换：卡片名称右侧显示当前模型徽章（4 app）；悬停操作加"模型"按钮打开快捷切换弹窗（拉取模型 → 搜索选择 → 一键应用到所有模型角色字段 → 可选 1M 标记）。
-## Requirements
+## MODIFIED Requirements
+
 ### Requirement: 卡片显示当前模型
 
 供应商卡片名称右侧 SHALL 显示当前模型徽章（小字、可截断、title 提示全名）。解析规则：
@@ -97,4 +96,3 @@ Claude 卡片在显示模型名的基础上，SHALL 额外标识当前主对话�
 
 - **WHEN** 检查本 change 改动文件
 - **THEN** 新逻辑在 ModelQuickSwitch/ 目录与 providerModelUtils 工具；ProviderCard 仅模型徽章渲染（含 1M 标记）与弹窗挂载注入点
-

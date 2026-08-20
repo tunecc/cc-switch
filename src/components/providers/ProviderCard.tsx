@@ -448,12 +448,22 @@ export function ProviderCard({
 
               {modelBadge && (
                 <span
-                  className="inline-flex items-center rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground"
+                  className="inline-flex items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground"
                   title={modelBadge.title}
                 >
                   <span className="truncate max-w-[200px]">
                     {modelBadge.label}
                   </span>
+                  {modelBadge.oneM && (
+                    <span
+                      className="inline-flex items-center rounded-sm bg-primary/10 px-1 py-0 text-[10px] font-medium text-primary"
+                      title={t("providerModel.oneMEnabledHint", {
+                        defaultValue: "1M 已开启",
+                      })}
+                    >
+                      {t("providerModel.oneMBadge", { defaultValue: "1M" })}
+                    </span>
+                  )}
                 </span>
               )}
 

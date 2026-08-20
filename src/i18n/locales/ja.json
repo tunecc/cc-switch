@@ -1368,7 +1368,9 @@
     "applyOneM": "1M マークを適用",
     "applied": "{{model}} に切り替えました",
     "applyFailed": "モデルの適用に失敗しました",
-    "noCredentials": "先に編集フォームで API Key とエンドポイントを設定してください"
+    "noCredentials": "先に編集フォームで API Key とエンドポイントを設定してください",
+    "oneMBadge": "1M",
+    "oneMEnabledHint": "1M が有効"
   },
   "copilot": {
     "authSection": "GitHub Copilot 認証",
