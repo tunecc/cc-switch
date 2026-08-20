@@ -1633,7 +1633,7 @@ function App() {
                               >
                                 <LayoutDashboard className="w-4 h-4" />
                               </Button>
-                              {(hasMcpSupport && visibleSidebarPanels.mcp) && (
+                              {hasMcpSupport && visibleSidebarPanels.mcp && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -1704,7 +1704,8 @@ function App() {
                                 className={cn(
                                   "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5",
                                   "transition-all duration-200 ease-in-out overflow-hidden",
-                                  (hasSkillsSupport && visibleSidebarPanels.skills)
+                                  hasSkillsSupport &&
+                                    visibleSidebarPanels.skills
                                     ? "opacity-100 w-8 scale-100 px-2"
                                     : "opacity-0 w-0 scale-75 pointer-events-none px-0 -ml-1",
                                 )}
@@ -1730,7 +1731,8 @@ function App() {
                                 className={cn(
                                   "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5",
                                   "transition-all duration-200 ease-in-out overflow-hidden",
-                                  (hasSessionSupport && visibleSidebarPanels.sessions)
+                                  hasSessionSupport &&
+                                    visibleSidebarPanels.sessions
                                     ? "opacity-100 w-8 scale-100 px-2"
                                     : "opacity-0 w-0 scale-75 pointer-events-none px-0 -ml-1",
                                 )}
@@ -1738,7 +1740,7 @@ function App() {
                               >
                                 <History className="flex-shrink-0 w-4 h-4" />
                               </Button>
-                              {(hasMcpSupport && visibleSidebarPanels.mcp) && (
+                              {hasMcpSupport && visibleSidebarPanels.mcp && (
                                 <Button
                                   variant="ghost"
                                   size="sm"

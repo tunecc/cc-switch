@@ -593,7 +593,9 @@ export function SettingsPage({
         </DialogContent>
       </Dialog>
 
-      {IS_FORK_BUILD && DEV_PANEL_ENABLED && <DevPanel open={devPanelOpen} onOpenChange={setDevPanelOpen} />}
+      {IS_FORK_BUILD && DEV_PANEL_ENABLED && (
+        <DevPanel open={devPanelOpen} onOpenChange={setDevPanelOpen} />
+      )}
     </div>
   );
 }
