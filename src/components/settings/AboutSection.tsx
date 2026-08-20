@@ -875,9 +875,7 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
               variant="outline"
               size="sm"
               onClick={() =>
-                settingsApi.openExternal(
-                  "https://github.com/tunecc/cc-switch",
-                )
+                settingsApi.openExternal("https://github.com/tunecc/cc-switch")
               }
               className="h-8 gap-1.5 text-xs"
             >
