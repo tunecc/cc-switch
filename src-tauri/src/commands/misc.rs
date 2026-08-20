@@ -82,11 +82,8 @@ pub async fn copy_text_to_clipboard(text: String) -> Result<bool, String> {
 
 #[tauri::command]
 pub async fn check_for_updates(handle: AppHandle) -> Result<bool, String> {
-    crate::host_open::open_url(
-        &handle,
-        "https://github.com/farion1231/cc-switch/releases/latest",
-    )
-    .map_err(|e| format!("打开更新页面失败: {e}"))?;
+    crate::host_open::open_url(&handle, "https://github.com/tunecc/cc-switch/releases")
+        .map_err(|e| format!("打开更新页面失败: {e}"))?;
 
     Ok(true)
 }
@@ -125,7 +122,12 @@ pub async fn open_portable_update_download(
 /// 判断是否为便携版（绿色版）运行
 #[tauri::command]
 pub async fn is_portable_mode() -> Result<bool, String> {
-    Ok(crate::app_update::is_portable())
+    let exe_path = std::env::current_exe().map_err(|e| format!("获取可执行路径失败: {e}"))?;
+    if let Some(dir) = exe_path.parent() {
+        Ok(dir.join("portable.ini").is_file())
+    } else {
+        Ok(false)
+    }
 }
 
 /// 获取应用启动阶段的初始化错误（若有）。
