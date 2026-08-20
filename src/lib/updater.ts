@@ -27,22 +27,8 @@ export async function checkForUpdate(
 ): Promise<
   { status: "up-to-date" } | { status: "available"; info: UpdateInfo }
 > {
-  // 动态引入，避免在未安装插件时导致打包期问题
-  const { check } = await import("@tauri-apps/plugin-updater");
-
-  const currentVersion = await getCurrentVersion();
-  const update = await check({ timeout: opts.timeout ?? 30000 } as any);
-
-  if (!update) {
-    return { status: "up-to-date" };
-  }
-
-  const info: UpdateInfo = {
-    currentVersion,
-    availableVersion: (update as any).version ?? "",
-    notes: (update as any).notes,
-    pubDate: (update as any).date,
-  };
-
-  return { status: "available", info };
+  // fork 已关闭自动更新（无 updater 插件），恒返回 up-to-date。
+  // 手动“检查更新”入口由 AboutSection 直接打开 GitHub releases 页。
+  void opts;
+  return { status: "up-to-date" };
 }
