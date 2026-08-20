@@ -20,7 +20,7 @@
 ### 1. 构建标识与开发预览
 
 - 引入编译期常量 `IS_FORK_BUILD`（vite define 注入），所有 fork 专属行为通过它门控，上游构建不受影响。
-- 应用标题与 `productName` 改为 `CC Switch (Fork)`；macOS 窗口标题在 `IS_FORK_BUILD && isTauri()` 双守卫下设置。
+- 应用标题与 `productName` 为 `CC Switch`（与上游一致），fork 仅通过版本号后缀与 `IS_FORK_BUILD` 行为区分；macOS 窗口标题在 `IS_FORK_BUILD && isTauri()` 双守卫下设置。
 - 新增 `dev:fork` 脚本：通过 `CCS_DEV_PANEL=1` + `CC_SWITCH_TEST_HOME=~/.cc-switch-fork-dev` 隔离出一个独立的开发预览环境，**不干扰本机正在使用的正式版 CC Switch**。
 - DevPanel 开发面板与 Fork 角标仅在 `dev:fork` 模式下显示（`DEV_PANEL_ENABLED`），正式 build 恒为关闭。
 
