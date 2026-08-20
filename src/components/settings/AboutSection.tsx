@@ -15,20 +15,15 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { toast } from "@/lib/toast";
 import { getVersion } from "@tauri-apps/api/app";
-import { providersApi, settingsApi } from "@/lib/api";
+import { settingsApi } from "@/lib/api";
 import { useUpdate } from "@/contexts/UpdateContext";
 import { Badge } from "@/components/ui/badge";
 import { WhatsNewDialog } from "@/components/WhatsNewDialog";
 import { WHATS_NEW_ENTRIES, entriesUpTo } from "@/lib/whatsNew";
 import ccswitchLogo from "@/assets/icons/logo.svg";
-import { extractErrorMessage } from "@/utils/errorUtils";
-import { Switch } from "@/components/ui/switch";
-import { SettingsRow } from "./SettingsLayout";
 
 interface AboutSectionProps {
   isPortable: boolean;
-  autoUpdateEnabled?: boolean;
-  onAutoSave?: (updates: { autoUpdateEnabled: boolean }) => Promise<boolean>;
 }
 
 // 应用自身版本（getVersion，本地毫秒级、无网络）也缓存一份，纯为重挂时免去 loading 闪烁。
@@ -49,11 +44,7 @@ function readStarPromptDismissed(): boolean {
  * 设置 → 关于：版本、便携模式、检查更新 / 安装并重启、项目链接。
  * 命令行应用的安装与升级在侧栏「应用」页。
  */
-export function AboutSection({
-  isPortable,
-  autoUpdateEnabled = false,
-  onAutoSave,
-}: AboutSectionProps) {
+export function AboutSection({ isPortable }: AboutSectionProps) {
   const { t } = useTranslation();
   // 惰性初始化自模块缓存：重挂时首帧即渲染上次的值，避免 loading 闪烁；首次挂载缓存
   // 为空则回退到原始初值（null / loading）。
@@ -61,7 +52,6 @@ export function AboutSection({
   const [isLoadingVersion, setIsLoadingVersion] = useState(
     () => appVersionCache === null,
   );
-  const [isDownloading, setIsDownloading] = useState(false);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [starPromptDismissed, setStarPromptDismissed] = useState(
     readStarPromptDismissed,
@@ -71,35 +61,7 @@ export function AboutSection({
     [version],
   );
 
-  const {
-    hasUpdate,
-    updateInfo,
-    checkUpdate,
-    resetDismiss,
-    isChecking,
-    autoUpdateSupported,
-    refreshAutoUpdate,
-  } = useUpdate();
-
-  const handleAutoUpdateChange = useCallback(
-    async (enabled: boolean) => {
-      if (!onAutoSave) return;
-      const saved = await onAutoSave({ autoUpdateEnabled: enabled });
-      if (!saved) return;
-      // 关掉即视为不要已下好的包（后端不再报），打开就马上在后台下一次
-      await refreshAutoUpdate();
-      // 托盘里的「重启并更新」跟着开关出现 / 消失
-      providersApi.updateTrayMenu().catch(console.error);
-      if (enabled) {
-        settingsApi
-          .downloadAppUpdate()
-          .catch((error) =>
-            console.error("[AboutSection] Auto update download failed", error),
-          );
-      }
-    },
-    [onAutoSave, refreshAutoUpdate],
-  );
+  const { hasUpdate, updateInfo, isChecking } = useUpdate();
 
   useEffect(() => {
     let active = true;
@@ -139,13 +101,13 @@ export function AboutSection({
 
       if (!displayVersion) {
         await settingsApi.openExternal(
-          "https://github.com/farion1231/cc-switch/releases",
+          "https://github.com/tunecc/cc-switch/releases",
         );
         return;
       }
 
       await settingsApi.openExternal(
-        `https://github.com/farion1231/cc-switch/releases/tag/${displayVersion}`,
+        `https://github.com/tunecc/cc-switch/releases/tag/${displayVersion}`,
       );
     } catch (error) {
       console.error("[AboutSection] Failed to open release notes", error);
@@ -167,65 +129,16 @@ export function AboutSection({
   }, []);
 
   const handleCheckUpdate = useCallback(async () => {
-    if (hasUpdate) {
-      if (isPortable) {
-        try {
-          await settingsApi.openPortableUpdateDownload(
-            updateInfo?.availableVersion ?? "",
-          );
-        } catch (error) {
-          console.error("[AboutSection] Portable update failed", error);
-        }
-        return;
-      }
-
-      setIsDownloading(true);
-      try {
-        resetDismiss();
-        const installed = await settingsApi.installUpdateAndRestart();
-        if (!installed) {
-          toast.success(t("settings.upToDate"), { closeButton: true });
-        }
-      } catch (error) {
-        console.error("[AboutSection] Update failed", error);
-        toast.error(t("settings.updateFailed"), {
-          description: extractErrorMessage(error) || undefined,
-          closeButton: true,
-        });
-        try {
-          await settingsApi.checkUpdates();
-        } catch (fallbackError) {
-          console.error(
-            "[AboutSection] Failed to open fallback updater",
-            fallbackError,
-          );
-        }
-      } finally {
-        setIsDownloading(false);
-      }
-      return;
-    }
-
+    // fork 已关闭自动更新：直接打开 GitHub releases 页。
     try {
-      const available = await checkUpdate();
-      if (!available) {
-        toast.success(t("settings.upToDate"), { closeButton: true });
-      }
+      await settingsApi.openExternal(
+        "https://github.com/tunecc/cc-switch/releases",
+      );
     } catch (error) {
-      console.error("[AboutSection] Check update failed", error);
-      toast.error(t("settings.checkUpdateFailed"), {
-        description: extractErrorMessage(error) || undefined,
-        closeButton: true,
-      });
+      console.error("[AboutSection] Failed to open releases page", error);
+      toast.error(t("settings.checkUpdateFailed"));
     }
-  }, [
-    checkUpdate,
-    hasUpdate,
-    isPortable,
-    resetDismiss,
-    t,
-    updateInfo?.availableVersion,
-  ]);
+  }, [t]);
 
   const displayVersion = version ?? t("common.unknown");
 
@@ -262,14 +175,9 @@ export function AboutSection({
           variant={hasUpdate ? "solid" : "neutral"}
           size="regular"
           onClick={handleCheckUpdate}
-          disabled={isChecking || isDownloading}
+          disabled={isChecking}
         >
-          {isDownloading ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              {t("settings.updating")}
-            </>
-          ) : hasUpdate ? (
+          {hasUpdate ? (
             <>
               <Download className="h-3.5 w-3.5" />
               {t("settings.updateTo", {
@@ -300,34 +208,7 @@ export function AboutSection({
           {updateInfo.notes && (
             <p className="line-clamp-3 text-fg-2">{updateInfo.notes}</p>
           )}
-          {isPortable && (
-            <p className="text-fg-2">{t("settings.portableUpdateHint")}</p>
-          )}
         </div>
-      )}
-
-      {onAutoSave && (
-        // 关于页的其它行是 px-5，这里用 SettingsRow 对齐（SettingsSwitchRow 固定 px-4）
-        <SettingsRow
-          className="px-5 py-4"
-          label={t("autoUpdate.toggle")}
-          help={{
-            title: t("autoUpdate.toggle"),
-            body: t("autoUpdate.toggleHelp"),
-          }}
-          // 灰掉的开关要写明为什么用不了
-          description={
-            autoUpdateSupported ? undefined : t("autoUpdate.unsupported")
-          }
-          control={
-            <Switch
-              checked={autoUpdateEnabled && autoUpdateSupported}
-              disabled={!autoUpdateSupported}
-              onCheckedChange={(value) => void handleAutoUpdateChange(value)}
-              aria-label={t("autoUpdate.toggle")}
-            />
-          }
-        />
       )}
 
       <div className="flex flex-wrap items-center gap-2 px-5 py-4">
