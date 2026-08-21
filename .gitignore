@@ -29,11 +29,6 @@ copilot-api
 .history
 CODEBUDDY.md
 mainWindow.js
-# >>> Comet managed project state >>>
-!/.comet/
-/.comet/*
-!/.comet/config.yaml
-# <<< Comet managed project state <<<
 
 # >>> Fork: Comet/Superpowers 工具产物（多平台 skills 镜像与 lockfile），不入库 >>>
 .agents/
@@ -72,3 +67,8 @@ skills-lock.json
 /.github/prompts/
 /.github/skills/
 # <<< Fork: Comet/Superpowers 工具产物 >>>
+# >>> Comet managed project state >>>
+!/.comet/
+/.comet/*
+!/.comet/config.yaml
+# <<< Comet managed project state <<<
