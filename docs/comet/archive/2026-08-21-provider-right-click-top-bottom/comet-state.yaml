@@ -1,0 +1,235 @@
+schema: comet.native.v4
+name: provider-right-click-top-bottom
+language: zh-CN
+phase: archive
+status: done
+state_version: 13
+brief: brief.md
+spec_changes: []
+workspace:
+  isolation: current
+  change_branch: comet/provider-right-click-top-bottom
+  target_branch: comet/provider-right-click-top-bottom
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 4
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: 列表 [A,B,C]，右键 C → 一键置顶 → 列表变为 [C,A,B]，sortIndex 重写为 0,1,2，托盘顺序同步。
+    result: passed
+    reason:
+      text: ProviderList 测试断言右键 C 置顶后 updateSortOrder 收到 [{c,0},{a,1},{b,2}] 且
+        updateTrayMenu 被调用；实现为 splice+unshift 后 applyQuickSort 按 index 重写。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: 列表 [A,B,C]，右键 A → 一键置底 → 列表变为 [B,C,A]，sortIndex 重写为 0,1,2。
+    result: passed
+    reason:
+      text: 测试断言右键 A 置底后 updateSortOrder 收到 [{b,0},{c,1},{a,2}]。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: 列表 [A,B,C]，右键 A → 一键置顶 → 提示「已在顶部」，列表与 sortIndex 不变。
+    result: passed
+    reason:
+      text: 测试断言已在顶部时 toast.info 提示且 updateSortOrder 未被调用。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: 列表 [A,B,C]，右键 C → 一键置底 → 提示「已在底部」，列表不变。
+    result: passed
+    reason:
+      text: 测试断言已在底部时 toast.info 提示且 updateSortOrder 未被调用。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: 在 [A,B,C] 中点「新增供应商」加 D → 列表变为 [A,D,B,C]（D 在第二位），现有项 sortIndex 已全部显式化。
+    result: passed
+    reason:
+      text: useAddProviderMutation 测试断言 [A,B,C] 新增 D 时让位 [{a,0},{b,2},{c,3}]，新项
+        sortIndex=1，现有项全部显式化。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: 空列表新增 X → 列表 [X]（X 为首位，无让位动作）。
+    result: passed
+    reason:
+      text: 测试断言空列表新增不触发 updateSortOrder，sortIndex 留空为首位。
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: 列表中含 sortIndex 未定义的条目时，新增 D 仍插入到**显示**第二位（处理 defined-first 排序陷阱，不排到最前）。
+    result: passed
+    reason:
+      text: 测试断言现有项 sortIndex 全 undefined 时按显示顺序让位显式化（A→0,B→2,C→3），新项 sortIndex=1
+        落显示第二位。
+      truncated: false
+builder_handoff:
+  candidate_id: 8ce733a2-6560-46cc-9687-65d3a88c6acb
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:da168a99-da36-41e8-9cdf-d56b9ec168fc
+  iteration: 1
+  summary:
+    text: 实现供应商右键菜单（一键置顶/置底）与新增供应商默认插入第二位。右键菜单内联在 ProviderList.tsx：onContextMenu
+      记录位置并打开 fixed 定位菜单，两项分别
+      moveProviderToTopQuick/moveProviderToBottomQuick（splice+unshift/push 后
+      applyQuickSort 按 index 重写全部 sortIndex），复用现有 providersApi.updateSortOrder
+      落库，随后 invalidate [providers]（路由类应用额外 invalidate [failoverQueue]）并
+      updateTrayMenu；已在顶/底时 toast.info 且不操作；点击外部/滚动/缩放/Esc 关闭菜单。新增插入第二位放在
+      useAddProviderMutation 的 newProvider.sortIndex===undefined 分支：取现有显示顺序，第 0
+      项保持 sortIndex=0、其余 +1 让位，新项 sortIndex=1，同时让所有现有项 sortIndex 显式化（解决
+      defined-first 排序陷阱）；空列表不触发让位；显式传 sortIndex 的路径（复制）不受影响。补齐 zh/en/zh-TW/ja
+      四语言 quickMove* 文案。不新增后端命令，不改拖拽排序与 hover 行内按钮。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+  checks:
+    - name:
+        text: typecheck
+        truncated: false
+      result: not-run
+      note:
+        text: tsc --noEmit（pnpm typecheck）
+        truncated: false
+    - name:
+        text: test:unit
+        truncated: false
+      result: not-run
+      note:
+        text: vitest run 全量；含新增 useAddProviderMutation 与 ProviderList 右键/插入用例
+        truncated: false
+    - name:
+        text: format:check
+        truncated: false
+      result: not-run
+      note:
+        text: prettier --check 改动文件
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未做运行时手测（启动 Tauri 应用实际右键）；仅由自动化单测 + 类型检查 +
+        格式检查覆盖。置顶/置底与新增插入的端到端视觉行为需在应用内确认。
+      truncated: false
+  known_limits_truncated: false
+  submitted_at: 2026-08-20T16:09:56.403Z
+blockers: []
+verification:
+  candidate_id: 8ce733a2-6560-46cc-9687-65d3a88c6acb
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:c977f17e-817c-40e8-b85b-fdd21f85fe58
+  iteration: 1
+  attempt: 4
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: check-typecheck
+      name:
+        text: typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8590
+    - id: check-test-unit
+      name:
+        text: test:unit
+        truncated: false
+      argv_display:
+        - text: vitest
+          truncated: false
+        - text: run
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 23406
+    - id: check-format
+      name:
+        text: format:check
+        truncated: false
+      argv_display:
+        - text: format:check
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 2976
+  summary:
+    text: Runtime 三项检查全过（typecheck / vitest 1026 用例 / prettier）。独立审阅
+      ProviderList.tsx 右键菜单实现与 useAddProviderMutation 插入第二位逻辑，A1-A7
+      全部有对应测试断言且行为与 brief 验收示例一致；i18n 四语言文案齐备。
+    truncated: false
+  risks:
+    - text: 未启动 Tauri 应用做运行时手测；右键菜单视觉定位、真实托盘同步等端到端行为仅由 jsdom 单测 + 代码审阅覆盖（Builder
+        交接已知限制）。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-08-21T00:29:47.987Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 2
+    outcome: execution-error
+    unresolved_ids: []
+    summary:
+      text: "Native Verifier response was invalid: Native check ID is invalid"
+      truncated: false
+    completed_at: 2026-08-21T00:15:22.856Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 3
+    outcome: execution-error
+    unresolved_ids: []
+    summary:
+      text: "Native Verifier response was invalid: Native Verifier repeatedly
+        requested only equivalent checks"
+      truncated: false
+    completed_at: 2026-08-21T00:22:00.330Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 4
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: Runtime 三项检查全过（typecheck / vitest 1026 用例 / prettier）。独立审阅
+        ProviderList.tsx 右键菜单实现与 useAddProviderMutation 插入第二位逻辑，A1-A7
+        全部有对应测试断言且行为与 brief 验收示例一致；i18n 四语言文案齐备。
+      truncated: false
+    completed_at: 2026-08-21T00:29:47.987Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-08-20T14:21:14.731Z
