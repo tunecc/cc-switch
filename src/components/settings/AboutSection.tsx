@@ -16,7 +16,6 @@ import { settingsApi } from "@/lib/api";
 import { useUpdate } from "@/contexts/UpdateContext";
 import { Badge } from "@/components/ui/badge";
 import appIcon from "@/assets/icons/app-icon.png";
-import { extractErrorMessage } from "@/utils/errorUtils";
 
 interface AboutSectionProps {
   isPortable: boolean;
