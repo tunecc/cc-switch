@@ -1,0 +1,366 @@
+schema: comet.native.v4
+name: claude-model-quick-access
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: claude-provider-model-quick-access
+    operation: create
+    source: specs/claude-provider-model-quick-access/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: 编辑非官方类别的 Claude 供应商时，「默认兜底模型」输入框（含 1M
+      勾选）渲染在请求地址字段下方、高级选项折叠区之外，无需展开即可查看和编辑。"
+    result: passed
+    reason:
+      text: 兜底模型块（输入框+1M勾选+hint）在 shouldShowModelSelector 守卫内、EndpointField
+        之后、Collapsible 之前渲染；测试断言折叠区内 modelMappingLabel 不存在且输入框值可达。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: 「一键设置」按钮位于兜底模型区块内且无需展开即可点击；点击后按既有优先级（ANTHROPIC_MODEL → Sonnet → Opus
+      → Fable → Haiku → Subagent）取值写入全部角色（含 Subagent），Haiku 仍剥离 [1M]
+      标记，行为与现状一致。"
+    result: passed
+    reason:
+      text: 一键设置按钮位于兜底区块内、Collapsible 之外；取值优先级
+        ANTHROPIC_MODEL→Sonnet→Opus→Fable→Haiku→Subagent；遍历 modelRoleRows 写入含
+        subagent；Haiku supportsOneM=false 走 stripClaudeOneMMarker。测试覆盖。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 「声明支持 1M」表头一键勾选的统计（全选/半选）与切换均包含兜底模型：全选时 ANTHROPIC_MODEL 加 [1M]
+      标记，取消时移除；兜底模型单独勾选 1M 时表头呈半选状态。"
+    result: passed
+    reason:
+      text: oneMToggleValues 含 claudeModel，统计覆盖兜底；表头 onCheckedChange 在
+        claudeModel.trim() 时对 ANTHROPIC_MODEL 调 setClaudeOneMMarker(claudeModel,
+        !allOneMEnabled)。测试断言 indeterminate=true 且切换后
+        ANTHROPIC_MODEL=fallback-model[1M]。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4:
+      高级选项折叠区内不再出现默认兜底模型区块，也不重复出现「一键设置」「获取模型列表」按钮；认证字段、模型映射角色表、UA、本地代理覆盖保持原行为。"
+    result: passed
+    reason:
+      text: git diff 显示 Collapsible 内旧兜底模型块和 modelMappingLabel
+        旁的「一键设置」「获取模型列表」按钮组整段删除；认证字段、角色表、UA、代理覆盖原样保留。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: 仅兜底模型有值时打开表单，「高级选项」不自动展开。"
+    result: passed
+    reason:
+      text: hasAnyAdvancedValue 移除 claudeModel；仅兜底有值时 hasAnyAdvancedValue=false →
+        advancedExpanded 初值 false。测试断言折叠区内 authField 不存在。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: 新增/调整的组件测试覆盖 A2、A3、A5，全部 vitest 相关用例通过。"
+    result: passed
+    reason:
+      text: 新增 4 用例覆盖 A2/A3/A5；vitest ClaudeFormFields 9/9 通过，全量 1030/1030 通过。
+      truncated: false
+  - id: A7
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: Claude 供应商编辑表单的模型配置直达区。
+    result: passed
+    reason:
+      text: 模型配置直达区已落在请求地址下方、Collapsible 之前，支持直达编辑兜底模型。
+      truncated: false
+  - id: A8
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 当 `shouldShowModelSelector` 为 true
+      时，在请求地址（EndpointField）之后、「高级选项」折叠区之前渲染「默认兜底模型」区块：
+    result: passed
+    reason:
+      text: 兜底块位于 EndpointField 之后、Collapsible 之前（shouldShowModelSelector 守卫）。
+      truncated: false
+  - id: A9
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: "`ANTHROPIC_MODEL` 输入框（复用 renderModelInput，支持 OAuth 预设分支与获取到的模型列表下拉）；"
+    result: passed
+    reason:
+      text: renderModelInput(claudeModel, ...) 含 Codex/Xai/Copilot/普通分支并共享模型列表下拉。
+      truncated: false
+  - id: A10
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 「1M」勾选框，控制 `ANTHROPIC_MODEL` 的 `[1M]` 标记；
+    result: passed
+    reason:
+      text: Checkbox checked=fallbackUsesOneM，onCheckedChange 调
+        setClaudeOneMMarker(base, checked===true) 控制 [1M]。
+      truncated: false
+  - id: A11
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 「一键设置」按钮：按 ANTHROPIC_MODEL → Sonnet → Opus → Fable → Haiku → Subagent
+      优先级取第一个非空值，写入全部模型角色（含 Subagent 与显示名称字段）；Haiku 剥离 `[1M]`；无任何可用值时禁用；
+    result: passed
+    reason:
+      text: 优先级链与旧位置一致；遍历写入 modelField 及 displayNameField；Haiku 剥离 [1M]；全空时禁用。
+      truncated: false
+  - id: A12
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 「获取模型列表」按钮：按供应商类型（普通 / Copilot / Codex OAuth / xAI OAuth）拉取，结果由兜底输入与各角色行共享；
+    result: passed
+    reason:
+      text: handleModelFetchClick 按预设类型分支拉取；fetchedModels 等通过 renderModelInput
+        共享给兜底输入与角色行。
+      truncated: false
+  - id: A13
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 兜底模型 hint 文案保持不变。
+    result: passed
+    reason:
+      text: 兜底 hint 文案逐字保留。
+      truncated: false
+  - id: A14
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 高级选项折叠区内不再渲染默认兜底模型区块及「一键设置」「获取模型列表」按钮。
+    result: passed
+    reason:
+      text: Collapsible 内旧兜底区块与重复按钮组已整段删除。
+      truncated: false
+  - id: A15
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 表头「声明支持 1M」的统计与切换范围 = Sonnet、Opus、Fable、Subagent、ANTHROPIC_MODEL（兜底模型）。
+    result: passed
+    reason:
+      text: oneMToggleValues = [...oneMRows models, claudeModel]，范围含
+        Sonnet/Opus/Fable/Subagent/ANTHROPIC_MODEL。
+      truncated: false
+  - id: A16
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: Haiku 角色不参与 1M。
+    result: passed
+    reason:
+      text: haiku supportsOneM=false 被 oneMRows 排除；表头切换不写 haiku。
+      truncated: false
+  - id: A17
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 全部参与项带 `[1M]` 时表头为全选；部分带时为半选；点击表头按 `!allOneMEnabled` 统一设置或移除标记。
+    result: passed
+    reason:
+      text: 表头 checked=全选/半选/未选；onCheckedChange 用 !allOneMEnabled 统一设置/移除，兜底亦同。
+      truncated: false
+  - id: A18
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: "`hasAnyAdvancedValue` 不再计入 `ANTHROPIC_MODEL`；仅兜底模型有值时不自动展开高级选项。"
+    result: passed
+    reason:
+      text: hasAnyAdvancedValue 表达式中 claudeModel 已删除，仅兜底有值时不再自动展开。
+      truncated: false
+  - id: A19
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 其余自动展开条件（角色模型、认证字段非默认、UA、本地代理覆盖）保持不变。
+    result: passed
+    reason:
+      text: 其余自动展开条件（角色模型、认证字段非默认、UA、代理覆盖）保持不变。
+      truncated: false
+  - id: A20
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: env 写入语义不变：空值删除键、`ANTHROPIC_SMALL_FAST_MODEL` 清理逻辑不变。
+    result: passed
+    reason:
+      text: useModelState.ts 未修改；空值删除键、ANTHROPIC_SMALL_FAST_MODEL 清理逻辑不变。
+      truncated: false
+  - id: A21
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 一键设置取值优先级不变。
+    result: passed
+    reason:
+      text: 一键设置取值链与旧位置代码逐字一致，优先级不变。
+      truncated: false
+  - id: A22
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: "`useModelState` / `providerModelUtils` 读写语义不变。"
+    result: passed
+    reason:
+      text: useModelState.ts 与 providerModelUtils 未被修改，读写语义不变。
+      truncated: false
+builder_handoff:
+  candidate_id: 82555fd3-1596-4fe5-bab9-f8e17bd8422c
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:f380ce40-5ef8-4542-a0c7-aa85d93f7b05
+  iteration: 1
+  summary:
+    text: Moved the Claude fallback model block to a quick-access section right
+      below the request endpoint (input + 1M checkbox + quick-set + fetch-models
+      buttons); removed the duplicated buttons and the old fallback block inside
+      Advanced Options. Extended the header toggle-all-1M coverage to include
+      the fallback model. Excluded claudeModel from hasAnyAdvancedValue so a
+      fallback-only value no longer auto-expands Advanced Options.
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+    - A13
+    - A14
+    - A15
+    - A16
+    - A17
+    - A18
+    - A19
+    - A20
+    - A21
+    - A22
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit clean
+        truncated: false
+    - name:
+        text: pnpm vitest run tests/components/ClaudeFormFields.test.tsx
+        truncated: false
+      result: passed
+      note:
+        text: 9/9 pass; 4 new cases cover A1/A2/A3/A5
+        truncated: false
+    - name:
+        text: pnpm vitest run tests/components
+        truncated: false
+      result: passed
+      note:
+        text: 60 files, 436 tests pass, no regression
+        truncated: false
+    - name:
+        text: pnpm vitest run
+        truncated: false
+      result: passed
+      note:
+        text: 132 files, 1030 tests pass, no regression
+        truncated: false
+  checks_truncated: false
+  known_limits: []
+  known_limits_truncated: false
+  submitted_at: 2026-08-21T03:25:46.467Z
+blockers: []
+verification:
+  candidate_id: 82555fd3-1596-4fe5-bab9-f8e17bd8422c
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:49d318af-248d-4838-92b1-3dbeac5a4357
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: typecheck
+      name:
+        text: tsc --noEmit
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7943
+    - id: vitest-claude-form-fields
+      name:
+        text: vitest ClaudeFormFields component tests
+        truncated: false
+      argv_display:
+        - text: vitest
+          truncated: false
+        - text: run
+          truncated: false
+        - text: tests/components/ClaudeFormFields.test.tsx
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 1748
+    - id: vitest-all
+      name:
+        text: vitest full suite
+        truncated: false
+      argv_display:
+        - text: vitest
+          truncated: false
+        - text: run
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 21247
+  summary:
+    text: 实现与 brief/spec 完全一致：兜底模型区块（输入框+1M勾选+一键设置+获取模型列表+hint）移至 EndpointField
+      之后、Collapsible 之前；Collapsible 内旧兜底块与重复按钮组已整段删除；表头 1M 统计/切换扩展到含
+      ANTHROPIC_MODEL；hasAnyAdvancedValue 移除 claudeModel 使仅兜底有值时不再自动展开。Haiku 仍剥离
+      [1M]，一键设置优先级不变，useModelState/providerModelUtils 未改，env 写入语义不变。Runtime
+      typecheck、ClaudeFormFields 9/9、全量 1030/1030 全部通过。
+    truncated: false
+  risks:
+    - text: 兜底块用 shouldShowModelSelector 守卫、请求地址用 shouldShowSpeedTest 守卫；当
+        shouldShowSpeedTest=false 但 shouldShowModelSelector=true
+        时兜底块无请求地址可依附而直接出现在顶部。此为既有布局延续，非本次变更引入。
+      truncated: false
+    - text: 表头一键 1M 切换对兜底模型有 claudeModel.trim() 守卫，空值时不写入 ANTHROPIC_MODEL（空值删除键），spec
+        未明确要求空值写入，行为合理。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-08-21T03:43:51.724Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 实现与 brief/spec 完全一致：兜底模型区块（输入框+1M勾选+一键设置+获取模型列表+hint）移至 EndpointField
+        之后、Collapsible 之前；Collapsible 内旧兜底块与重复按钮组已整段删除；表头 1M 统计/切换扩展到含
+        ANTHROPIC_MODEL；hasAnyAdvancedValue 移除 claudeModel 使仅兜底有值时不再自动展开。Haiku
+        仍剥离 [1M]，一键设置优先级不变，useModelState/providerModelUtils 未改，env
+        写入语义不变。Runtime typecheck、ClaudeFormFields 9/9、全量 1030/1030 全部通过。
+      truncated: false
+    completed_at: 2026-08-21T03:43:51.724Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-08-21T02:32:53.608Z

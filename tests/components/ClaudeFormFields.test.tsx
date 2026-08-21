@@ -195,4 +195,108 @@ describe("ClaudeFormFields", () => {
       "shared-model[1M]",
     );
   });
+
+  it("兜底模型区块渲染在高级选项之外，无需展开即可编辑", () => {
+    const onModelChange = vi.fn();
+    renderCopilotForm({
+      claudeModel: "fallback-model",
+      defaultSonnetModel: "",
+      defaultSonnetModelName: "",
+      onModelChange,
+    });
+
+    // 折叠状态下的高级选项内容不应渲染（Radix Collapsible 关闭时卸载内容）
+    expect(screen.queryByText("providerForm.modelMappingLabel")).toBeNull();
+
+    // 兜底模型输入框直接可达（Copilot 分支的输入框无 id，按值定位）
+    expect(screen.getByDisplayValue("fallback-model")).toBeInTheDocument();
+
+    // 一键设置、获取模型列表按钮均在折叠区外
+    expect(
+      screen.getByRole("button", { name: "一键设置" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "providerForm.fetchModels" }),
+    ).toBeInTheDocument();
+  });
+
+  it("仅兜底模型有值时高级选项不自动展开", () => {
+    renderCopilotForm({
+      claudeModel: "fallback-model",
+      defaultSonnetModel: "",
+      defaultSonnetModelName: "",
+    });
+
+    // 高级选项处于折叠状态：折叠区内内容未渲染
+    expect(screen.queryByText("providerForm.authField")).toBeNull();
+  });
+
+  it("一键设置把兜底模型写入全部角色，Haiku 剥离 1M 标记", () => {
+    const onModelChange = vi.fn();
+    renderCopilotForm({
+      claudeModel: "shared-model[1M]",
+      defaultSonnetModel: "",
+      defaultSonnetModelName: "",
+      onModelChange,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "一键设置" }));
+
+    // 兜底模型优先取值，写入各角色；ANTHROPIC_MODEL 本身不在写入范围（现状语义）
+    expect(onModelChange).toHaveBeenCalledWith(
+      "ANTHROPIC_DEFAULT_SONNET_MODEL",
+      "shared-model[1M]",
+    );
+    expect(onModelChange).toHaveBeenCalledWith(
+      "ANTHROPIC_DEFAULT_SONNET_MODEL_NAME",
+      "shared-model",
+    );
+    expect(onModelChange).toHaveBeenCalledWith(
+      "ANTHROPIC_DEFAULT_OPUS_MODEL",
+      "shared-model[1M]",
+    );
+    expect(onModelChange).toHaveBeenCalledWith(
+      "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+      "shared-model",
+    );
+    expect(onModelChange).toHaveBeenCalledWith(
+      "CLAUDE_CODE_SUBAGENT_MODEL",
+      "shared-model[1M]",
+    );
+  });
+
+  it("兜底模型勾选 1M 后，表头一键勾选呈半选并写入全部角色", () => {
+    const onModelChange = vi.fn();
+    renderCopilotForm({
+      claudeModel: "fallback-model[1M]",
+      defaultSonnetModel: "sonnet-model",
+      defaultSonnetModelName: "",
+      onModelChange,
+    });
+
+    // 兜底模型带 [1M]：输入框值展示剥离后的 base
+    expect(screen.getByDisplayValue("fallback-model")).toBeInTheDocument();
+
+    // 表头 1M 一键勾选处于半选状态（仅兜底带标记）
+    const toggleAll = screen.getByRole("checkbox", {
+      name: "一键全选 1M",
+    });
+    expect(toggleAll).toHaveProperty("indeterminate", true);
+
+    fireEvent.click(toggleAll);
+
+    // 全选切换：所有支持 1M 的角色与兜底模型都加 [1M]
+    expect(onModelChange).toHaveBeenCalledWith(
+      "ANTHROPIC_DEFAULT_SONNET_MODEL",
+      "sonnet-model[1M]",
+    );
+    expect(onModelChange).toHaveBeenCalledWith(
+      "ANTHROPIC_MODEL",
+      "fallback-model[1M]",
+    );
+    expect(onModelChange).not.toHaveBeenCalledWith(
+      "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+      expect.stringContaining("[1M]"),
+    );
+  });
 });
