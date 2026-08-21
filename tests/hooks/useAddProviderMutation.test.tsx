@@ -10,6 +10,7 @@ const apiMocks = vi.hoisted(() => ({
   ensureClaudeDesktopOfficialProvider: vi.fn(),
   getAll: vi.fn(),
   updateTrayMenu: vi.fn(),
+  updateSortOrder: vi.fn(),
 }));
 
 const uuidMocks = vi.hoisted(() => ({
@@ -29,6 +30,7 @@ vi.mock("@/lib/api", () => ({
       apiMocks.ensureClaudeDesktopOfficialProvider(...args),
     getAll: (...args: unknown[]) => apiMocks.getAll(...args),
     updateTrayMenu: (...args: unknown[]) => apiMocks.updateTrayMenu(...args),
+    updateSortOrder: (...args: unknown[]) => apiMocks.updateSortOrder(...args),
   },
   sessionsApi: {},
   settingsApi: {},
@@ -54,7 +56,7 @@ function createWrapper() {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  return { wrapper };
+  return { wrapper, queryClient };
 }
 
 beforeEach(() => {
@@ -64,6 +66,7 @@ beforeEach(() => {
     .mockResolvedValue(true);
   apiMocks.getAll.mockReset().mockResolvedValue({});
   apiMocks.updateTrayMenu.mockReset().mockResolvedValue(true);
+  apiMocks.updateSortOrder.mockReset().mockResolvedValue(true);
   uuidMocks.generateUUID.mockReset().mockReturnValue("generated-uuid");
   toastMocks.success.mockReset();
   toastMocks.error.mockReset();
@@ -141,7 +144,20 @@ describe("useAddProviderMutation", () => {
   });
 
   it("adds a managed Codex account as a separate official card", async () => {
-    const { wrapper } = createWrapper();
+    const { wrapper, queryClient } = createWrapper();
+    // 预置已有供应商，使新增走"插入第二位"的缓存路径而不触发 getAll 拉取。
+    queryClient.setQueryData(["providers", "codex"], {
+      providers: {
+        "existing-codex": {
+          id: "existing-codex",
+          name: "Existing",
+          settingsConfig: {},
+          sortIndex: 0,
+          createdAt: 1,
+        },
+      },
+      currentProviderId: "existing-codex",
+    });
     const { result } = renderHook(() => useAddProviderMutation("codex"), {
       wrapper,
     });
@@ -167,6 +183,7 @@ describe("useAddProviderMutation", () => {
       expect.objectContaining({
         id: "generated-uuid",
         category: "official",
+        sortIndex: 1,
         meta: {
           providerType: "codex_oauth",
           authBinding: {
@@ -196,7 +213,19 @@ describe("useAddProviderMutation", () => {
       .mockReset()
       .mockReturnValueOnce("unbound-official-1")
       .mockReturnValueOnce("unbound-official-2");
-    const { wrapper } = createWrapper();
+    const { wrapper, queryClient } = createWrapper();
+    queryClient.setQueryData(["providers", "codex"], {
+      providers: {
+        "existing-codex": {
+          id: "existing-codex",
+          name: "Existing",
+          settingsConfig: {},
+          sortIndex: 0,
+          createdAt: 1,
+        },
+      },
+      currentProviderId: "existing-codex",
+    });
     const { result } = renderHook(() => useAddProviderMutation("codex"), {
       wrapper,
     });
@@ -292,5 +321,186 @@ describe("useAddProviderMutation", () => {
     );
     expect(toastMocks.error).toHaveBeenCalled();
     expect(toastMocks.warning).not.toHaveBeenCalled();
+  });
+
+  it("inserts a new provider at the second position and shifts existing items", async () => {
+    const { wrapper, queryClient } = createWrapper();
+    // 现有列表 [A, B, C]，sortIndex 分别 0/1/2
+    queryClient.setQueryData(["providers", "claude"], {
+      providers: {
+        a: {
+          id: "a",
+          name: "A",
+          settingsConfig: {},
+          sortIndex: 0,
+          createdAt: 1,
+        },
+        b: {
+          id: "b",
+          name: "B",
+          settingsConfig: {},
+          sortIndex: 1,
+          createdAt: 2,
+        },
+        c: {
+          id: "c",
+          name: "C",
+          settingsConfig: {},
+          sortIndex: 2,
+          createdAt: 3,
+        },
+      },
+      currentProviderId: "a",
+    });
+    const { result } = renderHook(() => useAddProviderMutation("claude"), {
+      wrapper,
+    });
+
+    const newProvider = await act(async () =>
+      result.current.mutateAsync({
+        name: "D",
+        settingsConfig: {},
+        category: "custom",
+      }),
+    );
+
+    // 让位：第 0 项保持 0，其余 +1；新项 sortIndex=1（插入第二位）
+    expect(apiMocks.updateSortOrder).toHaveBeenCalledTimes(1);
+    expect(apiMocks.updateSortOrder).toHaveBeenCalledWith(
+      [
+        { id: "a", sortIndex: 0 },
+        { id: "b", sortIndex: 2 },
+        { id: "c", sortIndex: 3 },
+      ],
+      "claude",
+    );
+    expect(newProvider.sortIndex).toBe(1);
+    expect(apiMocks.add).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "generated-uuid", sortIndex: 1 }),
+      "claude",
+      undefined,
+    );
+  });
+
+  it("does not shift items and leaves sortIndex unset when the list is empty", async () => {
+    const { wrapper, queryClient } = createWrapper();
+    queryClient.setQueryData(["providers", "claude"], {
+      providers: {},
+      currentProviderId: "",
+    });
+    const { result } = renderHook(() => useAddProviderMutation("claude"), {
+      wrapper,
+    });
+
+    const newProvider = await act(async () =>
+      result.current.mutateAsync({
+        name: "X",
+        settingsConfig: {},
+        category: "custom",
+      }),
+    );
+
+    expect(apiMocks.updateSortOrder).not.toHaveBeenCalled();
+    expect(newProvider.sortIndex).toBeUndefined();
+    expect(apiMocks.add).toHaveBeenCalledWith(
+      expect.not.objectContaining({ sortIndex: expect.anything() }),
+      "claude",
+      undefined,
+    );
+  });
+
+  it("explicitly assigned sortIndex bypasses the insert-at-second logic", async () => {
+    const { wrapper, queryClient } = createWrapper();
+    queryClient.setQueryData(["providers", "claude"], {
+      providers: {
+        a: {
+          id: "a",
+          name: "A",
+          settingsConfig: {},
+          sortIndex: 0,
+          createdAt: 1,
+        },
+      },
+      currentProviderId: "a",
+    });
+    const { result } = renderHook(() => useAddProviderMutation("claude"), {
+      wrapper,
+    });
+
+    const newProvider = await act(async () =>
+      result.current.mutateAsync({
+        name: "Dup",
+        settingsConfig: {},
+        sortIndex: 1,
+      }),
+    );
+
+    expect(apiMocks.updateSortOrder).not.toHaveBeenCalled();
+    expect(newProvider.sortIndex).toBe(1);
+  });
+
+  it("falls back to getAll when the providers cache is empty for the app", async () => {
+    apiMocks.getAll.mockResolvedValueOnce({
+      a: { id: "a", name: "A", settingsConfig: {}, sortIndex: 0, createdAt: 1 },
+    });
+    const { wrapper, queryClient } = createWrapper();
+    // 缓存中没有该 app 的 providers（length === 0）
+    queryClient.setQueryData(["providers", "claude"], {
+      providers: {},
+      currentProviderId: "",
+    });
+    const { result } = renderHook(() => useAddProviderMutation("claude"), {
+      wrapper,
+    });
+
+    await act(async () =>
+      result.current.mutateAsync({
+        name: "D",
+        settingsConfig: {},
+        category: "custom",
+      }),
+    );
+
+    expect(apiMocks.getAll).toHaveBeenCalledWith("claude");
+    expect(apiMocks.updateSortOrder).toHaveBeenCalledTimes(1);
+    expect(apiMocks.updateSortOrder).toHaveBeenCalledWith(
+      [{ id: "a", sortIndex: 0 }],
+      "claude",
+    );
+  });
+
+  it("materializes sortIndex for undefined-sortIndex items so the new item lands second", async () => {
+    const { wrapper, queryClient } = createWrapper();
+    // 所有现有项 sortIndex 未定义：经 useDragSort 排序后顺序为 A,B,C
+    queryClient.setQueryData(["providers", "claude"], {
+      providers: {
+        a: { id: "a", name: "A", settingsConfig: {}, createdAt: 1 },
+        b: { id: "b", name: "B", settingsConfig: {}, createdAt: 2 },
+        c: { id: "c", name: "C", settingsConfig: {}, createdAt: 3 },
+      },
+      currentProviderId: "",
+    });
+    const { result } = renderHook(() => useAddProviderMutation("claude"), {
+      wrapper,
+    });
+
+    const newProvider = await act(async () =>
+      result.current.mutateAsync({
+        name: "D",
+        settingsConfig: {},
+        category: "custom",
+      }),
+    );
+
+    // 让位把所有现有项显式化：A→0, B→2, C→3；新项 sortIndex=1
+    expect(apiMocks.updateSortOrder).toHaveBeenCalledWith(
+      [
+        { id: "a", sortIndex: 0 },
+        { id: "b", sortIndex: 2 },
+        { id: "c", sortIndex: 3 },
+      ],
+      "claude",
+    );
+    expect(newProvider.sortIndex).toBe(1);
   });
 });

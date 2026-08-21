@@ -16,6 +16,27 @@ import { proxyKeys } from "@/lib/query/proxy";
 import { usageKeys } from "@/lib/query/usage";
 import { invalidatePiProviderCaches } from "@/lib/query/pi";
 import { GROKBUILD_OFFICIAL_PROVIDER_ID } from "@/utils/providerCapabilities";
+import type { ProvidersQueryData } from "@/lib/query/queries";
+
+// 与 useDragSort / queries 中的排序保持一致：sortIndex 缺失视为末尾，再按
+// createdAt、名称兜底。新增供应商插入第二位前需据此确定现有显示顺序。
+const sortProvidersForInsert = (
+  providers: Record<string, Provider>,
+): Provider[] =>
+  Object.values(providers).sort((a, b) => {
+    const indexA = a.sortIndex ?? Number.MAX_SAFE_INTEGER;
+    const indexB = b.sortIndex ?? Number.MAX_SAFE_INTEGER;
+    if (indexA !== indexB) {
+      return indexA - indexB;
+    }
+
+    const timeA = a.createdAt ?? 0;
+    const timeB = b.createdAt ?? 0;
+    if (timeA === timeB) {
+      return a.name.localeCompare(b.name, "zh-CN");
+    }
+    return timeA - timeB;
+  });
 
 export const useAddProviderMutation = (appId: AppId) => {
   const queryClient = useQueryClient();
@@ -88,6 +109,48 @@ export const useAddProviderMutation = (appId: AppId) => {
         createdAt: Date.now(),
       };
       delete (newProvider as any).providerKey;
+
+      // 新增供应商默认插入到第二位（index 1），便于立即调整和使用。仅在调用方
+      // 未显式指定 sortIndex 时生效（复制路径会显式传 sortIndex，保持原语义）。
+      // 让位时把现有第 0 项保持 sortIndex=0、其余项 +1，从而把位置 1 腾空给新项，
+      // 同时让所有现有项 sortIndex 显式化，避免 defined-first 排序把新项排到最前。
+      if (newProvider.sortIndex === undefined) {
+        let existingProviders =
+          queryClient.getQueryData<ProvidersQueryData>(["providers", appId])
+            ?.providers ?? {};
+
+        if (Object.keys(existingProviders).length === 0) {
+          try {
+            existingProviders = await providersApi.getAll(appId);
+          } catch (error) {
+            console.error(
+              "Failed to load providers before inserting new provider",
+              error,
+            );
+          }
+        }
+
+        const orderedProviders = sortProvidersForInsert(existingProviders);
+        if (orderedProviders.length > 0) {
+          const updates = orderedProviders.map((provider, index) => ({
+            id: provider.id,
+            sortIndex: index === 0 ? 0 : index + 1,
+          }));
+
+          try {
+            await providersApi.updateSortOrder(updates, appId);
+            newProvider.sortIndex = 1;
+          } catch (error) {
+            console.error(
+              "Failed to update sort order before adding provider",
+              error,
+            );
+            throw error instanceof Error
+              ? error
+              : new Error("Failed to update sort order before adding provider");
+          }
+        }
+      }
 
       await providersApi.add(newProvider, appId, addToLive);
       return newProvider;
