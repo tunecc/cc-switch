@@ -220,7 +220,7 @@ function MainDirectory({
       ? t("nav.todayCost", { cost: fmtUsd(todayCost, 2) })
       : undefined;
 
-  const globals: {
+  const allGlobals: {
     page: GlobalPage;
     label: string;
     icon: IconComponent;
@@ -243,7 +243,9 @@ function MainDirectory({
       icon: ChartColumn,
       trailing: todayLabel,
     },
-  ].filter(
+  ];
+  // fork：侧边面板可见性未配置（undefined）的项保持显示；显式 false 才隐藏
+  const globals = allGlobals.filter(
     (item) =>
       visibleSidebarPanels?.[
         item.page as "mcp" | "skills" | "sessions" | "prompts"

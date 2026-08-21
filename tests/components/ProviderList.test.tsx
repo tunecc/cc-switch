@@ -31,6 +31,14 @@ const lastProps = (id: string) =>
     .filter((props) => props.provider.id === id)
     .at(-1);
 
+const updateSortOrderMock = vi.fn();
+const updateTrayMenuMock = vi.fn();
+const toastMock = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+}));
+
 vi.mock("@/hooks/useDragSort", () => ({
   useDragSort: (...args: unknown[]) => useDragSortMock(...args),
 }));
@@ -87,6 +95,21 @@ vi.mock("@/components/UsageFooter", () => ({
   default: () => <div data-testid="usage-footer" />,
 }));
 
+vi.mock("@/lib/api/providers", () => ({
+  providersApi: {
+    updateSortOrder: (...args: unknown[]) => updateSortOrderMock(...args),
+    updateTrayMenu: (...args: unknown[]) => updateTrayMenuMock(...args),
+  },
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: (...args: unknown[]) => toastMock.success(...args),
+    error: (...args: unknown[]) => toastMock.error(...args),
+    info: (...args: unknown[]) => toastMock.info(...args),
+  },
+}));
+
 vi.mock("@dnd-kit/sortable", async () => {
   const actual = await vi.importActual<any>("@dnd-kit/sortable");
 
@@ -131,6 +154,11 @@ beforeEach(() => {
   useDragSortMock.mockReset();
   useSortableMock.mockReset();
   providerCardRenderSpy.mockClear();
+  updateSortOrderMock.mockReset().mockResolvedValue(true);
+  updateTrayMenuMock.mockReset().mockResolvedValue(true);
+  toastMock.success.mockClear();
+  toastMock.error.mockClear();
+  toastMock.info.mockClear();
 
   useSortableMock.mockImplementation(({ id }: { id: string }) => ({
     setNodeRef: vi.fn(),
@@ -725,6 +753,7 @@ describe("ProviderList Component", () => {
       screen.getByRole("button", { name: "provider.addProvider" }),
     ).toBeInTheDocument();
   });
+
   it("moves a provider to the top via the right-click menu", async () => {
     const providerA = createProvider({ id: "a", name: "A", sortIndex: 0 });
     const providerB = createProvider({ id: "b", name: "B", sortIndex: 1 });
