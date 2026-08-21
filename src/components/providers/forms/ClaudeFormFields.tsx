@@ -255,8 +255,8 @@ export function ClaudeFormFields({
   const hasRequestOverrides = Boolean(
     localProxyHeadersOverride.trim() || localProxyBodyOverride.trim(),
   );
+  // 兜底模型已移至请求地址下方的直达区，不再计入高级选项的自动展开条件
   const hasAnyAdvancedValue = !!(
-    claudeModel ||
     defaultHaikuModel ||
     defaultSonnetModel ||
     defaultOpusModel ||
@@ -699,12 +699,14 @@ export function ClaudeFormFields({
     handleRoleModelChange(row, setClaudeOneMMarker(row.model, enabled));
   };
 
+  // 1M 一键勾选范围：支持 1M 的角色行 + 兜底模型（Haiku 不参与）
   const oneMRows = modelRoleRows.filter((row) => row.supportsOneM);
-  const allOneMEnabled = oneMRows.every((row) =>
-    hasClaudeOneMMarker(row.model),
+  const oneMToggleValues = [...oneMRows.map((row) => row.model), claudeModel];
+  const allOneMEnabled = oneMToggleValues.every((model) =>
+    hasClaudeOneMMarker(model),
   );
-  const someOneMEnabled = oneMRows.some((row) =>
-    hasClaudeOneMMarker(row.model),
+  const someOneMEnabled = oneMToggleValues.some((model) =>
+    hasClaudeOneMMarker(model),
   );
 
   const oauthSections = (
@@ -889,6 +891,124 @@ export function ClaudeFormFields({
     </>
   );
 
+  // 默认兜底模型直达区：紧跟请求地址，无需展开高级选项即可编辑。Stack / 经典两种布局共用。
+  const fallbackQuickAccessSection = (
+    <>
+      {/* 默认兜底模型直达区：紧跟请求地址，无需展开高级选项即可编辑 */}
+      {shouldShowModelSelector && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <FormLabel htmlFor="claudeModel">
+                {t("providerForm.fallbackModelLabel", {
+                  defaultValue: "默认兜底模型",
+                })}
+              </FormLabel>
+              <div className="flex gap-2">
+                {/* 一键设置按钮：优先取兜底模型，应用到所有角色 */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const value =
+                      claudeModel ||
+                      defaultSonnetModel ||
+                      defaultOpusModel ||
+                      defaultFableModel ||
+                      defaultHaikuModel ||
+                      subagentModel;
+                    if (value) {
+                      for (const row of modelRoleRows) {
+                        const roleValue = row.supportsOneM
+                          ? value
+                          : stripClaudeOneMMarker(value);
+                        onModelChange(row.modelField, roleValue);
+                        if (row.displayNameField) {
+                          onModelChange(
+                            row.displayNameField,
+                            stripClaudeOneMMarker(roleValue),
+                          );
+                        }
+                      }
+                      toast.success(
+                        t("providerForm.quickSetSuccess", {
+                          defaultValue: "已将模型名称应用到所有角色",
+                        }),
+                      );
+                    }
+                  }}
+                  disabled={
+                    !claudeModel &&
+                    !defaultHaikuModel &&
+                    !defaultSonnetModel &&
+                    !defaultOpusModel &&
+                    !defaultFableModel &&
+                    !subagentModel
+                  }
+                  className="h-7 gap-1"
+                >
+                  <Wand2 className="h-3.5 w-3.5" />
+                  {t("providerForm.quickSetModels", {
+                    defaultValue: "一键设置",
+                  })}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleModelFetchClick}
+                  disabled={modelFetchLoading}
+                  className="h-7 gap-1"
+                >
+                  {modelFetchLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  {t("providerForm.fetchModels")}
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_minmax(0,104px)]">
+              {renderModelInput(
+                "claudeModel",
+                stripClaudeOneMMarker(claudeModel),
+                "ANTHROPIC_MODEL",
+                t("providerForm.modelPlaceholder", { defaultValue: "" }),
+                (value) =>
+                  onModelChange(
+                    "ANTHROPIC_MODEL",
+                    setClaudeOneMMarker(value, fallbackUsesOneM),
+                  ),
+              )}
+              <label className="flex h-9 items-center gap-2 text-sm text-muted-foreground">
+                <Checkbox
+                  checked={fallbackUsesOneM}
+                  onCheckedChange={(checked) => {
+                    const base = stripClaudeOneMMarker(claudeModel).trim();
+                    if (!base) return;
+                    onModelChange(
+                      "ANTHROPIC_MODEL",
+                      setClaudeOneMMarker(base, checked === true),
+                    );
+                  }}
+                />
+                {t("providerForm.modelOneMLabel", {
+                  defaultValue: "1M",
+                })}
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t("providerForm.fallbackModelHint", {
+                defaultValue:
+                  "用于未明确落到 Sonnet、Opus、Fable、Haiku 角色的请求。使用第三方/中转端点时建议填写：否则这些请求（含 Haiku 后台子任务）会以原始 Claude 模型名透传给上游，可能因上游无此模型而报错。官方端点可留空。",
+              })}
+            </p>
+          </div>
+        )}
+    </>
+  );
+
   const speedTestModal = (
     <>
       {/* 端点测速弹窗 */}
@@ -1036,6 +1156,8 @@ export function ClaudeFormFields({
           />
         )}
 
+        {fallbackQuickAccessSection}
+
         {/* 高级区只有 UA 和请求覆盖；Copilot 的转发会跳过这两项，整块不显示 */}
         {!isCopilotPreset && (
           <Collapsible
@@ -1078,6 +1200,7 @@ export function ClaudeFormFields({
       {apiKeySection}
       {templateSection}
       {endpointSection}
+      {fallbackQuickAccessSection}
       {speedTestModal}
 
       {shouldShowModelSelector && (
@@ -1111,7 +1234,7 @@ export function ClaudeFormFields({
               (apiFormat === "anthropic" || isCopilotPreset) &&
               authFieldSelect}
 
-            {/* 模型映射 */}
+            {/* 模型映射（兜底模型与一键设置/获取按钮已移至请求地址下方的直达区） */}
             <div className="space-y-1 border-t border-border pt-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-0.5">
@@ -1119,72 +1242,6 @@ export function ClaudeFormFields({
                   <HelpTip title={t("providerForm.modelMappingLabel")}>
                     {t("providerForm.modelMappingHint")}
                   </HelpTip>
-                </div>
-                <div className="flex gap-2">
-                  {/* 一键设置按钮 */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      // 按面板从上到下取值，默认兜底模型最后使用。
-                      const value =
-                        defaultSonnetModel ||
-                        defaultOpusModel ||
-                        defaultFableModel ||
-                        defaultHaikuModel ||
-                        subagentModel ||
-                        claudeModel;
-                      if (value) {
-                        for (const row of modelRoleRows) {
-                          const roleValue = row.supportsOneM
-                            ? value
-                            : stripClaudeOneMMarker(value);
-                          onModelChange(row.modelField, roleValue);
-                          if (row.displayNameField) {
-                            onModelChange(
-                              row.displayNameField,
-                              stripClaudeOneMMarker(roleValue),
-                            );
-                          }
-                        }
-                        toast.success(
-                          t("providerForm.quickSetSuccess", {
-                            defaultValue: "已将模型名称应用到所有角色",
-                          }),
-                        );
-                      }
-                    }}
-                    disabled={
-                      !claudeModel &&
-                      !defaultHaikuModel &&
-                      !defaultSonnetModel &&
-                      !defaultOpusModel &&
-                      !defaultFableModel &&
-                      !subagentModel
-                    }
-                    className="h-7 gap-1"
-                  >
-                    <Wand2 className="h-3.5 w-3.5" />
-                    {t("providerForm.quickSetModels", {
-                      defaultValue: "一键设置",
-                    })}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleModelFetchClick}
-                    disabled={modelFetchLoading}
-                    className="h-7 gap-1"
-                  >
-                    {modelFetchLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Download className="h-3.5 w-3.5" />
-                    )}
-                    {t("providerForm.fetchModels")}
-                  </Button>
                 </div>
               </div>
             </div>
@@ -1220,6 +1277,12 @@ export function ClaudeFormFields({
                         onModelChange(
                           row.modelField,
                           setClaudeOneMMarker(row.model, !allOneMEnabled),
+                        );
+                      }
+                      if (claudeModel.trim()) {
+                        onModelChange(
+                          "ANTHROPIC_MODEL",
+                          setClaudeOneMMarker(claudeModel, !allOneMEnabled),
                         );
                       }
                     }}
@@ -1299,68 +1362,6 @@ export function ClaudeFormFields({
                   </div>
                 );
               })}
-            </div>
-
-            <div className="space-y-2 border-t border-border pt-4">
-              <div className="flex items-center gap-0.5">
-                <FormLabel htmlFor="claudeModel">
-                  {fallbackModelLabel}
-                </FormLabel>
-                {/* 直连时它是 Claude Code 的主模型；经过路由时才是各档留空、没匹配到档位的回落。 */}
-                <HelpTip title={fallbackModelLabel}>
-                  {directModeFormatNotice
-                    ? t("providerForm.fallbackModelHelpDirect", {
-                        defaultValue:
-                          "写进 ANTHROPIC_MODEL，是 Claude Code 启动时用的主模型。后台任务另用 Haiku 那一档。",
-                      })
-                    : t("providerForm.fallbackModelHelp", {
-                        defaultValue:
-                          "没落到 Sonnet、Opus、Fable、Haiku 任一档的请求，改用这个模型发给上游。",
-                      })}
-                </HelpTip>
-              </div>
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_minmax(0,104px)]">
-                {renderModelInput(
-                  "claudeModel",
-                  stripClaudeOneMMarker(claudeModel),
-                  "ANTHROPIC_MODEL",
-                  t("providerForm.modelPlaceholder", { defaultValue: "" }),
-                  (value) =>
-                    onModelChange(
-                      "ANTHROPIC_MODEL",
-                      setClaudeOneMMarker(value, fallbackUsesOneM),
-                    ),
-                )}
-                <label className="flex h-9 items-center gap-2 text-sm text-fg-2">
-                  <Checkbox
-                    checked={fallbackUsesOneM}
-                    onCheckedChange={(checked) => {
-                      const base = stripClaudeOneMMarker(claudeModel).trim();
-                      if (!base) return;
-                      onModelChange(
-                        "ANTHROPIC_MODEL",
-                        setClaudeOneMMarker(base, checked === true),
-                      );
-                    }}
-                  />
-                  {t("providerForm.modelOneMLabel", {
-                    defaultValue: "1M",
-                  })}
-                </label>
-              </div>
-              {fallbackModelMissing && (
-                <p className="text-xs leading-relaxed text-warning-text">
-                  {directModeFormatNotice
-                    ? t("providerForm.fallbackModelHaikuMissing", {
-                        defaultValue:
-                          "Haiku 一档没填：后台任务会用原始 Claude 模型名请求上游，第三方端点可能报错。",
-                      })
-                    : t("providerForm.fallbackModelMissing", {
-                        defaultValue:
-                          "没填：没落到任何一档的请求会用原始 Claude 模型名发给上游，可能报错。",
-                      })}
-                </p>
-              )}
             </div>
 
             {/* Copilot 的请求由转发层按 Copilot 客户端的样子发，UA 和请求覆盖都会被跳过 */}
