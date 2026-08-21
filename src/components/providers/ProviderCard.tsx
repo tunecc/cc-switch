@@ -395,6 +395,24 @@ export function ProviderCard({
             >
               {provider.name}
             </h3>
+            {modelBadge && (
+              <span
+                className="inline-flex items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground"
+                title={modelBadge.title}
+              >
+                <span className="truncate max-w-[200px]">{modelBadge.label}</span>
+                {modelBadge.oneM && (
+                  <span
+                    className="inline-flex items-center rounded-sm bg-primary/10 px-1 py-0 text-[10px] font-medium text-primary"
+                    title={t("providerModel.oneMEnabledHint", {
+                      defaultValue: "1M 已开启",
+                    })}
+                  >
+                    {t("providerModel.oneMBadge", { defaultValue: "1M" })}
+                  </span>
+                )}
+              </span>
+            )}
             {presentation.chips.map((chip) => (
               <CardChipBadge key={chip.key} chip={chip} />
             ))}
@@ -413,58 +431,6 @@ export function ProviderCard({
                   {manualNote ??
                     t("codex.followCodexLoginDescription", {
                       defaultValue: "账号会随 Codex CLI 当前登录变化",
-=======
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2 min-h-7">
-              <h3
-                className={cn(
-                  "text-base font-semibold leading-none",
-                  codexOfficialIdentity && "min-w-0 flex-1 truncate",
-                )}
-                title={codexOfficialIdentity ? provider.name : undefined}
-              >
-                {provider.name}
-              </h3>
-
-              {modelBadge && (
-                <span
-                  className="inline-flex items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground"
-                  title={modelBadge.title}
-                >
-                  <span className="truncate max-w-[200px]">
-                    {modelBadge.label}
-                  </span>
-                  {modelBadge.oneM && (
-                    <span
-                      className="inline-flex items-center rounded-sm bg-primary/10 px-1 py-0 text-[10px] font-medium text-primary"
-                      title={t("providerModel.oneMEnabledHint", {
-                        defaultValue: "1M 已开启",
-                      })}
-                    >
-                      {t("providerModel.oneMBadge", { defaultValue: "1M" })}
-                    </span>
-                  )}
-                </span>
-              )}
-
-              {isOmo && (
-                <span className="inline-flex items-center rounded-md bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
-                  OMO
-                </span>
-              )}
-
-              {isOmoSlim && (
-                <span className="inline-flex items-center rounded-md bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                  Slim
-                </span>
-              )}
-
-              {appId === "claude-desktop" &&
-                providerNeedsRouting(appId, provider) && (
-                  <ProviderStatusBadge
-                    tone="info"
-                    label={t("provider.needsRouting", {
-                      defaultValue: "需要路由",
                     })}
                 </span>
               ) : managedCodexAccount ? (
