@@ -265,7 +265,7 @@ function MainDirectory({
       : undefined;
   const todayTrailing = todayValues.length > 1 ? todayValues : todayText;
 
-  const globals: {
+  const allGlobals: {
     page: GlobalPage;
     label: string;
     icon: IconComponent;
@@ -290,7 +290,9 @@ function MainDirectory({
       trailing: todayTrailing,
       trailingLabel: todayText,
     },
-  ].filter(
+  ];
+  // fork：侧边面板可见性未配置（undefined）的项保持显示；显式 false 才隐藏
+  const globals = allGlobals.filter(
     (item) =>
       visibleSidebarPanels?.[
         item.page as "mcp" | "skills" | "sessions" | "prompts"
