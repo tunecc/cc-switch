@@ -96,34 +96,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(DISMISSED_VERSION_KEY);
   }, []);
 
-<<<<<<< HEAD
-  // 应用启动时自动检查更新
-  useEffect(() => {
-    // 延迟1秒后检查，避免影响启动体验
-    const timer = setTimeout(() => {
-      checkUpdate().catch((err) =>
-        notifyBackgroundTaskFailed("updateCheck", err),
-      );
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [checkUpdate]);
-
-  // 后端手里有下好的包，就算有更新：离线、或主窗口重建后联网检查还没成功，
-  // 侧栏红点和关于页的安装按钮也要在（安装命令离线时会直接装缓存的包）
-  const effectiveUpdateInfo: UpdateInfo | null =
-    updateInfo ??
-    (readyUpdate
-      ? {
-          currentVersion: "",
-          availableVersion: readyUpdate.version,
-          notes: readyUpdate.notes ?? undefined,
-        }
-      : null);
-
-=======
   // fork 已关闭自动更新：启动时不检查。手动“检查更新”由 AboutSection 打开 GitHub releases 页。
->>>>>>> c5c614e22 (feat: disable in-app updater, point users to GitHub releases)
   const value: UpdateContextValue = {
     hasUpdate,
     updateInfo,
