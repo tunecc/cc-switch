@@ -834,76 +834,78 @@ export function ClaudeFormFields({
       {/* 默认兜底模型直达区：紧跟请求地址，无需展开高级选项即可编辑 */}
       {shouldShowModelSelector && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <FormLabel htmlFor="claudeModel">
-              {t("providerForm.fallbackModelLabel", {
-                defaultValue: "默认兜底模型",
-              })}
-            </FormLabel>
-            <div className="flex gap-2">
-              {/* 一键设置按钮：优先取兜底模型，应用到所有角色 */}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const value =
-                    claudeModel ||
-                    defaultSonnetModel ||
-                    defaultOpusModel ||
-                    defaultFableModel ||
-                    defaultHaikuModel ||
-                    subagentModel;
-                  if (value) {
-                    for (const row of modelRoleRows) {
-                      const roleValue = row.supportsOneM
-                        ? value
-                        : stripClaudeOneMMarker(value);
-                      onModelChange(row.modelField, roleValue);
-                      if (row.displayNameField) {
-                        onModelChange(
-                          row.displayNameField,
-                          stripClaudeOneMMarker(roleValue),
-                        );
-                      }
-                    }
-                    toast.success(
-                      t("providerForm.quickSetSuccess", {
-                        defaultValue: "已将模型名称应用到所有角色",
-                      }),
-                    );
-                  }
-                }}
-                disabled={
-                  !claudeModel &&
-                  !defaultHaikuModel &&
-                  !defaultSonnetModel &&
-                  !defaultOpusModel &&
-                  !defaultFableModel &&
-                  !subagentModel
-                }
-                className="h-7 gap-1"
-              >
-                <Wand2 className="h-3.5 w-3.5" />
-                {t("providerForm.quickSetModels", {
-                  defaultValue: "一键设置",
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_minmax(0,104px)]">
+            <div className="flex items-center justify-between">
+              <FormLabel htmlFor="claudeModel">
+                {t("providerForm.fallbackModelLabel", {
+                  defaultValue: "默认兜底模型",
                 })}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleModelFetchClick}
-                disabled={modelFetchLoading}
-                className="h-7 gap-1"
-              >
-                {modelFetchLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Download className="h-3.5 w-3.5" />
-                )}
-                {t("providerForm.fetchModels")}
-              </Button>
+              </FormLabel>
+              <div className="flex gap-2">
+                {/* 一键设置按钮：优先取兜底模型，应用到所有角色 */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const value =
+                      claudeModel ||
+                      defaultSonnetModel ||
+                      defaultOpusModel ||
+                      defaultFableModel ||
+                      defaultHaikuModel ||
+                      subagentModel;
+                    if (value) {
+                      for (const row of modelRoleRows) {
+                        const roleValue = row.supportsOneM
+                          ? value
+                          : stripClaudeOneMMarker(value);
+                        onModelChange(row.modelField, roleValue);
+                        if (row.displayNameField) {
+                          onModelChange(
+                            row.displayNameField,
+                            stripClaudeOneMMarker(roleValue),
+                          );
+                        }
+                      }
+                      toast.success(
+                        t("providerForm.quickSetSuccess", {
+                          defaultValue: "已将模型名称应用到所有角色",
+                        }),
+                      );
+                    }
+                  }}
+                  disabled={
+                    !claudeModel &&
+                    !defaultHaikuModel &&
+                    !defaultSonnetModel &&
+                    !defaultOpusModel &&
+                    !defaultFableModel &&
+                    !subagentModel
+                  }
+                  className="h-7 gap-1"
+                >
+                  <Wand2 className="h-3.5 w-3.5" />
+                  {t("providerForm.quickSetModels", {
+                    defaultValue: "一键设置",
+                  })}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleModelFetchClick}
+                  disabled={modelFetchLoading}
+                  className="h-7 gap-1"
+                >
+                  {modelFetchLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  {t("providerForm.fetchModels")}
+                </Button>
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_minmax(0,104px)]">

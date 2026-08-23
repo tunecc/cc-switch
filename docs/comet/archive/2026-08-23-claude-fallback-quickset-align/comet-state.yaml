@@ -1,0 +1,342 @@
+schema: comet.native.v4
+name: claude-fallback-quickset-align
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: claude-provider-model-quick-access
+    operation: modify
+    source: specs/claude-provider-model-quick-access/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: md 及以上视口下，「默认兜底模型」区块头部行使用与输入行相同的 `md:grid-cols-[1fr_minmax(0,104px)]`
+      网格；标签在第一列左侧，两个按钮在第一列右侧（`justify-between`）。两个按钮所在容器的右边缘 =
+      输入框（第一列）的右边缘，而不是整行右边缘。"
+    result: passed
+    reason:
+      text: 头部行(line 837)用 md:grid-cols-[1fr_minmax(0,104px)]，与输入行(line 911)一致；line
+        838 第一列 flex items-center
+        justify-between，标签左、按钮组右；第二列留空，按钮容器右边缘=第一列右边缘=输入框右边缘。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: 移动端（`grid-cols-1`）下，头部行第一列内部仍以 `flex items-center justify-between`
+      排布标签与按钮，响应式行为与改动前一致；输入行（输入框 + 1M 勾选）布局不变。"
+    result: passed
+    reason:
+      text: grid-cols-1 下第一列仍 flex items-center justify-between(line 838)；输入行(line
+        911)结构未变。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: 'A3: 两个按钮的功能、禁用条件、图标、文案、`size="sm"` / `h-7` 外观与改动前一致；1M 勾选、hint
+      文案、高级选项折叠区及其内部按钮/角色表行为不受影响。'
+    result: passed
+    reason:
+      text: diff 确认按钮 size=sm/h-7/Wand2/Download/Loader2/文案/onClick/disabled 全部保留；1M
+        勾选、hint、Collapsible 未变。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4: 既有 `tests/components/ClaudeFormFields.test.tsx` 用例不回归；`pnpm vitest
+      run tests/components/ClaudeFormFields.test.tsx` 通过。"
+    result: passed
+    reason:
+      text: pnpm vitest run tests/components/ClaudeFormFields.test.tsx 9/9 通过。
+      truncated: false
+  - id: A5
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: Claude 供应商编辑表单的模型配置直达区。
+    result: passed
+    reason:
+      text: 仍是 ClaudeFormFields 中 shouldShowModelSelector 兜底模型直达区。
+      truncated: false
+  - id: A6
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 当 `shouldShowModelSelector` 为 true
+      时，在请求地址（EndpointField）之后、「高级选项」折叠区之前渲染「默认兜底模型」区块：
+    result: passed
+    reason:
+      text: shouldShowModelSelector 时在
+        EndpointField(749-832)之后、Collapsible(949+)之前渲染(834-947)。
+      truncated: false
+  - id: A7
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: "`ANTHROPIC_MODEL` 输入框（复用 renderModelInput，支持 OAuth 预设分支与获取到的模型列表下拉）；"
+    result: passed
+    reason:
+      text: ANTHROPIC_MODEL 复用 renderModelInput(line 912)，支持 Codex/xAI/Copilot/普通分支。
+      truncated: false
+  - id: A8
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 「1M」勾选框，控制 `ANTHROPIC_MODEL` 的 `[1M]` 标记；
+    result: passed
+    reason:
+      text: 1M 勾选 onCheckedChange 调 setClaudeOneMMarker 写 ANTHROPIC_MODEL(923-938)。
+      truncated: false
+  - id: A9
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 「一键设置」按钮：按 ANTHROPIC_MODEL → Sonnet → Opus → Fable → Haiku → Subagent
+      优先级取第一个非空值，写入全部模型角色（含 Subagent 与显示名称字段）；Haiku 剥离 `[1M]`；无任何可用值时禁用；
+    result: passed
+    reason:
+      text: 优先级 claudeModel→Sonnet→Opus→Fable→Haiku→Subagent(851-857)；Haiku
+        剥离[1M](862)；无值禁用(878-885)。
+      truncated: false
+  - id: A10
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 「获取模型列表」按钮：按供应商类型（普通 / Copilot / Codex OAuth / xAI OAuth）拉取，结果由兜底输入与各角色行共享；
+    result: passed
+    reason:
+      text: handleModelFetchClick 按普通/Copilot/Codex/xAI 分派(452-458)。
+      truncated: false
+  - id: A11
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 兜底模型 hint 文案保持不变。
+    result: passed
+    reason:
+      text: fallbackModelHint 文案(940-945)未变。
+      truncated: false
+  - id: A12
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 高级选项折叠区内不再渲染默认兜底模型区块及「一键设置」「获取模型列表」按钮。
+    result: passed
+    reason:
+      text: Collapsible(949+)内只有认证字段/模型映射表/UA/代理覆写，无兜底模型区块。
+      truncated: false
+  - id: A13
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 「默认兜底模型」区块头部行（承载 FormLabel 与「一键设置」「获取模型列表」按钮的容器）使用与输入行相同的网格 `grid
+      grid-cols-1 gap-2 md:grid-cols-[1fr_minmax(0,104px)]`。
+    result: passed
+    reason:
+      text: line 837 与 line 911 网格模板完全相同。
+      truncated: false
+  - id: A14
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 标签与两个按钮置于第一列（`1fr`）内，内部以 `flex items-center justify-between`
+      排布：标签在第一列左侧，按钮在第一列右侧。
+    result: passed
+    reason:
+      text: line 838 第一列内 flex items-center justify-between 排布标签与按钮组。
+      truncated: false
+  - id: A15
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 第二列（`104px`）留空，使按钮所在第一列的右边缘与下方输入框（第一列）的右边缘对齐。
+    result: passed
+    reason:
+      text: 头部行容器仅含一个子 div(第一列)，第二列无子元素，自然留空。
+      truncated: false
+  - id: A16
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: md 及以上视口下，两个按钮的右边缘对齐到 `ANTHROPIC_MODEL` 输入框的右边缘，而非表单整行右边缘。
+    result: passed
+    reason:
+      text: md+ 两行同为 1fr+104px 网格，第一列右边缘对齐，按钮右边缘=输入框右边缘。
+      truncated: false
+  - id: A17
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 移动端（`grid-cols-1`）下，头部行第一列内部 `justify-between` 排布不变，响应式行为与改动前一致。
+    result: passed
+    reason:
+      text: grid-cols-1 下头部行第一列内 justify-between 排布未变。
+      truncated: false
+  - id: A18
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 按钮尺寸（`size="sm"` / `h-7`）、图标、文案、禁用条件与 `onClick` 行为不受对齐调整影响。
+    result: passed
+    reason:
+      text: diff 确认 size=sm、h-7、图标、文案、disabled、onClick 全部保留。
+      truncated: false
+  - id: A19
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 表头「声明支持 1M」的统计与切换范围 = Sonnet、Opus、Fable、Subagent、ANTHROPIC_MODEL（兜底模型）。
+    result: passed
+    reason:
+      text: oneMRows=supportsOneM
+        行(Sonnet/Opus/Fable/Subagent)+claudeModel(653-654)；表头统计含
+        ANTHROPIC_MODEL(1053-1058)。
+      truncated: false
+  - id: A20
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: Haiku 角色不参与 1M。
+    result: passed
+    reason:
+      text: Haiku supportsOneM=false(line 619)，不在 oneMRows。
+      truncated: false
+  - id: A21
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 全部参与项带 `[1M]` 时表头为全选；部分带时为半选；点击表头按 `!allOneMEnabled` 统一设置或移除标记。
+    result: passed
+    reason:
+      text: allOneMEnabled→全选；someOneMEnabled→indeterminate；点击按 !allOneMEnabled
+        设置(1039-1059)。
+      truncated: false
+  - id: A22
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: "`hasAnyAdvancedValue` 不再计入 `ANTHROPIC_MODEL`；仅兜底模型有值时不自动展开高级选项。"
+    result: passed
+    reason:
+      text: hasAnyAdvancedValue(234-243)不含 claudeModel，仅兜底有值时不自动展开。
+      truncated: false
+  - id: A23
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 其余自动展开条件（角色模型、认证字段非默认、UA、本地代理覆盖）保持不变。
+    result: passed
+    reason:
+      text: 其余条件角色模型/认证字段/UA/代理覆写均保留。
+      truncated: false
+  - id: A24
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: env 写入语义不变：空值删除键、`ANTHROPIC_SMALL_FAST_MODEL` 清理逻辑不变。
+    result: passed
+    reason:
+      text: 未触及 onModelChange/空值删除/SMALL_FAST_MODEL 清理相关代码。
+      truncated: false
+  - id: A25
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 一键设置取值优先级不变。
+    result: passed
+    reason:
+      text: 一键设置取值优先级代码(851-857)未变。
+      truncated: false
+  - id: A26
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: "`useModelState` / `providerModelUtils` 读写语义不变。"
+    result: passed
+    reason:
+      text: useModelState/providerModelUtils 引入与调用未变。
+      truncated: false
+  - id: A27
+    source: specs/claude-provider-model-quick-access/spec.md
+    text: 对齐通过复用输入行网格实现，不引入硬编码像素留白。
+    result: passed
+    reason:
+      text: 对齐通过复用输入行 grid 实现；grep 无 pr-[/pl-[/w-[Npx] 等硬编码留白。
+      truncated: false
+builder_handoff:
+  candidate_id: 97cf3844-bf98-4a0d-b582-9ac6e1a7ed6e
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:144cb31c-2a2f-4607-ab5f-83bd4fcf3a77
+  iteration: 1
+  summary:
+    text: 将「默认兜底模型」直达区的头部行容器由 flex items-center justify-between 改为与输入行相同的网格 grid
+      grid-cols-1 gap-2
+      md:grid-cols-[1fr_minmax(0,104px)]；标签+两个按钮置于第一列(1fr)，第一列内部仍用 flex
+      items-center justify-between
+      排布，第二列(104px)留空。这样两个按钮右边缘对齐到兜底模型名输入框(第一列)右边缘而非整行右边缘。只改
+      ClaudeFormFields.tsx 头部行容器 className 与内部嵌套缩进，按钮
+      onClick/禁用条件/size=sm/h-7/图标/文案、输入行网格、1M 勾选、hint 文案、高级选项折叠区及其内部角色表全部未改。已运行
+      typecheck、vitest、prettier。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A13
+    - A14
+    - A15
+    - A16
+    - A17
+    - A18
+  checks:
+    - name:
+        text: pnpm typecheck (tsc --noEmit)
+        truncated: false
+      result: passed
+      note:
+        text: 无类型错误。
+        truncated: false
+    - name:
+        text: pnpm vitest run tests/components/ClaudeFormFields.test.tsx
+        truncated: false
+      result: passed
+      note:
+        text: 9 个用例全部通过，含一键设置写入全部角色、Haiku 剥离 1M、兜底区块在折叠区外、仅兜底模型有值不自动展开、兜底 1M 半选切换等。
+        truncated: false
+    - name:
+        text: pnpm format (prettier --write)
+        truncated: false
+      result: passed
+      note:
+        text: 已对改动文件执行 prettier 格式化。
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: A5-A12、A19-A27 属既有 capability
+        的已实现行为，本次改动仅改头部行对齐，未触及相关逻辑，预期保持不变；视觉对齐(A1/A16)以源码网格结构验证，未在真实浏览器渲染截图。
+      truncated: false
+    - text: 未运行完整 vitest 套件，仅运行了 ClaudeFormFields 相关用例。
+      truncated: false
+  known_limits_truncated: false
+  submitted_at: 2026-08-23T07:10:31.266Z
+blockers: []
+verification:
+  candidate_id: 97cf3844-bf98-4a0d-b582-9ac6e1a7ed6e
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:efdaae55-4c65-494c-b164-502538c1756c
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks: []
+  summary:
+    text: 实现与 brief/spec 完全一致：头部行容器由 flex justify-between 改为与输入行相同的 grid grid-cols-1
+      gap-2 md:grid-cols-[1fr_minmax(0,104px)]，标签+按钮置于第一列内仍用 flex items-center
+      justify-between，第二列 104px 留空，使按钮右边缘自然对齐到 ANTHROPIC_MODEL 输入框右边缘。diff 仅触及
+      834-947 行，按钮功能/禁用/图标/文案/size、1M 勾选、hint、EndpointField、高级选项折叠区全部未变。9/9
+      测试通过，tsc 无错误，Prettier 格式通过，无硬编码像素留白。27 项验收全部 passed。
+    truncated: false
+  risks:
+    - text: 改动仅通过静态阅读+测试验证对齐关系；未做浏览器视觉回归(项目无该能力)，但网格模板与输入行逐字相同，对齐关系由 CSS 网格语义保证。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-08-23T07:15:10.830Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 实现与 brief/spec 完全一致：头部行容器由 flex justify-between 改为与输入行相同的 grid grid-cols-1
+        gap-2 md:grid-cols-[1fr_minmax(0,104px)]，标签+按钮置于第一列内仍用 flex items-center
+        justify-between，第二列 104px 留空，使按钮右边缘自然对齐到 ANTHROPIC_MODEL 输入框右边缘。diff 仅触及
+        834-947 行，按钮功能/禁用/图标/文案/size、1M 勾选、hint、EndpointField、高级选项折叠区全部未变。9/9
+        测试通过，tsc 无错误，Prettier 格式通过，无硬编码像素留白。27 项验收全部 passed。
+      truncated: false
+    completed_at: 2026-08-23T07:15:10.830Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-08-23T06:58:00.006Z
