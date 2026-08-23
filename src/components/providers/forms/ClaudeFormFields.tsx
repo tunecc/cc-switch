@@ -856,7 +856,8 @@ export function ClaudeFormFields({
     <>
       {/* 默认兜底模型直达区：紧跟请求地址，无需展开高级选项即可编辑 */}
       {shouldShowModelSelector && (
-          <div className="space-y-2">
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_minmax(0,104px)]">
             <div className="flex items-center justify-between">
               <FormLabel htmlFor="claudeModel">
                 {t("providerForm.fallbackModelLabel", {
@@ -929,43 +930,44 @@ export function ClaudeFormFields({
                 </Button>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_minmax(0,104px)]">
-              {renderModelInput(
-                "claudeModel",
-                stripClaudeOneMMarker(claudeModel),
-                "ANTHROPIC_MODEL",
-                t("providerForm.modelPlaceholder", { defaultValue: "" }),
-                (value) =>
+          </div>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_minmax(0,104px)]">
+            {renderModelInput(
+              "claudeModel",
+              stripClaudeOneMMarker(claudeModel),
+              "ANTHROPIC_MODEL",
+              t("providerForm.modelPlaceholder", { defaultValue: "" }),
+              (value) =>
+                onModelChange(
+                  "ANTHROPIC_MODEL",
+                  setClaudeOneMMarker(value, fallbackUsesOneM),
+                ),
+            )}
+            <label className="flex h-9 items-center gap-2 text-sm text-muted-foreground">
+              <Checkbox
+                checked={fallbackUsesOneM}
+                onCheckedChange={(checked) => {
+                  const base = stripClaudeOneMMarker(claudeModel).trim();
+                  if (!base) return;
                   onModelChange(
                     "ANTHROPIC_MODEL",
-                    setClaudeOneMMarker(value, fallbackUsesOneM),
-                  ),
-              )}
-              <label className="flex h-9 items-center gap-2 text-sm text-muted-foreground">
-                <Checkbox
-                  checked={fallbackUsesOneM}
-                  onCheckedChange={(checked) => {
-                    const base = stripClaudeOneMMarker(claudeModel).trim();
-                    if (!base) return;
-                    onModelChange(
-                      "ANTHROPIC_MODEL",
-                      setClaudeOneMMarker(base, checked === true),
-                    );
-                  }}
-                />
-                {t("providerForm.modelOneMLabel", {
-                  defaultValue: "1M",
-                })}
-              </label>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t("providerForm.fallbackModelHint", {
-                defaultValue:
-                  "用于未明确落到 Sonnet、Opus、Fable、Haiku 角色的请求。使用第三方/中转端点时建议填写：否则这些请求（含 Haiku 后台子任务）会以原始 Claude 模型名透传给上游，可能因上游无此模型而报错。官方端点可留空。",
+                    setClaudeOneMMarker(base, checked === true),
+                  );
+                }}
+              />
+              {t("providerForm.modelOneMLabel", {
+                defaultValue: "1M",
               })}
-            </p>
+            </label>
           </div>
-        )}
+          <p className="text-xs text-muted-foreground">
+            {t("providerForm.fallbackModelHint", {
+              defaultValue:
+                "用于未明确落到 Sonnet、Opus、Fable、Haiku 角色的请求。使用第三方/中转端点时建议填写：否则这些请求（含 Haiku 后台子任务）会以原始 Claude 模型名透传给上游，可能因上游无此模型而报错。官方端点可留空。",
+            })}
+          </p>
+        </div>
+      )}
     </>
   );
 
