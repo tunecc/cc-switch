@@ -230,13 +230,21 @@ export function ClaudeFormFields({
   const hasRequestOverrides = Boolean(
     localProxyHeadersOverride.trim() || localProxyBodyOverride.trim(),
   );
-  // 兜底模型已移至请求地址下方的直达区，不再计入高级选项的自动展开条件
+  // 模型角色与兜底模型一致（如一键设置的均匀映射）不算高级配置；
+  // 只有存在差异化映射时才把模型映射计入自动展开条件。
+  const fallbackModelBase = stripClaudeOneMMarker(claudeModel).trim();
+  const hasCustomModelMapping = [
+    defaultSonnetModel,
+    defaultOpusModel,
+    defaultFableModel,
+    defaultHaikuModel,
+    subagentModel,
+  ].some(
+    (model) =>
+      model.trim() && stripClaudeOneMMarker(model).trim() !== fallbackModelBase,
+  );
   const hasAnyAdvancedValue = !!(
-    defaultHaikuModel ||
-    defaultSonnetModel ||
-    defaultOpusModel ||
-    defaultFableModel ||
-    subagentModel ||
+    hasCustomModelMapping ||
     apiKeyField !== "ANTHROPIC_AUTH_TOKEN" ||
     customUserAgent ||
     hasRequestOverrides
