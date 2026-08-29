@@ -231,6 +231,42 @@ describe("ClaudeFormFields", () => {
     expect(screen.queryByText("providerForm.authField")).toBeNull();
   });
 
+  it("角色模型与兜底模型一致（一键设置后的状态）时高级选项不自动展开", () => {
+    renderCopilotForm({
+      claudeModel: "shared-model[1M]",
+      defaultHaikuModel: "shared-model",
+      defaultHaikuModelName: "shared-model",
+      defaultSonnetModel: "shared-model[1M]",
+      defaultSonnetModelName: "shared-model",
+      defaultOpusModel: "shared-model[1M]",
+      defaultOpusModelName: "shared-model",
+      defaultFableModel: "shared-model[1M]",
+      defaultFableModelName: "shared-model",
+      subagentModel: "shared-model[1M]",
+    });
+
+    // 一键设置产出的是均匀映射，不算高级配置：高级选项保持折叠
+    expect(
+      screen.getByRole("button", { name: /advancedOptionsToggle|高级选项/ }),
+    ).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("任一角色模型与兜底模型不同时高级选项自动展开", () => {
+    renderCopilotForm({
+      claudeModel: "fallback-model",
+      defaultHaikuModel: "fallback-model",
+      defaultSonnetModel: "custom-sonnet",
+      defaultOpusModel: "fallback-model",
+      defaultFableModel: "fallback-model",
+      subagentModel: "fallback-model",
+    });
+
+    // 存在差异化映射：高级选项自动展开
+    expect(
+      screen.getByRole("button", { name: /advancedOptionsToggle|高级选项/ }),
+    ).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("一键设置把兜底模型写入全部角色，Haiku 剥离 1M 标记", () => {
     const onModelChange = vi.fn();
     renderCopilotForm({
