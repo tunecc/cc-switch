@@ -66,6 +66,11 @@ export function SearchableModelPicker({
       <PopoverContent
         align="end"
         className="w-[min(420px,calc(100vw-2rem))] p-0 z-[200]"
+        // 模态 Dialog 内打开时，popover 挂在 document.body、位于 Dialog 的
+        // RemoveScroll shards 之外，wheel 会被 document 级监听 preventDefault
+        // 导致列表滚不动；捕获阶段阻断传播即可放行原生滚动（先例见
+        // SessionManagerPage.tsx 的 onWheel 阻断）。
+        onWheelCapture={(e) => e.stopPropagation()}
       >
         <Command>
           <CommandInput
