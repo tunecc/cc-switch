@@ -55,18 +55,35 @@ pub fn build_claude(
         .map_err(|e| AppError::Message(format!("获取 Claude 供应商 base_url 失败: {e}")))?;
     let url = adapter.build_url(&base, "/v1/messages");
 
-    // 鉴权：AUTH_TOKEN 优先 → Bearer；否则 API_KEY → x-api-key
+    // 鉴权：对齐 ClaudeAdapter::extract_key 兜底口径，按 1→2→3→4 顺序读取：
+    // 1. env.ANTHROPIC_AUTH_TOKEN → Authorization: Bearer
+    // 2. env.ANTHROPIC_API_KEY → x-api-key
+    // 3. env.OPENROUTER_API_KEY / env.OPENAI_API_KEY / env.GEMINI_API_KEY → x-api-key
+    // 4. 顶层 settings_config.apiKey / api_key → x-api-key
     let env = provider.settings_config.get("env");
-    let auth_token = env
-        .and_then(|e| e.get("ANTHROPIC_AUTH_TOKEN"))
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|s| !s.is_empty());
-    let api_key = env
-        .and_then(|e| e.get("ANTHROPIC_API_KEY"))
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|s| !s.is_empty());
+    let trimmed_nonempty = |v: Option<&Value>| {
+        v.and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(ToString::to_string)
+    };
+    let auth_token = trimmed_nonempty(
+        env.and_then(|e| e.get("ANTHROPIC_AUTH_TOKEN")),
+    );
+    let api_key = trimmed_nonempty(env.and_then(|e| e.get("ANTHROPIC_API_KEY")))
+        .or_else(|| {
+            trimmed_nonempty(env.and_then(|e| e.get("OPENROUTER_API_KEY")))
+                .or_else(|| trimmed_nonempty(env.and_then(|e| e.get("OPENAI_API_KEY"))))
+                .or_else(|| trimmed_nonempty(env.and_then(|e| e.get("GEMINI_API_KEY"))))
+        })
+        .or_else(|| {
+            trimmed_nonempty(
+                provider
+                    .settings_config
+                    .get("apiKey")
+                    .or_else(|| provider.settings_config.get("api_key")),
+            )
+        });
 
     let mut headers: Vec<(String, String)> = Vec::new();
     match auth_token {
@@ -74,12 +91,12 @@ pub fn build_claude(
             headers.push(("Authorization".to_string(), format!("Bearer {token}")));
         }
         None => match api_key {
-            Some(key) => headers.push(("x-api-key".to_string(), key.to_string())),
+            Some(key) => headers.push(("x-api-key".to_string(), key)),
             None => {
                 return Err(AppError::localized(
                     "connectivity_test.claude_no_auth",
-                    "Claude 供应商缺少 ANTHROPIC_AUTH_TOKEN 或 ANTHROPIC_API_KEY，无法进行连通性测试",
-                    "Claude provider is missing ANTHROPIC_AUTH_TOKEN or ANTHROPIC_API_KEY, cannot run connectivity test",
+                    "Claude 供应商缺少 ANTHROPIC_AUTH_TOKEN / ANTHROPIC_API_KEY / apiKey，无法进行连通性测试",
+                    "Claude provider is missing ANTHROPIC_AUTH_TOKEN / ANTHROPIC_API_KEY / apiKey, cannot run connectivity test",
                 ))
             }
         },
@@ -439,6 +456,79 @@ mod tests {
         let p = provider(json!({ "env": { "ANTHROPIC_BASE_URL": "https://api.anthropic.com" } }));
         let params = ConnectivityTestParams::default();
         assert!(build_claude(&p, "claude-sonnet-5", &params).is_err());
+    }
+
+    #[test]
+    fn claude_auth_falls_back_to_top_level_api_key() {
+        // 顶层 settings_config.apiKey（非 env 内）也应可用作鉴权
+        let p = provider(json!({
+            "env": { "ANTHROPIC_BASE_URL": "https://api.anthropic.com" },
+            "apiKey": "sk-ant-top-level"
+        }));
+        let params = ConnectivityTestParams::default();
+        let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
+        assert_eq!(header(&target.headers, "x-api-key"), Some("sk-ant-top-level"));
+        assert!(header(&target.headers, "Authorization").is_none());
+    }
+
+    #[test]
+    fn claude_auth_falls_back_to_top_level_api_key_snake() {
+        // 顶层 settings_config.api_key（蛇形）同样可兜底
+        let p = provider(json!({
+            "base_url": "https://api.anthropic.com",
+            "api_key": "sk-ant-top-snake"
+        }));
+        let params = ConnectivityTestParams::default();
+        let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
+        assert_eq!(header(&target.headers, "x-api-key"), Some("sk-ant-top-snake"));
+    }
+
+    #[test]
+    fn claude_auth_falls_back_to_openrouter_env_key() {
+        // env.OPENROUTER_API_KEY（对齐 adapter 兜底口径第 3 级）→ x-api-key
+        let p = provider(json!({
+            "env": {
+                "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+                "OPENROUTER_API_KEY": "sk-or-key"
+            }
+        }));
+        let params = ConnectivityTestParams::default();
+        let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
+        assert_eq!(header(&target.headers, "x-api-key"), Some("sk-or-key"));
+    }
+
+    #[test]
+    fn claude_auth_falls_back_to_openai_or_gemini_env_key() {
+        // env.OPENAI_API_KEY 兜底
+        let p = provider(json!({
+            "env": { "ANTHROPIC_BASE_URL": "https://api.anthropic.com", "OPENAI_API_KEY": "sk-oa-key" }
+        }));
+        let params = ConnectivityTestParams::default();
+        let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
+        assert_eq!(header(&target.headers, "x-api-key"), Some("sk-oa-key"));
+
+        // env.GEMINI_API_KEY 兜底
+        let p2 = provider(json!({
+            "env": { "ANTHROPIC_BASE_URL": "https://api.anthropic.com", "GEMINI_API_KEY": "sk-gm-key" }
+        }));
+        let target2 = build_claude(&p2, "claude-sonnet-5", &params).unwrap();
+        assert_eq!(header(&target2.headers, "x-api-key"), Some("sk-gm-key"));
+    }
+
+    #[test]
+    fn claude_auth_prefers_env_auth_token_over_top_level_key() {
+        // env.AUTH_TOKEN 优先于顶层 apiKey（级别 1 > 级别 4）
+        let p = provider(json!({
+            "env": {
+                "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+                "ANTHROPIC_AUTH_TOKEN": "sk-ant-token"
+            },
+            "apiKey": "sk-ant-top-level"
+        }));
+        let params = ConnectivityTestParams::default();
+        let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
+        assert_eq!(header(&target.headers, "Authorization"), Some("Bearer sk-ant-token"));
+        assert!(header(&target.headers, "x-api-key").is_none());
     }
 
     #[test]
