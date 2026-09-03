@@ -33,7 +33,7 @@ pub struct ConnectivityTestResult {
     pub error_message: Option<String>,
     /// 实际请求 URL
     pub request_url: String,
-    /// 实际请求 headers（不含鉴权敏感值，仅供排查）
+    /// 实际请求 headers（鉴权敏感头已脱敏，不含 API key 等凭据）
     pub request_headers: serde_json::Value,
     /// 实际请求 body
     pub request_body: serde_json::Value,
@@ -332,10 +332,24 @@ where
     Ok(())
 }
 
-/// `Vec<(String, String)>` → JSON 对象。
+/// 敏感 header 名匹配：大小写不敏感；命中则不进结果（防止 API key 等凭据泄漏）。
+fn is_sensitive_header(name: &str) -> bool {
+    let lower = name.to_ascii_lowercase();
+    matches!(
+        lower.as_str(),
+        "authorization" | "proxy-authorization" | "x-api-key" | "cookie" | "set-cookie"
+    ) || lower.contains("api_key")
+        || lower.contains("apikey")
+        || lower.contains("api-key")
+}
+
+/// `Vec<(String, String)>` → JSON 对象；敏感 header（鉴权/密钥/cookie）被剔除。
 fn headers_to_value(headers: &[(String, String)]) -> serde_json::Value {
     let mut object = serde_json::Map::new();
     for (name, value) in headers {
+        if is_sensitive_header(name) {
+            continue;
+        }
         object.insert(name.clone(), serde_json::Value::String(value.clone()));
     }
     serde_json::Value::Object(object)
@@ -483,6 +497,67 @@ mod tests {
         assert!(verdict(200, None, &b"event: error\ndata: {}\n\n"[..]).is_err());
         // 流式读取错误 → error
         assert!(verdict(200, Some("stream idle".to_string()), &b"x"[..]).is_err());
+    }
+
+    #[test]
+    fn headers_to_value_redacts_sensitive_headers() {
+        // Authorization / x-api-key / Cookie 等鉴权敏感头必须被剔除
+        let input: Vec<(String, String)> = vec![
+            ("Authorization".into(), "Bearer sk-secret".into()),
+            ("x-api-key".into(), "sk-secret".into()),
+            ("Cookie".into(), "session=abc".into()),
+            ("Proxy-Authorization".into(), "Basic abc".into()),
+            ("Set-Cookie".into(), "sid=123".into()),
+            ("X-Custom-API-Key".into(), "sk-lookup".into()),
+            ("X-Api_Key-Extra".into(), "sk-other".into()),
+            ("Content-Type".into(), "application/json".into()),
+            ("X-Request-Id".into(), "req-1".into()),
+        ];
+        let value = headers_to_value(&input);
+        let object = value.as_object().unwrap();
+        for name in [
+            "Authorization",
+            "x-api-key",
+            "Cookie",
+            "Proxy-Authorization",
+            "Set-Cookie",
+            "X-Custom-API-Key",
+            "X-Api_Key-Extra",
+        ] {
+            assert!(
+                object.keys().all(|k| !k.eq_ignore_ascii_case(name)),
+                "敏感 header 不应出现在结果中: {name}"
+            );
+        }
+        assert_eq!(object.get("Content-Type").unwrap(), "application/json");
+        assert_eq!(object.get("X-Request-Id").unwrap(), "req-1");
+    }
+
+    #[test]
+    fn request_headers_do_not_include_api_key() {
+        // 以真实协议构造的 claude target 为例：Authorization/x-api-key 必须被脱敏
+        let provider = crate::provider::Provider::with_id(
+            "p".to_string(),
+            "P".to_string(),
+            serde_json::json!({
+                "env": {
+                    "ANTHROPIC_BASE_URL": "https://api.anthropic.com/v1",
+                    "ANTHROPIC_AUTH_TOKEN": "sk-ant-secret-token"
+                }
+            }),
+            None,
+        );
+        let params = ConnectivityTestParams::default();
+        let target =
+            protocol::build_claude(&provider, "claude-sonnet-5", &params).unwrap();
+        let request_headers = headers_to_value(&target.headers);
+        let json = serde_json::to_value(&request_headers).unwrap();
+        assert!(json.get("Authorization").is_none());
+        assert!(json.get("x-api-key").is_none());
+        assert!(json.get("authorization").is_none());
+        // 非敏感头（content-type / accept）仍保留（protocol 以原始大小写写入）
+        assert_eq!(json["Content-Type"], "application/json");
+        assert_eq!(json["Accept"], "text/event-stream");
     }
 
     #[test]
