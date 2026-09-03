@@ -37,6 +37,8 @@ pub mod webdav;
 pub mod webdav_auto_sync;
 pub mod webdav_sync;
 
+pub mod connectivity_test;
+
 pub use config::ConfigService;
 pub use mcp::McpService;
 pub use omo::OmoService;
