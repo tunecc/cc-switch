@@ -16,7 +16,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Search, X } from "lucide-react";
+import { Activity, Loader2, Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
@@ -34,9 +34,14 @@ import {
   useHermesLiveProviderIds,
   useHermesModelConfig,
 } from "@/hooks/useHermes";
-import { useStreamCheck } from "@/hooks/useStreamCheck";
+import {
+  useConnectivityProbe,
+  type ConnectivityProbeEntry,
+} from "@/hooks/useConnectivityProbe";
 import { ProviderCard } from "@/components/providers/ProviderCard";
 import { ProviderEmptyState } from "@/components/providers/ProviderEmptyState";
+import { ConnectivityTestDialog } from "@/components/providers/ConnectivityTestDialog";
+import { shouldShowTestEntry } from "@/components/providers/connectivityEntry";
 import {
   useCurrentOmoProviderId,
   useCurrentOmoSlimProviderId,
@@ -109,7 +114,22 @@ export function ProviderList({
   onSearchOpenChange,
 }: ProviderListProps) {
   const { t } = useTranslation();
-  const { checkProvider, isChecking } = useStreamCheck(appId);
+  // 连通性测试弹窗态：卡片「检测」按钮只负责打开弹窗，弹窗内部自行管理
+  // useConnectivityTest（逐模型真实请求）。testProvider 随 appId 切换由
+  // 上层 AnimatePresence key 重置（ProviderList 在 app 切换时整体重挂）。
+  const [testProvider, setTestProvider] = useState<{
+    provider: Provider;
+    open: boolean;
+  } | null>(null);
+  // 批量探针：列表头「批量检测」触发，逐供应商调用单模型探测命令，按完成
+  // 顺序增量更新卡片徽标（waiting → running → success/error）。
+  const { results: probeResults, probeAll } = useConnectivityProbe(appId);
+  const isProbeRunning = Object.values(probeResults).some(
+    (entry) => entry.status === "waiting" || entry.status === "running",
+  );
+  const handleTest = useCallback((provider: Provider) => {
+    setTestProvider({ provider, open: true });
+  }, []);
   const { sortedProviders, sensors, handleDragEnd } = useDragSort(
     providers,
     appId,
@@ -177,13 +197,6 @@ export function ProviderList({
       isPiStateReady,
       piCurrentState,
     ],
-  );
-
-  const handleTest = useCallback(
-    (provider: Provider) => {
-      checkProvider(provider.id, provider.name);
-    },
-    [checkProvider],
   );
 
   const queryClient = useQueryClient();
@@ -591,10 +604,9 @@ export function ProviderList({
       onOpenWebsite={onOpenWebsite}
       onOpenTerminal={onOpenTerminal}
       onTest={handleTest}
-      isTesting={isChecking(provider.id)}
-      onContextMenu={(event) =>
-        handleProviderContextMenu(event, provider.id)
-      }
+      isTesting={probeResults[provider.id]?.status === "running"}
+      connectivityProbe={probeResults[provider.id]}
+      onContextMenu={(event) => handleProviderContextMenu(event, provider.id)}
     />
   );
 
@@ -669,6 +681,39 @@ export function ProviderList({
           )}
         </AnimatePresence>,
         document.body,
+      )}
+
+      {shouldShowTestEntry(appId) && (
+        <div className="flex items-center justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isProbeRunning}
+            onClick={() => void probeAll(Object.values(providers))}
+          >
+            {isProbeRunning ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Activity className="w-4 h-4 mr-2" />
+            )}
+            {t("provider.batchConnectivityTest", {
+              defaultValue: "批量检测",
+            })}
+          </Button>
+        </div>
+      )}
+
+      {testProvider && (
+        <ConnectivityTestDialog
+          provider={testProvider.provider}
+          appId={appId}
+          open={testProvider.open}
+          onOpenChange={(open) =>
+            setTestProvider((prev) =>
+              prev ? { ...prev, open } : prev,
+            )
+          }
+        />
       )}
 
       {filteredProviders.length === 0 ? (
@@ -772,6 +817,7 @@ interface SortableProviderCardProps {
   onTest?: (provider: Provider) => void;
   isTesting: boolean;
   onContextMenu?: (event: ReactMouseEvent<HTMLDivElement>) => void;
+  connectivityProbe?: ConnectivityProbeEntry;
 }
 
 function SortableProviderCard(props: SortableProviderCardProps) {
