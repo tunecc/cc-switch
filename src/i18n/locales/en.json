@@ -3764,23 +3764,6 @@
     "stoppedWithRestore": "Routing service stopped; all apps are back on direct connections",
     "stopWithRestoreFailed": "Stop failed: {{detail}}"
   },
-<<<<<<< HEAD
-  "streamCheck": {
-    "reachable": "{{providerName}} is reachable ({{responseTimeMs}}ms)",
-    "reachableSlow": "{{providerName}} reachable but slow ({{responseTimeMs}}ms)",
-    "unreachable": "{{providerName}} unreachable: {{message}}",
-    "unreachableHint": "Could not establish a connection (DNS / connect / TLS / timeout). Check the base_url and your network.",
-    "error": "{{providerName}} check error: {{error}}",
-    "connectivityNote": "Connectivity check only probes whether the provider address is reachable; it does not send a real model request. Any response counts as \"reachable\" — which does not guarantee that auth or model settings are correct.",
-    "configSaved": "Connectivity check settings saved",
-    "configSaveFailed": "Save failed",
-    "checkParams": "Check Parameters",
-    "timeout": "Timeout (seconds)",
-    "maxRetries": "Max Retries",
-    "degradedThreshold": "Slow-response threshold (ms)"
-  },
-=======
->>>>>>> ce86032b (refactor(connectivity-test): 移除旧 stream_check 可达性探测全链路（保留表结构）)
   "proxyConfig": {
     "proxyEnabled": "Routing Master Switch",
     "appTakeover": "Routing Enabled",
