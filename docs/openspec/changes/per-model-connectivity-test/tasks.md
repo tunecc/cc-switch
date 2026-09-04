@@ -4,7 +4,7 @@
 
 - [x] 1.1 新增 `services/connectivity_test` 模块：类型定义（请求/结果/配置）、模型清单解析（modelCatalog → ANTHROPIC_MODEL / codex model 回退）、claude（/v1/messages）与 codex（/v1/responses）请求体构造、自定义 headers/body 浅合并
 - [x] 1.2 实现直连探测执行：reqwest 请求、SSE 流读取（总超时 + 空闲超时）、first_byte_ms/total_ms 度量、错误识别（非 2xx、`event: error`、`response.failed`、错误 JSON、空响应）与单元测试
-- [ ] 1.3 新增命令 `connectivity_test_provider_models`（单供应商多模型并行/串行测试）与 `connectivity_probe_provider`（批量探针用的单模型探测），注册到 `lib.rs`，确认不写入网关/熔断状态
+- [x] 1.3 新增命令 `connectivity_test_provider_models`（单供应商多模型并行/串行测试）与 `connectivity_probe_provider`（批量探针用的单模型探测），注册到 `lib.rs`，确认不写入网关/熔断状态
 - [ ] 1.4 测试参数持久化：`settings_config.connectivityTest` 字段读写（prompt/defaultTestModelId/stream/temperature/maxTokens/headers/body/timeoutSecs，缺省即默认值），复用供应商更新路径
 
 ## 2. 前端：连通性测试弹窗
