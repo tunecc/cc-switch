@@ -1595,11 +1595,6 @@ pub fn run() {
             commands::sync_session_usage,
             commands::rebuild_codex_usage,
             commands::get_usage_data_sources,
-            // Stream health check
-            commands::stream_check_provider,
-            commands::stream_check_all_providers,
-            commands::get_stream_check_config,
-            commands::save_stream_check_config,
             // Per-model connectivity test
             commands::connectivity_test_provider_models,
             commands::connectivity_probe_provider,

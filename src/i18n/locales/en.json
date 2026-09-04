@@ -3009,20 +3009,6 @@
     "stoppedWithRestore": "Routing service stopped, all routing configs restored",
     "stopWithRestoreFailed": "Stop failed: {{detail}}"
   },
-  "streamCheck": {
-    "reachable": "{{providerName}} is reachable ({{responseTimeMs}}ms)",
-    "reachableSlow": "{{providerName}} reachable but slow ({{responseTimeMs}}ms)",
-    "unreachable": "{{providerName}} unreachable: {{message}}",
-    "unreachableHint": "Could not establish a connection (DNS / connect / TLS / timeout). Check the base_url and your network.",
-    "connectivityNote": "Connectivity check only probes whether the provider address is reachable; it does not send a real model request. Any response counts as \"reachable\" — which does not guarantee that auth or model settings are correct.",
-    "configSaved": "Connectivity check settings saved",
-    "configSaveFailed": "Save failed",
-    "checkParams": "Check Parameters",
-    "timeout": "Timeout (seconds)",
-    "maxRetries": "Max Retries",
-    "degradedThreshold": "Slow-response threshold (ms)",
-    "error": "{{providerName}} check error: {{error}}"
-  },
   "proxyConfig": {
     "proxyEnabled": "Routing Master Switch",
     "appTakeover": "Routing Enabled",

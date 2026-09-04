@@ -1896,7 +1896,7 @@ impl RequestForwarder {
                 Vec::new()
             };
 
-        // 自定义 User-Agent：与 stream_check / model_fetch 共用 parse_custom_user_agent，
+        // 自定义 User-Agent：与 model_fetch 共用 parse_custom_user_agent，
         // 运行时静默忽略非法值（前端在输入处给非阻断提示，不在保存时阻断）。
         // Copilot 指纹 UA 不可覆盖。
         let custom_user_agent = if is_copilot {

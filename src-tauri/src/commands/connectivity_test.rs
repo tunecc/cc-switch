@@ -3,7 +3,7 @@
 //! 命令层只做三件事：官方/动态端点供应商过滤（`is_probe_capable`）、按
 //! `app_type` 查找供应商、从 settings 解析模型清单，然后调用
 //! `services::connectivity_test::ConnectivityTestService::test_models`。
-//! 不写 `stream_check_log`，也不触碰 `proxy` / `failover` / `failover_queue`
+//! 不记录请求日志，也不触碰 `proxy` / `failover` / `failover_queue`
 //! 任何状态（连通性探测与网关/熔断互不干扰）。
 
 use crate::app_config::AppType;
@@ -40,14 +40,13 @@ fn is_probe_capable(provider: &Provider, _app_type: &AppType) -> bool {
     if provider.category.as_deref() == Some("official") {
         return false;
     }
-    match provider
-        .meta
-        .as_ref()
-        .and_then(|meta| meta.provider_type.as_deref())
-    {
-        Some("codex_oauth") | Some("xai_oauth") | Some("github_copilot") => false,
-        _ => true,
-    }
+    !matches!(
+        provider
+            .meta
+            .as_ref()
+            .and_then(|meta| meta.provider_type.as_deref()),
+        Some("codex_oauth") | Some("xai_oauth") | Some("github_copilot")
+    )
 }
 
 /// 按 `app_type` + `provider_id` 查找供应商。
@@ -66,7 +65,7 @@ fn lookup_provider(
 /// 多模型连通性测试（测试弹窗用）。
 ///
 /// 逐模型真实请求探测供应商连通性，返回全部模型的结果列表；
-/// 不记录 `stream_check_log`，不影响网关/熔断状态。
+/// 不记录请求日志，不影响网关/熔断状态。
 #[tauri::command]
 pub async fn connectivity_test_provider_models(
     state: State<'_, AppState>,
@@ -96,7 +95,7 @@ pub async fn connectivity_test_provider_models(
 /// 单模型连通性探测（供应商列表批量徽标用）。
 ///
 /// 对指定 `model_id` 发一次真实请求并返回单条结果；`timeout_secs` 缺省时由
-/// 服务层默认 30 秒。不记录 `stream_check_log`，不触碰网关/熔断状态。
+/// 服务层默认 30 秒。不记录请求日志，不触碰网关/熔断状态。
 #[tauri::command]
 pub async fn connectivity_probe_provider(
     state: State<'_, AppState>,
