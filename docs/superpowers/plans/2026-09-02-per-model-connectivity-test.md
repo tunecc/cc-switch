@@ -536,7 +536,7 @@ git commit -m "feat(connectivity-test): 测试参数持久化纯函数（缺省�
 ---
 
 ### Task 5: 前端 API 层 + useConnectivityTest / useConnectivityProbe hooks
-- [ ] Task 5: 前端 API 层 + useConnectivityTest / useConnectivityProbe hooks
+- [x] Task 5: 前端 API 层 + useConnectivityTest / useConnectivityProbe hooks
 
 前端命令绑定与两类状态管理 hook（弹窗逐模型、批量探针并发 5）。
 
