@@ -101,7 +101,8 @@
     "windowClose": "關閉視窗"
   },
   "provider": {
-    "connectivityCheck": "檢測連通",
+    "connectivityCheck": "連通性測試",
+    "batchConnectivityTest": "批量檢測",
     "tabProvider": "供應商",
     "tabUniversal": "通用供應商",
     "noProviders": "尚未新增任何供應商",

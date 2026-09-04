@@ -25,6 +25,9 @@ import XaiOauthQuotaFooter from "@/components/XaiOauthQuotaFooter";
 import { PROVIDER_TYPES, TEMPLATE_TYPES } from "@/config/constants";
 import { isHermesReadOnlyProvider } from "@/config/hermesProviderPresets";
 import { ProviderHealthBadge } from "@/components/providers/ProviderHealthBadge";
+import { ConnectivityBadge } from "@/components/providers/ConnectivityBadge";
+import { shouldShowTestEntry } from "@/components/providers/connectivityEntry";
+import type { ConnectivityProbeEntry } from "@/hooks/useConnectivityProbe";
 import { FailoverPriorityBadge } from "@/components/providers/FailoverPriorityBadge";
 import {
   extractCodexBaseUrl,
@@ -72,6 +75,8 @@ interface ProviderCardProps {
   onTest?: (provider: Provider) => void;
   onOpenTerminal?: (provider: Provider) => void;
   isTesting?: boolean;
+  /** 批量探针结果（卡片徽标），undefined 时不渲染 */
+  connectivityProbe?: ConnectivityProbeEntry;
   isProxyRunning: boolean;
   isProxyTakeover?: boolean; // 代理接管模式（Live配置已被接管，切换为热切换）
   dragHandleProps?: DragHandleProps;
@@ -189,6 +194,7 @@ export function ProviderCard({
   onTest,
   onOpenTerminal,
   isTesting,
+  connectivityProbe,
   isProxyRunning,
   isProxyTakeover = false,
   dragHandleProps,
@@ -525,6 +531,14 @@ export function ProviderCard({
                   />
                 )}
 
+              {connectivityProbe && (
+                <ConnectivityBadge
+                  status={connectivityProbe.status}
+                  totalMs={connectivityProbe.totalMs}
+                  errorMessage={connectivityProbe.errorMessage}
+                />
+              )}
+
               {isAutoFailoverEnabled &&
                 !supportsOfficialRouting &&
                 isInFailoverQueue &&
@@ -732,12 +746,12 @@ export function ProviderCard({
               onEdit={() => onEdit(provider)}
               onDuplicate={() => onDuplicate(provider)}
               onTest={
-                // 连通检测对第三方/自定义/Copilot/Codex-OAuth 供应商开放（这些正是旧的
-                // 真实请求探测会误报、而可达性探测能正确处理的对象）。官方供应商
-                // (category === "official") 一律隐藏：它们 base_url 故意留空、走客户端
-                // 默认/OAuth 端点，cc-switch 没有可靠的探测目标（尤其 Claude Desktop
-                // 官方是原生 1P 模式，根本不在请求路径上）。
-                onTest && provider.category !== "official"
+                // 连通性测试入口（首期 claude/codex）。shouldShowTestEntry 同时
+                // 守卫 appId 与 provider.category === "official"：官方供应商一律
+                // 隐藏（base_url 故意留空、走客户端默认/OAuth 端点，cc-switch
+                // 没有可靠的探测目标），其余应用暂未接入。点击只打开弹窗，
+                // 真实请求由 ConnectivityTestDialog 内部的 useConnectivityTest 触发。
+                onTest && shouldShowTestEntry(appId, provider.category)
                   ? () => onTest(provider)
                   : undefined
               }

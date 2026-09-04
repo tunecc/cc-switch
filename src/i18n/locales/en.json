@@ -113,7 +113,8 @@
     "windowClose": "Close window"
   },
   "provider": {
-    "connectivityCheck": "Connectivity check",
+    "connectivityCheck": "Connectivity test",
+    "batchConnectivityTest": "Batch test",
     "tabProvider": "Provider",
     "tabUniversal": "Universal",
     "noProviders": "No providers added yet",

@@ -14,7 +14,7 @@ import {
   type CSSProperties,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Search, X } from "lucide-react";
+import { Activity, AlertTriangle, Loader2, Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -31,9 +31,14 @@ import {
   useHermesLiveProviderIds,
   useHermesModelConfig,
 } from "@/hooks/useHermes";
-import { useStreamCheck } from "@/hooks/useStreamCheck";
+import {
+  useConnectivityProbe,
+  type ConnectivityProbeEntry,
+} from "@/hooks/useConnectivityProbe";
 import { ProviderCard } from "@/components/providers/ProviderCard";
 import { ProviderEmptyState } from "@/components/providers/ProviderEmptyState";
+import { ConnectivityTestDialog } from "@/components/providers/ConnectivityTestDialog";
+import { shouldShowTestEntry } from "@/components/providers/connectivityEntry";
 import {
   useAutoFailoverEnabled,
   useFailoverQueue,
@@ -95,7 +100,22 @@ export function ProviderList({
   onSetAsDefault,
 }: ProviderListProps) {
   const { t } = useTranslation();
-  const { checkProvider, isChecking } = useStreamCheck(appId);
+  // 连通性测试弹窗态：卡片「检测」按钮只负责打开弹窗，弹窗内部自行管理
+  // useConnectivityTest（逐模型真实请求）。testProvider 随 appId 切换由
+  // 上层 AnimatePresence key 重置（ProviderList 在 app 切换时整体重挂）。
+  const [testProvider, setTestProvider] = useState<{
+    provider: Provider;
+    open: boolean;
+  } | null>(null);
+  // 批量探针：列表头「批量检测」触发，逐供应商调用单模型探测命令，按完成
+  // 顺序增量更新卡片徽标（waiting → running → success/error）。
+  const { results: probeResults, probeAll } = useConnectivityProbe(appId);
+  const isProbeRunning = Object.values(probeResults).some(
+    (entry) => entry.status === "waiting" || entry.status === "running",
+  );
+  const handleTest = useCallback((provider: Provider) => {
+    setTestProvider({ provider, open: true });
+  }, []);
   const { sortedProviders, sensors, handleDragEnd } = useDragSort(
     providers,
     appId,
@@ -232,13 +252,10 @@ export function ProviderList({
     [isPiAuthoritativeStateReady, piCurrentState],
   );
 
-  // 连通性检查不发真实请求、无封号/计费风险，直接执行（无需确认弹窗）。
-  const handleTest = useCallback(
-    (provider: Provider) => {
-      checkProvider(provider.id, provider.name);
-    },
-    [checkProvider],
-  );
+  // 连通性测试入口：claude/codex 卡片「检测」按钮 → 打开弹窗；其余应用不
+  // 渲染入口（shouldShowTestEntry 守卫）。批量探针与弹窗相互独立：批量探针
+  // 走 useConnectivityProbe 的单模型探测，弹窗走 useConnectivityTest 的逐
+  // 模型测试，两条链路并存。
 
   // Import current live config as default provider
   const queryClient = useQueryClient();
@@ -623,8 +640,11 @@ export function ProviderList({
                 onConfigureUsage={onConfigureUsage}
                 onOpenWebsite={onOpenWebsite}
                 onOpenTerminal={onOpenTerminal}
-                onTest={handleTest}
-                isTesting={isChecking(provider.id)}
+                onTest={shouldShowTestEntry(appId) ? handleTest : undefined}
+                isTesting={
+                  probeResults[provider.id]?.status === "running"
+                }
+                connectivityProbe={probeResults[provider.id]}
                 isProxyRunning={supportsFailover && isProxyRunning}
                 isProxyTakeover={supportsFailover && isProxyTakeover}
                 isAutoFailoverEnabled={isFailoverModeActive}
@@ -753,6 +773,39 @@ export function ProviderList({
         )}
       </AnimatePresence>
 
+      {shouldShowTestEntry(appId) && (
+        <div className="flex items-center justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isProbeRunning}
+            onClick={() => void probeAll(Object.values(providers))}
+          >
+            {isProbeRunning ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Activity className="w-4 h-4 mr-2" />
+            )}
+            {t("provider.batchConnectivityTest", {
+              defaultValue: "批量检测",
+            })}
+          </Button>
+        </div>
+      )}
+
+      {testProvider && (
+        <ConnectivityTestDialog
+          provider={testProvider.provider}
+          appId={appId}
+          open={testProvider.open}
+          onOpenChange={(open) =>
+            setTestProvider((prev) =>
+              prev ? { ...prev, open } : prev,
+            )
+          }
+        />
+      )}
+
       {filteredProviders.length === 0 ? (
         <div className="px-6 py-8 text-sm text-center border border-dashed rounded-lg border-border text-muted-foreground">
           {t("provider.noSearchResults", {
@@ -821,6 +874,7 @@ interface SortableProviderCardProps {
   onOpenTerminal?: (provider: Provider) => void;
   onTest?: (provider: Provider) => void;
   isTesting: boolean;
+  connectivityProbe?: ConnectivityProbeEntry;
   isProxyRunning: boolean;
   isProxyTakeover: boolean;
   isAutoFailoverEnabled: boolean;
@@ -855,6 +909,7 @@ function SortableProviderCard({
   onOpenTerminal,
   onTest,
   isTesting,
+  connectivityProbe,
   isProxyRunning,
   isProxyTakeover,
   isAutoFailoverEnabled,
@@ -905,6 +960,7 @@ function SortableProviderCard({
         onOpenTerminal={onOpenTerminal}
         onTest={onTest}
         isTesting={isTesting}
+        connectivityProbe={connectivityProbe}
         isProxyRunning={isProxyRunning}
         isProxyTakeover={isProxyTakeover}
         dragHandleProps={{

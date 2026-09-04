@@ -101,7 +101,8 @@
     "windowClose": "ウィンドウを閉じる"
   },
   "provider": {
-    "connectivityCheck": "接続チェック",
+    "connectivityCheck": "接続テスト",
+    "batchConnectivityTest": "一括テスト",
     "tabProvider": "プロバイダー",
     "tabUniversal": "統一プロバイダー",
     "noProviders": "まだプロバイダーがありません",
