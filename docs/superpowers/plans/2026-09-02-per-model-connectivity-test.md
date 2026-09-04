@@ -766,7 +766,7 @@ git commit -m "refactor(connectivity-test): 移除旧 stream_check 可达性探�
 ---
 
 ### Task 9: 端到端验证（5.1 / 5.2）
-- [ ] Task 9: 端到端验证（5.1 / 5.2）
+- [x] Task 9: 端到端验证（5.1 / 5.2）
 
 对齐 tasks.md 第 5 组，做编译/静态/功能/回归四层验证。
 
