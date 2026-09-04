@@ -8,7 +8,7 @@
  * api.kimi.com/coding/v1/responses 全程放行——上面的 403 结论只对当年的 Chat/Anthropic
  * 路径成立，Codex 预设已改原生 Responses 直连，不再需要借这些预设伪装。
  *
- * 第一条是官方 Claude Code CLI 实际发送的完整格式（参见 `stream_check.rs` 里检测用的
+ * 第一条是官方 Claude Code CLI 实际发送的完整格式（参见 `model_fetch` 里检测用的
  * `claude-cli/2.1.2 (external, cli)`），最贴近真实客户端、最稳过严格的 UA 校验；其余为简短变体。
  *
  * 这些预设主要用于"非白名单 Coding Agent（Codex/Gemini/Hermes/OpenClaw 等）想接入受 UA
