@@ -2,6 +2,7 @@
 change: per-model-connectivity-test
 design-doc: docs/superpowers/specs/2026-09-02-per-model-connectivity-test-design.md
 base-ref: 76f8072df81510255c330c77d4dffbf84fbc0188
+archived-with: 2026-09-04-per-model-connectivity-test
 ---
 
 # 按模型真实请求连通性测试——实施计划
