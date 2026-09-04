@@ -747,11 +747,18 @@ export function ProviderCard({
               onDuplicate={() => onDuplicate(provider)}
               onTest={
                 // 连通性测试入口（首期 claude/codex）。shouldShowTestEntry 同时
-                // 守卫 appId 与 provider.category === "official"：官方供应商一律
-                // 隐藏（base_url 故意留空、走客户端默认/OAuth 端点，cc-switch
-                // 没有可靠的探测目标），其余应用暂未接入。点击只打开弹窗，
-                // 真实请求由 ConnectivityTestDialog 内部的 useConnectivityTest 触发。
-                onTest && shouldShowTestEntry(appId, provider.category)
+                // 守卫 appId、provider.category === "official" 与 providerType
+                // （动态端点排除）：官方供应商与 codex_oauth/xai_oauth/github_copilot
+                // 一律隐藏（端点随 OAuth 运行时解析或走客户端默认，cc-switch 没有
+                // 可靠的探测目标），其余应用暂未接入。与 useConnectivityProbe /
+                // 后端 is_probe_capable 同口径。点击只打开弹窗，真实请求由
+                // ConnectivityTestDialog 内部的 useConnectivityTest 触发。
+                onTest &&
+                  shouldShowTestEntry(
+                    appId,
+                    provider.category,
+                    provider.meta?.providerType,
+                  )
                   ? () => onTest(provider)
                   : undefined
               }

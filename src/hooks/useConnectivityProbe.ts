@@ -2,18 +2,12 @@ import { useCallback, useState } from "react";
 import { connectivityProbeProvider } from "@/lib/api/connectivity-test";
 import { getConnectivityTestSettings } from "@/lib/connectivityTestSettings";
 import { listProviderModelIds } from "@/lib/providerModelIds";
+import { NON_PROBE_PROVIDER_TYPES } from "@/components/providers/connectivityEntry";
 import type { AppId } from "@/lib/api";
 import type { Provider } from "@/types";
 
 /** 批量探针并发度（设计 D5：前端控制并发 5） */
 const PROBE_CONCURRENCY = 5;
-
-/** 动态端点供应商：端点随 OAuth token 运行时解析，不可测（与后端 is_probe_capable 同口径） */
-const NON_PROBE_PROVIDER_TYPES: ReadonlySet<string> = new Set([
-  "codex_oauth",
-  "xai_oauth",
-  "github_copilot",
-]);
 
 /** 首期仅 claude / codex 支持真实请求连通性测试 */
 const PROBE_SUPPORTED_APPS: ReadonlySet<AppId> = new Set(["claude", "codex"]);

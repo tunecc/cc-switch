@@ -640,7 +640,15 @@ export function ProviderList({
                 onConfigureUsage={onConfigureUsage}
                 onOpenWebsite={onOpenWebsite}
                 onOpenTerminal={onOpenTerminal}
-                onTest={shouldShowTestEntry(appId) ? handleTest : undefined}
+                onTest={
+                  shouldShowTestEntry(
+                    appId,
+                    provider.category,
+                    provider.meta?.providerType,
+                  )
+                    ? handleTest
+                    : undefined
+                }
                 isTesting={
                   probeResults[provider.id]?.status === "running"
                 }
@@ -773,6 +781,8 @@ export function ProviderList({
         )}
       </AnimatePresence>
 
+      {/* App 级批量检测门禁：仅判 appId。逐供应商过滤（official/动态端点/无模型
+          跳过）由 useConnectivityProbe 内部完成，此处不需传 providerType。 */}
       {shouldShowTestEntry(appId) && (
         <div className="flex items-center justify-end">
           <Button
