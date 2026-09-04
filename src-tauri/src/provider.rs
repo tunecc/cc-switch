@@ -566,7 +566,7 @@ pub struct ProviderMeta {
 
 /// 解析 Provider 级自定义 User-Agent 字符串（单一真理来源）。
 ///
-/// 转发（forwarder）、流式检测（stream_check）、获取模型列表（model_fetch）三条路径
+/// 转发（forwarder）、获取模型列表（model_fetch）两条路径
 /// 共用同一口径，避免出现"某条路径用了 UA、另一条没用 / 报错"的不一致。
 ///
 /// 合法性由 `http::HeaderValue::from_str` 按**字节**判定（`b >= 32 && b != 127 || b == '\t'`），
