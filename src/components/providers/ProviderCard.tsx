@@ -36,6 +36,8 @@ import { useQuotaPlan } from "@/lib/query/accountPlans";
 import type { CopilotQuota } from "@/lib/query/copilot";
 import KimiAccountQuotaFooter from "@/components/KimiAccountQuotaFooter";
 import { PROVIDER_TYPES, TEMPLATE_TYPES } from "@/config/constants";
+import { ConnectivityBadge } from "@/components/providers/ConnectivityBadge";
+import type { ConnectivityProbeEntry } from "@/hooks/useConnectivityProbe";
 import {
   extractCodexExperimentalBearerToken,
   extractProviderBaseUrl,
@@ -98,6 +100,8 @@ interface ProviderCardProps {
   onTest?: (provider: Provider) => void;
   onOpenTerminal?: (provider: Provider) => void;
   isTesting?: boolean;
+  /** 批量探针结果（卡片徽标），undefined 时不渲染 */
+  connectivityProbe?: ConnectivityProbeEntry;
   dragHandleProps?: DragHandleProps;
 }
 
@@ -240,6 +244,7 @@ export function ProviderCard({
   onTest,
   onOpenTerminal,
   isTesting,
+  connectivityProbe,
   dragHandleProps,
 }: ProviderCardProps) {
   const { t } = useTranslation();
@@ -583,6 +588,13 @@ export function ProviderCard({
                   </span>
                 )}
               </span>
+            )}
+            {connectivityProbe && (
+              <ConnectivityBadge
+                status={connectivityProbe.status}
+                totalMs={connectivityProbe.totalMs}
+                errorMessage={connectivityProbe.errorMessage}
+              />
             )}
             {presentation.chips.map((chip) => (
               <CardChipBadge key={chip.key} chip={chip} />
