@@ -3855,6 +3855,7 @@
     "stoppedWithRestore": "ルーティングサービスを停止し、すべてのアプリを直接接続に戻しました",
     "stopWithRestoreFailed": "停止に失敗しました: {{detail}}"
   },
+<<<<<<< HEAD
   "streamCheck": {
     "reachable": "{{providerName}} は接続可能 ({{responseTimeMs}}ms)",
     "reachableSlow": "{{providerName}} は接続可能だが低速 ({{responseTimeMs}}ms)",
@@ -3869,6 +3870,8 @@
     "maxRetries": "最大リトライ回数",
     "degradedThreshold": "低速判定しきい値（ミリ秒）"
   },
+=======
+>>>>>>> ce86032b (refactor(connectivity-test): 移除旧 stream_check 可达性探测全链路（保留表结构）)
   "proxyConfig": {
     "proxyEnabled": "ルーティング総スイッチ",
     "appTakeover": "ルーティング有効",
