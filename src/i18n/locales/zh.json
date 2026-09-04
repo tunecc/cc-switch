@@ -94,7 +94,15 @@
     "disableAutoModeServerHelp": "网关不支持服务端检查，auto mode 每个会话会先停下提示一次「不符合条件」，回车后改用本机检查。勾选后直接用本机检查，不再提示。官方端点不要勾选。",
     "keyFieldsHint": "地址、Key、模型、上下文窗口和兼容开关随供应商切换；其余字段是 Claude Code 全局设置，保存后对所有供应商生效。",
     "inactiveFieldsHint": "这个供应商还保存着 {{count}} 个不随切换生效的字段。点击可加入上方的全局设置，保存后写入配置文件；供应商里保存的原值不会删除。",
-    "addToGlobalSettings": "加入全局设置"
+    "addToGlobalSettings": "加入全局设置",
+    "writeCommonConfig": "应用通用配置",
+    "editCommonConfig": "编辑通用配置",
+    "editCommonConfigTitle": "编辑通用配置片段",
+    "commonConfigHint": "该片段会在勾选\"应用通用配置\"时合并到 settings.json 中",
+    "extractFromCurrent": "从编辑内容提取",
+    "extractNoCommonConfig": "当前编辑内容没有可提取的通用配置",
+    "extractFailed": "提取失败: {{error}}",
+    "saveFailed": "保存失败: {{error}}"
   },
   "header": {
     "viewOnGithub": "在 GitHub 上查看",
@@ -219,7 +227,12 @@
     "formSubtitleStack": "{{app}}（聚合模式）",
     "editCurrentNoticeFile": "这是正在使用的供应商。保存后会立即写进",
     "editCurrentNoticeFileEnd": "，下一次请求生效。",
-    "editCurrentNotice": "这是正在使用的供应商。保存后立即生效，下一次请求就用新的设置。"
+    "editCurrentNotice": "这是正在使用的供应商。保存后立即生效，下一次请求就用新的设置。",
+    "noProvidersDescriptionSnippet": "除 Key 和请求地址外的数据（如插件配置）会被保存到通用配置片段，用于在不同供应商之间共享",
+    "writeCommonConfig": "应用通用配置",
+    "editCommonConfigButton": "编辑通用配置",
+    "editCommonConfigTitle": "编辑通用配置片段",
+    "editCommonConfigHint": "通用配置片段将合并到所有启用它的供应商配置中"
   },
   "claudeCode": {
     "needsRouting": "需要路由",
@@ -334,7 +347,8 @@
     "codexAuthCleanupFailed": "切换成功，但未能删除 auth.json，官方登录凭据仍留在磁盘上；如需彻底移除请手动删除 Codex 配置目录中的 auth.json",
     "windowControlFailed": "窗口控制失败：{{error}}",
     "officialBlockedByProxy": "本地路由模式下不能切换到官方供应商，使用路由访问官方 API 可能导致账号被封禁",
-    "proxyOfficialWarning": "当前供应商 {{name}} 是官方供应商，建议切换到第三方供应商后再使用本地路由"
+    "proxyOfficialWarning": "当前供应商 {{name}} 是官方供应商，建议切换到第三方供应商后再使用本地路由",
+    "proxyReasonClaudeDesktop": "使用 Claude Desktop 本地路由模式"
   },
   "confirm": {
     "deleteProvider": "删除供应商",
@@ -373,6 +387,11 @@
       "title": "开启自动同步",
       "message": "开启自动同步后，每次数据库变更都会自动上传到 WebDAV 服务器。\n\n这可能会产生较高的网络流量消耗，请确保您的网络环境和 WebDAV 服务支持频繁的数据传输。",
       "confirm": "我已了解，继续开启"
+    },
+    "commonConfig": {
+      "title": "关于通用配置",
+      "message": "「通用配置片段」可以在不同供应商之间共享插件、环境变量等配置，避免切换供应商时丢失这些设置。\n\n使用方法：\n① 编辑供应商时点击「编辑通用配置」→「从编辑内容提取」\n② 新建供应商时勾选「应用通用配置」（默认已勾选）\n\n如果您新安装了插件或 Hook，请重新提取一次通用配置。",
+      "confirm": "我知道了"
     }
   },
   "settings": {
@@ -398,7 +417,8 @@
       "beta": "Beta",
       "copilotDescription": "管理 GitHub Copilot 账号",
       "codexOauthDescription": "管理 ChatGPT 账号",
-      "xaiOauthDescription": "管理 xAI / Grok 账号"
+      "xaiOauthDescription": "管理 xAI / Grok 账号",
+      "title": "OAuth 认证中心"
     },
     "advanced": {
       "configDir": {
@@ -488,6 +508,10 @@
           "debug": "详细信息，包含 SSE 流和请求/响应详情",
           "trace": "全部日志，最详细"
         }
+      },
+      "connectivityCheck": {
+        "title": "连通检测配置",
+        "description": "配置供应商地址探测的超时、重试和较慢阈值"
       }
     },
     "language": "界面语言",
@@ -1007,7 +1031,11 @@
       "pricingSave": "保存计费配置",
       "pricingSaved": "计费配置已保存",
       "pricingSaveFailed": "保存计费配置失败：{{error}}",
-      "pricingLoadFailed": "加载计费配置失败：{{error}}"
+      "pricingLoadFailed": "加载计费配置失败：{{error}}",
+      "defaultCostMultiplierLabel": "默认倍率",
+      "defaultCostMultiplierHint": "用于成本计算的倍率，支持小数。",
+      "defaultCostMultiplierRequired": "默认倍率不能为空",
+      "defaultCostMultiplierInvalid": "默认倍率格式不正确"
     },
     "saveFailedGeneric": "保存失败，请重试",
     "sections": {
@@ -1026,6 +1054,25 @@
     },
     "data": {
       "location": "存储位置"
+    },
+    "skillStorage": {
+      "title": "Skills 存储位置",
+      "description": "选择 CC Switch 存放 Skills 主副本的目录",
+      "ccSwitch": "CC Switch",
+      "unified": "~/.agents/skills",
+      "ccSwitchHint": "技能存储在 ~/.cc-switch/skills/，由 CC Switch 统一管理并同步到各应用。",
+      "unifiedHint": "技能存储在 ~/.agents/skills/，遵循 Agent Skills 开放标准。兼容的工具（Claude Code、Codex、Gemini CLI 等）可直接发现此目录中的技能。",
+      "confirmTitle": "迁移技能存储",
+      "confirmMessage": "将移动 {{count}} 个技能到新位置，是否继续？",
+      "migrationSuccess": "已成功迁移 {{count}} 个技能",
+      "migrationPartial": "迁移了 {{migrated}} 个技能，{{errors}} 个失败，请查看日志"
+    },
+    "skillSync": {
+      "title": "Skills 同步方式",
+      "description": "选择 Skills 的文件同步策略",
+      "symlink": "软连接",
+      "copy": "文件复制",
+      "symlinkHint": "软连接节省磁盘空间并支持实时同步。注意：Windows 可能需要管理员权限或开启开发者模式"
     }
   },
   "apps": {
@@ -1193,7 +1240,28 @@
       "copiedCommand": "已复制 /{{slug}}",
       "templateDeletedUndo": "已删除 /{{slug}}，Pi 里不再有这个命令",
       "templateDeletedSub": "撤销会把 prompts/{{slug}}.md 原样写回。",
-      "templateRestored": "已写回 ~/.pi/agent/prompts/{{slug}}.md"
+      "templateRestored": "已写回 ~/.pi/agent/prompts/{{slug}}.md",
+      "agentsLibrary": "AGENTS.md 提示库",
+      "agentsLibraryDescription": "选择一个提示词写入 Pi 的全局 AGENTS.md。",
+      "writtenToAgents": "已写入 AGENTS.md",
+      "externalAgents": "外部 AGENTS.md",
+      "noGlobalPrompt": "未配置全局 AGENTS.md",
+      "noGlobalPrompts": "暂无全局提示",
+      "noGlobalPromptsDescription": "点击右上角添加提示词；需要时再选择一个写入全局 AGENTS.md。",
+      "noPromptDescription": "暂无描述",
+      "usePrompt": "使用",
+      "stopUsing": "停用",
+      "stopBeforeDelete": "请先停用再删除",
+      "systemFilesDescription": "通常优先使用追加；仅在需要完整控制基础指令时使用替换。",
+      "configured": "已配置",
+      "markdownContent": "Markdown 内容",
+      "removeGlobalFile": "删除全局文件",
+      "removeFileTitle": "删除 {{filename}}？",
+      "removeFileMessage": "这会删除 Pi 全局配置目录中的 {{filename}}。",
+      "fileRemoved": "{{filename}} 已删除",
+      "templateDeleted": "/{{slug}} 已删除",
+      "deleteTemplateTitle": "删除 /{{slug}}？",
+      "deleteTemplateMessage": "此操作会永久删除 prompts/{{slug}}.md。"
     }
   },
   "appSwitcher": {
@@ -1487,7 +1555,59 @@
       "rawMatch": "原文中的匹配",
       "expandContent": "展开完整内容",
       "collapseContent": "收起"
-    }
+    },
+    "title": "会话管理",
+    "subtitle": "管理 Claude Code、Codex、Gemini CLI、Grok Build、OpenCode、OpenClaw、Hermes 与 Pi 会话记录",
+    "providerFilterAll": "全部",
+    "providerFilterTooltip": "供应商筛选",
+    "viewModeTooltip": "查看方式",
+    "viewModeFlat": "列表",
+    "viewModeGrouped": "分类",
+    "toggleProviderGroup": "展开或折叠 {{provider}} 供应商分组",
+    "toggleDirectoryGroup": "展开或折叠 {{directory}} 目录分组",
+    "collapseAllGroups": "全部收起",
+    "selectProviderGroupForBatch": "选择 {{provider}} 供应商分组内会话",
+    "selectDirectoryGroupForBatch": "选择 {{directory}} 目录分组内会话",
+    "manageBatchTooltip": "进入批量管理",
+    "exitBatchModeTooltip": "退出批量管理",
+    "batchModeHint": "勾选要删除的会话",
+    "selectForBatch": "选择会话",
+    "selectedCount": "已选 {{count}} 项",
+    "selectAllFiltered": "全选当前",
+    "clearFilteredSelection": "取消全选",
+    "clearSelection": "清空已选",
+    "deleteSelected": "批量删除",
+    "noSessions": "未发现会话",
+    "selectSession": "请选择会话查看详情",
+    "noSummary": "暂无摘要",
+    "lastActive": "最近活跃",
+    "projectDir": "项目目录",
+    "sourcePath": "原始文件",
+    "openInTerminal": "在终端恢复",
+    "terminalTargetTerminal": "Terminal",
+    "terminalTargetKitty": "kitty",
+    "terminalTargetCopy": "仅复制",
+    "terminalLaunched": "终端已启动",
+    "openFailed": "终端启动失败",
+    "resumeFallbackCopied": "已复制恢复命令，可手动粘贴到终端",
+    "copyProjectDir": "复制目录",
+    "projectDirCopied": "目录已复制",
+    "delete": "删除会话",
+    "deleting": "删除中...",
+    "deleteTooltip": "永久删除此本地会话记录",
+    "deleteConfirmTitle": "删除会话",
+    "deleteConfirmMessage": "将永久删除本地会话“{{title}}”\nSession ID: {{sessionId}}\n\n此操作不可恢复。",
+    "batchDeleteConfirmTitle": "批量删除会话",
+    "batchDeleteConfirmMessage": "将永久删除已选中的 {{count}} 个本地会话记录。\n\n此操作不可恢复。",
+    "batchDeleteConfirmAction": "删除所选会话",
+    "clickToCopyPath": "点击复制路径",
+    "tocTitle": "对话目录",
+    "roleUser": "用户",
+    "resume": "恢复会话",
+    "resumeTooltip": "在终端中恢复此会话",
+    "copyCommand": "复制命令",
+    "copyMessage": "复制消息",
+    "conversationHistory": "对话记录"
   },
   "console": {
     "providerSwitchReceived": "收到供应商切换事件:",
@@ -1571,7 +1691,8 @@
       "9527code": "9527 CODE 是企业级满血 AI 中转平台，为 Claude Code、Codex 等主流模型提供高速稳定的中转服务。持续运营一年，服务稳定性达 99.9%，提供 7×24 小时人工技术支持。新人福利联系客服赠送体验额度，拉新返现无上限！",
       "soleapi": "SoleAPI 是面向开发者与企业的 AI 模型网关，一个 API Key 直达 Claude、GPT、Gemini 等 30+ 主流模型，原生兼容 OpenAI 与 Anthropic 协议，智能选路毫秒级故障切换，可用性 99.99%，7×24 技术支持。通过专属链接注册即送体验额度，邀请好友充值持续返现！",
       "fluxa": "FluxA 与百度智能云联合推出 AgenticPlan，让 AI Agent 能自主购买、管理和使用模型、API 与工具。内含百度千帆 TokenPlan，低至 6 折，可使用 DeepSeek V4、GLM 5.2、Kimi 等旗舰模型，并获赠 FluxA AgentMarket API 调用额度，解锁搜索、数据抓取、社交媒体、金融、加密、生图、视频等 13000+ 付费 API。",
-      "88api": "88API 是由香港企业运营的一站式多模型 API 平台，通过统一接口接入文本、图片、语音和视频模型，支持国际主流付款方式，可提供发票，提供企业级稳定服务。通过专属链接注册可获取专属赠送额度！"
+      "88api": "88API 是由香港企业运营的一站式多模型 API 平台，通过统一接口接入文本、图片、语音和视频模型，支持国际主流付款方式，可提供发票，提供企业级稳定服务。通过专属链接注册可获取专属赠送额度！",
+      "etok": "官网加入ETok社群，订阅套餐。"
     },
     "presets": {
       "ucloud": "优云智算",
@@ -1757,7 +1878,8 @@
     "deploymentType": "GitHub 部署类型",
     "deploymentGitHubCom": "GitHub.com",
     "deploymentEnterprise": "GitHub Enterprise Server",
-    "enterpriseDomainPlaceholder": "例如：company.ghe.com"
+    "enterpriseDomainPlaceholder": "例如：company.ghe.com",
+    "logoutAll": "注销所有账号"
   },
   "codexOauth": {
     "authStatus": "认证状态",
@@ -1797,7 +1919,8 @@
     "retry": "重试",
     "copyCode": "复制代码",
     "fastMode": "FAST 模式",
-    "fastModeDescription": "发送 service_tier=\"priority\" 换取更低延迟。默认关闭——开启后会按更高速率消耗 ChatGPT 配额。"
+    "fastModeDescription": "发送 service_tier=\"priority\" 换取更低延迟。默认关闭——开启后会按更高速率消耗 ChatGPT 配额。",
+    "reauthTitle": "部分账号需要重新登录"
   },
   "xaiOauth": {
     "authStatus": "xAI OAuth 认证",
@@ -1951,7 +2074,14 @@
     "advancedSectionHint": "包含上游格式、模型映射、思考能力与自定义 User-Agent。使用 Chat Completions 协议的供应商需开启路由接管才能使用。",
     "keyFieldsHint": "地址、Key、模型、推理档位、上下文窗口和兼容开关随供应商切换；其余是 Codex 全局设置，保存后对所有供应商生效。",
     "inactiveFieldsHint": "这个供应商还保存着 {{count}} 个不随切换生效的设置。点击复制它的 TOML，按需粘贴到上方；供应商里保存的原值不会删除。",
-    "inactiveFieldCopied": "已复制"
+    "inactiveFieldCopied": "已复制",
+    "writeCommonConfig": "应用通用配置",
+    "editCommonConfig": "编辑通用配置",
+    "editCommonConfigTitle": "编辑 Codex 通用配置片段",
+    "commonConfigHint": "该片段会在勾选'应用通用配置'时追加到 config.toml 末尾",
+    "extractFromCurrent": "从编辑内容提取",
+    "extractNoCommonConfig": "当前编辑内容没有可提取的通用配置",
+    "noCommonConfigToApply": "通用配置片段为空或没有可写入的内容"
   },
   "geminiConfig": {
     "envFile": "环境变量 (.env)",
@@ -1960,7 +2090,22 @@
     "configJsonHint": "Gemini CLI 的 settings.json（MCP 服务器在 MCP 面板里管理）",
     "keyFieldsHint": "地址、Key、模型名和认证方式随供应商切换；其余环境变量和 settings.json 是 Gemini CLI 全局设置，保存后对所有供应商生效。",
     "inactiveFieldsHint": "这个供应商还保存着 {{count}} 个不随切换生效的设置。点击可加入上方的全局设置，保存后写入配置文件；供应商里保存的原值不会删除。",
-    "addToGlobalSettings": "加入全局设置"
+    "addToGlobalSettings": "加入全局设置",
+    "writeCommonConfig": "应用通用配置",
+    "editCommonConfig": "编辑通用配置",
+    "editCommonConfigTitle": "编辑 Gemini 通用配置片段",
+    "commonConfigHint": "该片段会在勾选\"应用通用配置\"时写入 Gemini 的 .env（不允许包含 GOOGLE_GEMINI_BASE_URL、GEMINI_API_KEY）",
+    "extractFromCurrent": "从编辑内容提取",
+    "extractNoCommonConfig": "当前编辑内容没有可提取的通用配置",
+    "extractFailed": "提取失败: {{error}}",
+    "saveFailed": "保存失败: {{error}}",
+    "extractedConfigInvalid": "提取的配置格式错误",
+    "invalidJsonFormat": "通用配置片段格式错误（必须是有效的 JSON）",
+    "commonConfigInvalidKeys": "通用配置片段不能包含 GOOGLE_GEMINI_BASE_URL 或 GEMINI_API_KEY（发现：{{keys}}）",
+    "commonConfigInvalidValues": "通用配置片段的值必须是字符串",
+    "noCommonConfigToApply": "通用配置片段为空或没有可写入的内容",
+    "configMergeFailed": "配置合并失败: {{error}}",
+    "configReplaceFailed": "配置替换失败: {{error}}"
   },
   "opencode": {
     "npmPackage": "接口格式",
@@ -2754,7 +2899,10 @@
     "disableFailed": "禁用失败",
     "importSuccess": "导入成功",
     "importFailed": "导入失败",
-    "confirm": {},
+    "confirm": {
+      "deleteTitle": "确认删除",
+      "deleteMessage": "确定要删除提示词 \"{{name}}\" 吗？"
+    },
     "appSelect": "选择应用",
     "helpTitle": "提示词怎么生效",
     "helpText": "每个应用同时只启用一条，它就是目标文件的内容。在别处改了文件，下次打开本页时会收进启用中的那条；文件里有本页没有的内容，启用前先存成「原始提示词」。",
@@ -2847,7 +2995,19 @@
       "imported": "已导入 {{path}} 的内容，文件没有改动",
       "importedPi": "已把 AGENTS.md 存进提示库，文件没有改动",
       "copied": "已把「{{name}}」复制到 {{apps}}"
-    }
+    },
+    "manage": "提示词",
+    "title": "{{appName}} 提示词管理",
+    "claudeTitle": "Claude 提示词管理",
+    "codexTitle": "Codex 提示词管理",
+    "edit": "编辑提示词",
+    "import": "导入现有",
+    "count": "共 {{count}} 个提示词",
+    "enabledName": "已启用: {{name}}",
+    "noneEnabled": "未启用任何提示词",
+    "currentFile": "当前 {{filename}} 内容",
+    "empty": "暂无提示词",
+    "emptyDescription": "点击右上角按钮添加或导入提示词"
   },
   "profiles": {
     "switcherAriaLabel": "项目：{{name}}",
@@ -3098,7 +3258,15 @@
       "remaining": "剩余 {{remaining}} / {{limit}} 字符",
       "overLimitBy": "超出上限 {{over}} 字符，Hermes 下次加载时会截断",
       "toggledOn": "已启用 {{name}}，Hermes 下次启动或新建会话时生效。",
-      "toggledOff": "已停用 {{name}}，Hermes 下次启动或新建会话时生效。"
+      "toggledOff": "已停用 {{name}}，Hermes 下次启动或新建会话时生效。",
+      "title": "记忆管理",
+      "agentTab": "Agent 记忆 (MEMORY.md)",
+      "userTab": "用户画像 (USER.md)",
+      "usage": "已用 {{current}} / {{limit}} 字符",
+      "overLimit": "已超过上限，Hermes 下次加载时会截断",
+      "enableOn": "已启用",
+      "enableOff": "已禁用",
+      "runtimeNote": "更改将在 Hermes 下次启动或新建会话时生效。"
     }
   },
   "env": {
@@ -3689,7 +3857,14 @@
     "reachableSlow": "{{providerName}} 连通但较慢 ({{responseTimeMs}}ms)",
     "unreachable": "{{providerName}} 无法连通: {{message}}",
     "unreachableHint": "无法建立连接（DNS / 连接 / TLS / 超时）。请检查 base_url 与网络。",
-    "error": "{{providerName}} 检查出错: {{error}}"
+    "error": "{{providerName}} 检查出错: {{error}}",
+    "connectivityNote": "连通检测仅探测供应商地址是否可达，不发送真实模型请求。收到任意响应即视为“可达”——这不代表鉴权或模型配置一定正确。",
+    "configSaved": "连通检测配置已保存",
+    "configSaveFailed": "保存失败",
+    "checkParams": "检查参数",
+    "timeout": "超时时间（秒）",
+    "maxRetries": "最大重试次数",
+    "degradedThreshold": "较慢阈值（毫秒）"
   },
   "proxyConfig": {
     "proxyEnabled": "路由总开关",
@@ -4704,5 +4879,69 @@
       "refresh": "刷新额度",
       "refreshAria": "刷新 {{login}} 的额度"
     }
+  },
+  "commonConfig": {
+    "guideTitle": "什么是通用配置片段？",
+    "guidePurpose": "用来在不同供应商之间共享插件、环境变量等非敏感配置。切换供应商时不会丢失这些设置。",
+    "guideUsage": "用法：① 点击「从编辑内容提取」保存通用部分  ② 新建供应商时勾选「应用通用配置」",
+    "guideReExtract": "如果您新安装了插件或 Hook，请重新提取一次通用配置，以便同步到其他供应商。",
+    "guideReassurance": "放心：您的原始配置已保存在默认供应商中，不会丢失。",
+    "emptyTitle": "还没有通用配置片段",
+    "emptyHint": "点击下方「从编辑内容提取」按钮，从当前配置中提取可复用的部分"
+  },
+  "providerAdvanced": {
+    "pricingConfig": "计费配置",
+    "useCustomPricing": "使用单独配置",
+    "pricingConfigDesc": "为此供应商配置单独的计费参数，不启用时使用全局默认配置。",
+    "costMultiplier": "成本倍率",
+    "costMultiplierPlaceholder": "留空使用全局默认（1）",
+    "costMultiplierHint": "实际成本 = 基础成本 × 倍率，支持小数如 1.5",
+    "pricingModelSourceLabel": "计费模式",
+    "pricingModelSourceInherit": "继承全局默认",
+    "pricingModelSourceRequest": "请求模型",
+    "pricingModelSourceResponse": "返回模型",
+    "pricingModelSourceHint": "选择按请求模型还是返回模型进行定价匹配"
+  },
+  "agents": {
+    "title": "智能体"
+  },
+  "connectivityTest": {
+    "title": "连通性测试",
+    "modelSelection": "选择模型",
+    "selectAll": "全选",
+    "prompt": "测试提示词",
+    "defaultTestModel": "默认测试模型",
+    "defaultTestModelNone": "不指定",
+    "stream": "流式请求",
+    "advancedParams": "高级参数",
+    "temperature": "温度 (temperature)",
+    "maxTokens": "最大 Token (maxTokens)",
+    "timeoutSecs": "超时时间（秒）",
+    "customHeaders": "自定义请求头 (JSON)",
+    "customBody": "自定义请求体 (JSON)",
+    "start": "开始测试",
+    "saveParams": "保存参数",
+    "results": "测试结果",
+    "running": "测试中",
+    "success": "成功",
+    "failed": "失败",
+    "waiting": "等待中",
+    "model": "模型",
+    "status": "状态",
+    "firstByteMs": "首字节 (ms)",
+    "totalMs": "总耗时 (ms)",
+    "errorInfo": "错误信息",
+    "requestDetails": "请求详情",
+    "selectModelFirst": "请先选择要测试的模型",
+    "noTestableModels": "无模型可测试",
+    "invalidJson": "{{field}} 不是有效的 JSON",
+    "disclaimer": "提示：测试会向上游发送真实请求并可能产生费用与用量消耗，结果仅供参考。",
+    "paramsSaved": "测试参数已保存",
+    "paramsSaveFailed": "测试参数保存失败",
+    "requestUrl": "请求 URL",
+    "requestHeaders": "请求头",
+    "requestBody": "请求体",
+    "responseHeaders": "响应头",
+    "responseBody": "响应体"
   }
 }
