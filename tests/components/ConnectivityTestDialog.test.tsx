@@ -154,6 +154,28 @@ describe("ConnectivityTestDialog behaviors", () => {
     expect(screen.getByRole("button", { name: /start/i })).toBeEnabled();
   });
 
+  it("renders only the first matching field per catalog entry (backend parity)", () => {
+    const aliased = {
+      ...provider,
+      settingsConfig: {
+        modelCatalog: {
+          models: [{ model: "x", id: "x-id", name: "X" }, { name: "y" }],
+        },
+      },
+    };
+
+    openDialog(aliased);
+
+    expect(screen.getByRole("checkbox", { name: "x" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "y" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("checkbox", { name: "X" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("checkbox", { name: "x-id" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows the empty state when the provider has no testable models", () => {
     const noModels = {
       ...provider,
