@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   getConnectivityTestSettings,
   mergeConnectivityTestSettings,
-  settingsConfigConnectivityTest,
   DEFAULT_CONNECTIVITY_TEST_SETTINGS,
 } from "@/lib/connectivityTestSettings";
 
@@ -70,10 +69,5 @@ describe("connectivityTestSettings", () => {
   it("falls back to defaults when the stored field is malformed", () => {
     const s = getConnectivityTestSettings({ connectivityTest: "nope" });
     expect(s).toEqual(DEFAULT_CONNECTIVITY_TEST_SETTINGS);
-  });
-
-  it("exposes settingsConfigConnectivityTest as an alias of get", () => {
-    expect(settingsConfigConnectivityTest).toBe(getConnectivityTestSettings);
-    expect(settingsConfigConnectivityTest({})).toEqual(getConnectivityTestSettings({}));
   });
 });
