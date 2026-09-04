@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { connectivityProbeProvider } from "@/lib/api/connectivity-test";
 import { getConnectivityTestSettings } from "@/lib/connectivityTestSettings";
-import { extractCodexModelName } from "@/utils/providerConfigUtils";
+import { listProviderModelIds } from "@/lib/providerModelIds";
 import type { AppId } from "@/lib/api";
 import type { Provider } from "@/types";
 
@@ -38,60 +38,13 @@ interface ProbeItem {
   modelId: string;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-/**
- * 供应商首个可用模型（与后端 model_ids_from_settings 同口径）：
- * modelCatalog.models（数组条目取 model/id/name，退化对象取键）→
- * claude 回退 env.ANTHROPIC_MODEL / codex 回退 config.toml 顶层 model。
- */
-function firstModelId(
-  appId: AppId,
-  settingsConfig: Record<string, any> | undefined,
-): string | undefined {
-  const config = isRecord(settingsConfig) ? settingsConfig : {};
-  const catalog = isRecord(config.modelCatalog)
-    ? config.modelCatalog
-    : undefined;
-  const models = catalog?.models;
-
-  if (Array.isArray(models)) {
-    for (const entry of models) {
-      if (!isRecord(entry)) continue;
-      for (const field of ["model", "id", "name"]) {
-        const value = entry[field];
-        if (typeof value === "string" && value.trim()) {
-          return value.trim();
-        }
-      }
-    }
-  } else if (isRecord(models)) {
-    const key = Object.keys(models).find((k) => k.trim());
-    if (key) return key.trim();
-  }
-
-  if (appId === "claude") {
-    const env = isRecord(config.env) ? config.env : {};
-    const model = env["ANTHROPIC_MODEL"];
-    return typeof model === "string" && model.trim() ? model.trim() : undefined;
-  }
-  if (appId === "codex") {
-    const configText =
-      typeof config.config === "string" ? config.config : undefined;
-    const model = extractCodexModelName(configText);
-    return model && model.trim() ? model.trim() : undefined;
-  }
-  return undefined;
-}
-
-/** 探针目标模型：默认测试模型优先，无则取模型清单第一个；两者皆无 → 跳过（设计 D5） */
+/** 探针目标模型：默认测试模型优先，无则取模型清单第一个（共享 helper 与后端同口径）；两者皆无 → 跳过（设计 D5） */
 function probeModelId(appId: AppId, provider: Provider): string | undefined {
   const configured = getConnectivityTestSettings(
     provider.settingsConfig,
   ).defaultTestModelId;
   if (configured && configured.trim()) return configured.trim();
-  return firstModelId(appId, provider.settingsConfig);
+  return listProviderModelIds(provider.settingsConfig, appId)[0];
 }
 
 /**
