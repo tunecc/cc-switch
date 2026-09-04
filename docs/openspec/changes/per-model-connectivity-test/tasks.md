@@ -22,9 +22,9 @@
 
 ## 4. 移除旧可达性探测
 
-- [ ] 4.1 后端删除：`commands/stream_check.rs`、`services/stream_check.rs`、DB 中 stream check 配置/日志读写方法、`lib.rs` 命令注册（保留表结构）
-- [ ] 4.2 前端删除：`useStreamCheck.ts`、`connectivity-check.ts`、`ConnectivityCheckConfigPanel.tsx` 及其在设置/用量页的引用
-- [ ] 4.3 i18n 清理与新增：删除 `streamCheck.*` 与旧配置面板文案，新增连通性测试相关文案（zh、en、ja、zh-TW 四种语言）
+- [x] 4.1 后端删除：`commands/stream_check.rs`、`services/stream_check.rs`、DB 中 stream check 配置/日志读写方法、`lib.rs` 命令注册（保留表结构）
+- [x] 4.2 前端删除：`useStreamCheck.ts`、`connectivity-check.ts`、`ConnectivityCheckConfigPanel.tsx` 及其在设置/用量页的引用
+- [x] 4.3 i18n 清理与新增：删除 `streamCheck.*` 与旧配置面板文案，新增连通性测试相关文案（zh、en、ja、zh-TW 四种语言）
 
 ## 5. 验证
 
