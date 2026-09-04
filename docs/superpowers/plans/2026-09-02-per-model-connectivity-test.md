@@ -458,7 +458,7 @@ git commit -m "feat(connectivity-test): Tauri 命令与注册，官方/动态端
 ---
 
 ### Task 4: 测试参数持久化（前端纯函数 + update 复用）
-- [ ] Task 4: 测试参数持久化（前端纯函数 + update 复用）
+- [x] Task 4: 测试参数持久化（前端纯函数 + update 复用）
 
 前端侧新增参数持久化读写纯函数（写回供应商 `settings_config.connectivityTest`，复用 `providersApi.update`），供弹窗使用。
 
