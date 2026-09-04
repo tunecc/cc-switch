@@ -82,8 +82,16 @@
     "disableAutoModeServer": "auto mode のサーバー側チェックを無効化",
     "disableAutoModeServerHelp": "ゲートウェイはサーバー側チェックに対応していないため、auto mode はセッションごとに一度「対象外」の通知で止まり、Enter を押すとローカルチェックに切り替わります。オンにすると最初からローカルチェックを使い、通知は出ません。公式エンドポイントではオンにしないでください。",
     "keyFieldsHint": "エンドポイント、キー、モデル、コンテキストウィンドウ、互換スイッチはプロバイダーの切り替えに従います。それ以外のフィールドは Claude Code のグローバル設定で、保存するとすべてのプロバイダーに適用されます。",
-    "inactiveFieldsHint": "旧バージョンがこのプロバイダーに保存した設定で、切り替えでは反映されなくなりました。クリックすると上に追加され、保存後はすべてのプロバイダーに適用されます。",
-    "addToGlobalSettings": "グローバル設定に追加"
+    "inactiveFieldsHint": "このプロバイダーには、切り替えても反映されないフィールドが {{count}} 件保存されています。クリックすると上のグローバル設定に追加され、保存時に設定ファイルへ書き込まれます。プロバイダーに保存された元の値は削除されません。",
+    "addToGlobalSettings": "グローバル設定に追加",
+    "writeCommonConfig": "共通設定を適用",
+    "editCommonConfig": "共通設定を編集",
+    "editCommonConfigTitle": "共通設定スニペットを編集",
+    "commonConfigHint": "「共通設定を適用」がオンのとき settings.json にマージされます",
+    "extractFromCurrent": "編集内容から抽出",
+    "extractNoCommonConfig": "編集内容から抽出できる共通設定がありません",
+    "extractFailed": "抽出に失敗しました: {{error}}",
+    "saveFailed": "保存に失敗しました: {{error}}"
   },
   "header": {
     "viewOnGithub": "GitHub で見る",
@@ -239,7 +247,7 @@
         "account": "アカウント",
         "accountFollow": "agy の現在のログインに従う",
         "accountMissing": "このコンピューターにないアカウント",
-        "accountHelp": "新しいアカウントの紐付けを保存すると、以降に起動する agy はそのアカウントを使います。このカードからターミナルを開くときも、紐付けたアカウントに切り替わります。アカウントは認証センターで追加します。"
+        "accountHelp": "アカウントを選ぶと、「ターミナルを開く」の前に agy のログインをそのアカウントに切り替えます（全体に適用され、以降に起動する agy はそのアカウントを使います）。アカウントは認証センターで追加します。"
       },
       "gemini": {
         "model": "モデル",
@@ -293,7 +301,12 @@
     "formSubtitleStack": "{{app}}（集約モード）",
     "editCurrentNoticeFile": "使用中のプロバイダーです。保存するとすぐに",
     "editCurrentNoticeFileEnd": " に書き込まれ、次のリクエストから反映されます。",
-    "editCurrentNotice": "使用中のプロバイダーです。保存するとすぐに反映され、次のリクエストから新しい設定が使われます。"
+    "editCurrentNotice": "使用中のプロバイダーです。保存するとすぐに反映され、次のリクエストから新しい設定が使われます。",
+    "noProvidersDescriptionSnippet": "API キーとリクエスト URL 以外のデータ（プラグインなど）は共通設定スニペットに保存され、プロバイダー間で共有できます",
+    "writeCommonConfig": "共通設定を適用",
+    "editCommonConfigButton": "共通設定を編集",
+    "editCommonConfigTitle": "共通設定スニペットを編集",
+    "editCommonConfigHint": "共通設定スニペットは、この機能をオンにしたすべてのプロバイダーへマージされます"
   },
   "claudeCode": {
     "needsRouting": "ルーティングが必要"
@@ -406,7 +419,8 @@
       "thirdPartyBucket": "サードパーティプロバイダー",
       "migrationFinished": "古いセッションを {{count}} 件移行しました。Codex を再起動すると続けられます。",
       "migrationFailed": "古いセッションの移行に失敗しました：{{error}}。次回 CC Switch の起動時に自動で再試行します。"
-    }
+    },
+    "proxyReasonClaudeDesktop": "Claude Desktop ローカルルーティングモードを使用中"
   },
   "confirm": {
     "deleteProvider": "プロバイダーを削除",
@@ -445,6 +459,11 @@
       "title": "自動同期を有効にする",
       "message": "自動同期を有効にすると、データベースの変更ごとに WebDAV サーバーへ自動アップロードされます。\n\nネットワークトラフィックが大幅に増加する可能性があります。ネットワーク環境と WebDAV サービスが頻繁なデータ転送に対応できることをご確認ください。",
       "confirm": "理解しました、有効にする"
+    },
+    "commonConfig": {
+      "title": "共通設定について",
+      "message": "「共通設定スニペット」を使うと、プラグインや環境変数などの設定を異なるプロバイダー間で共有でき、切り替え時に失われることがありません。\n\n使い方：\n① プロバイダーを編集 →「共通設定を編集」→「編集内容から抽出」\n② 新規プロバイダー作成時に「共通設定を適用」をチェック（デフォルトでオン）\n\n新しいプラグインや Hook をインストールした場合は、共通設定を再抽出してください。",
+      "confirm": "わかりました"
     }
   },
   "settings": {
@@ -573,6 +592,10 @@
           "debug": "SSE ストリームとリクエスト/レスポンスを含む詳細情報",
           "trace": "すべてのログ、最も詳細"
         }
+      },
+      "connectivityCheck": {
+        "title": "接続チェック設定",
+        "description": "プロバイダー接続チェックのタイムアウト、リトライ、低速判定しきい値を設定"
       }
     },
     "language": "言語",
@@ -921,14 +944,6 @@
     "minimizeToTrayDescription": "チェックすると閉じるボタンでトレイに隠し、オフならアプリを終了します。",
     "useAppWindowControls": "アプリ内ウィンドウボタンを有効化",
     "useAppWindowControlsDescription": "有効にすると、アプリヘッダーに最小化・最大化/復元・閉じるボタンを表示します。",
-    "copilotVscode": {
-      "enable": "VS Code Copilot 拡張機能に適用",
-      "description": "CLI に追加したモデルと API キーを、検出したすべての VS Code プロファイルに自動で適用します。プロバイダーの変更も自動で同期されます。",
-      "pending": "VS Code モデルの同期待ち",
-      "pendingDescription": "VS Code は前の設定を使用している可能性があります。再試行して最新の変更を同期してください。",
-      "noTargets": "VS Code の設定が見つかりません。VS Code を一度起動してから再試行してください。",
-      "failed": "VS Code Copilot への同期に失敗しました"
-    },
     "enableClaudePluginIntegration": "Claude Code 拡張に適用",
     "enableClaudePluginIntegrationDescription": "オンにすると VS Code の Claude Code 拡張のプロバイダーも同期します",
     "skipClaudeOnboarding": "Claude Code の初回確認をスキップ",
@@ -1070,7 +1085,7 @@
     "copyToolUninstallCommand": "{{tool}} のアンインストールコマンドをコピー",
     "uninstallCommandCopied": "アンインストールコマンドをコピーしました",
     "uninstallCommandCopyFailed": "コピーに失敗しました。コマンドを選択して手動でコピーしてください。",
-    "oneClickInstallHint": "Claude Code / Codex / Gemini CLI / Grok Build / OpenCode / OpenClaw / Hermes / Pi / MiniMax Code / Oh My Pi をインストールまたは更新",
+    "oneClickInstallHint": "Claude Code / Codex / Gemini CLI / Grok Build / OpenCode / OpenClaw / Hermes / Pi / MiniMax Code をインストールまたは更新",
     "localEnvCheck": "ローカル環境チェック",
     "updateAllTools": "すべて更新（{{count}}）",
     "currentVersion": "現在のバージョン",
@@ -1160,7 +1175,11 @@
       "pricingModelSourceResponse": "レスポンスモデル",
       "pricingSaved": "課金設定を保存しました",
       "pricingSaveFailed": "課金設定の保存に失敗しました: {{error}}",
-      "pricingLoadFailed": "課金設定の読み込みに失敗しました: {{error}}"
+      "pricingLoadFailed": "課金設定の読み込みに失敗しました: {{error}}",
+      "defaultCostMultiplierLabel": "デフォルト倍率",
+      "defaultCostMultiplierHint": "コスト計算用の倍率（小数対応）。",
+      "defaultCostMultiplierRequired": "デフォルト倍率は必須です",
+      "defaultCostMultiplierInvalid": "デフォルト倍率の形式が正しくありません"
     },
     "saveFailedGeneric": "保存に失敗しました。もう一度お試しください",
     "sections": {
@@ -1371,9 +1390,9 @@
       "contextWindow": "コンテキストウィンドウ",
       "maxTokens": "最大出力トークン数",
       "compatibility": "互換性",
-      "compatibilityHint": "OpenAI 互換をうたうエンドポイントが一部のリクエストを拒否する場合にだけ設定します。各項目はそのエンドポイントの癖を一つ表します。たとえば supportsDeveloperRole を false にすると developer ロールを受け付けないこと、maxTokensField を max_tokens にすると古いフィールド名しか受け付けないことを示します。プリセットを選ぶと必要な項目は自動で入ります。空のままならデフォルトで動作します。",
+      "compatibilityHint": "互換エンドポイントやローカル環境向けにリクエスト動作を調整します。",
       "addCompatibilityOption": "追加",
-      "noCompatibilityOptions": "未設定（デフォルトで動作）",
+      "noCompatibilityOptions": "互換性オプションはありません",
       "optionKey": "オプション",
       "optionValue": "値",
       "removeCompatibilityOption": "互換性オプションを削除",
@@ -1461,7 +1480,28 @@
       "copiedCommand": "/{{slug}} をコピーしました",
       "templateDeletedUndo": "/{{slug}} を削除しました。Pi からこのコマンドはなくなります",
       "templateDeletedSub": "元に戻すと prompts/{{slug}}.md をそのまま書き戻します。",
-      "templateRestored": "~/.pi/agent/prompts/{{slug}}.md を書き戻しました"
+      "templateRestored": "~/.pi/agent/prompts/{{slug}}.md を書き戻しました",
+      "agentsLibrary": "AGENTS.md ライブラリ",
+      "agentsLibraryDescription": "1 つのプロンプトを選び、Pi のグローバル AGENTS.md に書き込みます。",
+      "writtenToAgents": "AGENTS.md に書き込み済み",
+      "externalAgents": "外部 AGENTS.md",
+      "noGlobalPrompt": "グローバル AGENTS.md は未設定",
+      "noGlobalPrompts": "グローバルプロンプトがありません",
+      "noGlobalPromptsDescription": "右上からプロンプトを追加し、必要なものをグローバル AGENTS.md に書き込めます。",
+      "noPromptDescription": "説明なし",
+      "usePrompt": "使用",
+      "stopUsing": "停止",
+      "stopBeforeDelete": "先に使用を停止してください",
+      "systemFilesDescription": "通常は追記を使用し、基本指示を完全に制御する場合のみ置換を使用してください。",
+      "configured": "設定済み",
+      "markdownContent": "Markdown 内容",
+      "removeGlobalFile": "グローバルファイルを削除",
+      "removeFileTitle": "{{filename}} を削除しますか？",
+      "removeFileMessage": "Pi のグローバル設定ディレクトリから {{filename}} を削除します。",
+      "fileRemoved": "{{filename}} を削除しました",
+      "templateDeleted": "/{{slug}} を削除しました",
+      "deleteTemplateTitle": "/{{slug}} を削除しますか？",
+      "deleteTemplateMessage": "prompts/{{slug}}.md を完全に削除します。"
     }
   },
   "appSwitcher": {
@@ -1560,7 +1600,6 @@
     "selectSessionLabel": "{{title}} を選択",
     "agyDeleteHint": "実行状態も削除するには Antigravity でセッションを削除してください",
     "mcodeDeleteHint": "MiniMax Code で削除してください",
-    "codebuddyDeleteHint": "このセッションは CodeBuddy で管理してください。バックグラウンドジョブ、チームメンバー、ファイル履歴がその記録を参照しています",
     "groupMeta": "{{count}} 件 · {{time}}",
     "bucketToday": "今日",
     "bucketYesterday": "昨日",
@@ -1782,6 +1821,58 @@
       "expandContent": "全文を表示",
       "collapseContent": "折りたたむ"
     },
+    "title": "セッション管理",
+    "subtitle": "Claude Code / Codex / Gemini CLI / Grok Build / OpenCode / OpenClaw / Hermes / Pi のセッションを管理",
+    "providerFilterAll": "すべて",
+    "providerFilterTooltip": "プロバイダーフィルター",
+    "viewModeTooltip": "表示方式",
+    "viewModeFlat": "一覧",
+    "viewModeGrouped": "分類",
+    "toggleProviderGroup": "{{provider}} プロバイダーグループを開閉",
+    "toggleDirectoryGroup": "{{directory}} ディレクトリグループを開閉",
+    "collapseAllGroups": "すべて折りたたむ",
+    "selectProviderGroupForBatch": "{{provider}} プロバイダーグループ内のセッションを選択",
+    "selectDirectoryGroupForBatch": "{{directory}} ディレクトリグループ内のセッションを選択",
+    "manageBatchTooltip": "一括管理に入る",
+    "exitBatchModeTooltip": "一括管理を終了",
+    "batchModeHint": "削除するセッションを選択",
+    "selectForBatch": "セッションを選択",
+    "selectedCount": "{{count}} 件を選択中",
+    "selectAllFiltered": "一覧を全選択",
+    "clearFilteredSelection": "全選択を解除",
+    "clearSelection": "クリア",
+    "deleteSelected": "削除",
+    "noSessions": "セッションが見つかりません",
+    "selectSession": "セッションを選択してください",
+    "noSummary": "概要なし",
+    "lastActive": "最終アクティブ",
+    "projectDir": "プロジェクトディレクトリ",
+    "sourcePath": "元ファイル",
+    "openInTerminal": "ターミナルで再開",
+    "terminalTargetTerminal": "Terminal",
+    "terminalTargetKitty": "kitty",
+    "terminalTargetCopy": "コピーのみ",
+    "terminalLaunched": "ターミナルを起動しました",
+    "openFailed": "ターミナルの起動に失敗しました",
+    "resumeFallbackCopied": "再開コマンドをコピーしました（手動で実行してください）",
+    "copyProjectDir": "ディレクトリをコピー",
+    "projectDirCopied": "ディレクトリをコピーしました",
+    "delete": "セッションを削除",
+    "deleting": "削除中...",
+    "deleteTooltip": "このローカルセッション記録を完全に削除します",
+    "deleteConfirmTitle": "セッションを削除",
+    "deleteConfirmMessage": "ローカルセッション「{{title}}」を完全に削除します\nSession ID: {{sessionId}}\n\nこの操作は元に戻せません。",
+    "batchDeleteConfirmTitle": "選択したセッションを削除",
+    "batchDeleteConfirmMessage": "選択した {{count}} 件のローカルセッションを完全に削除します。\n\nこの操作は元に戻せません。",
+    "batchDeleteConfirmAction": "選択した項目を削除",
+    "clickToCopyPath": "クリックしてパスをコピー",
+    "tocTitle": "目次",
+    "roleUser": "ユーザー",
+    "resume": "セッションを再開",
+    "resumeTooltip": "ターミナルでこのセッションを再開",
+    "copyCommand": "コマンドをコピー",
+    "copyMessage": "メッセージをコピー",
+    "conversationHistory": "会話履歴",
     "copilotDeleteHint": "セッションストアの整合性を保つため、このセッションは GitHub Copilot CLI で削除してください"
   },
   "console": {
@@ -1870,7 +1961,8 @@
       "grooroute": "GrooRoute Pro は OpenAI、Claude、DeepSeek などの主要モデルに対応する信頼性の高い AI API 中継プラットフォームで、従量課金とサブスクリプションに対応しています。CC Switch ユーザーはこのリンクから登録すると 5 元分の無料お試しクレジットがもらえます！",
       "buytoken": "BuyToken は Claude Code、Codex、DeepSeek などの中継サービスを提供し、エンタープライズ級の同時実行と迅速な請求書発行に対応、安定して長く続くサービスを目指しています。CC Switch ユーザーはこのリンクから登録すると 3 元分のお試しクレジットを受け取れ、初回チャージは 10% オフになります！",
       "vapi": "V-API は 3 年の実績を持つブランドで、個人・開発者・企業向けに安定・高速・安全な高品質 LLM API サービスを提供し、契約締結と正規の請求書発行（普通 / 専用）に対応しています。CC Switch ユーザーはこのリンクから登録すると、初回注文が 2 元引きのうえ 10% オフになります！",
-      "ospreyai": "ACS OspreyAI は開発者と企業向けのワンストップ・マルチモデル API サービスプラットフォームです。1 つの API Key で Claude、Gemini、GPT、GLM、Kimi、Qwen、DeepSeek、Tencent Hunyuan など国内外の主要モデルを呼び出せます。OpenAI、Anthropic などの主要 API プロトコルに対応し、Claude Code、Codex、OpenCode、Pi、Hermes などの主要 AI ツールでも利用できます。海外モデルは公式価格より 20〜40%、中国国内モデルは 30〜50% お得です。チャージと請求の一元化、使用量の確認、モデルの柔軟な切り替えに対応し、AI アプリ開発、コンテンツ制作、自動化ワークフローなどに適しています。このリンクからアカウントを作成すると特典を受けられ、国内外の主要モデルにすぐ接続できます。"
+      "ospreyai": "ACS OspreyAI は開発者と企業向けのワンストップ・マルチモデル API サービスプラットフォームです。1 つの API Key で Claude、Gemini、GPT、GLM、Kimi、Qwen、DeepSeek、Tencent Hunyuan など国内外の主要モデルを呼び出せます。OpenAI、Anthropic などの主要 API プロトコルに対応し、Claude Code、Codex、OpenCode、Pi、Hermes などの主要 AI ツールでも利用できます。海外モデルは公式価格より 20〜40%、中国国内モデルは 30〜50% お得です。チャージと請求の一元化、使用量の確認、モデルの柔軟な切り替えに対応し、AI アプリ開発、コンテンツ制作、自動化ワークフローなどに適しています。このリンクからアカウントを作成すると特典を受けられ、国内外の主要モデルにすぐ接続できます。",
+      "everyapi": "EveryAPI は専用のデスクトップクライアントを備え、Claude Code、Codex、Cursor など 20 以上のツールをワンクリックで自動設定できます。1 つのキーで Claude、GPT、DeepSeek、GLM、MiniMax、Kimi、Doubao を利用でき、モデルを切り替えても設定の変更は不要です。登録で 14 元分のクレジットを進呈、GPT は公式価格の 15% から。CC Switch ユーザー限定：初回チャージ時に割引コード \"ccswitch\" を使うと 20% オフ（期限なし）！"
     },
     "presets": {
       "ucloud": "Compshare",
@@ -2082,7 +2174,6 @@
     "deploymentGitHubCom": "GitHub.com",
     "deploymentEnterprise": "GitHub Enterprise Server",
     "enterpriseDomainPlaceholder": "例: company.ghe.com",
-    "autoModelName": "GitHub Copilot 自動選択",
     "form": {
       "officialTitle": "Copilot CLI 自身の GitHub ログインを使用",
       "officialHint": "「ターミナルを開く」はこのカードのモデルで copilot を起動します。認証センターのアカウントを紐付けると、そのアカウントで起動します。",
@@ -2112,7 +2203,8 @@
       "notSignedIn": "Copilot CLI にログインしていません。copilot を実行して /login でログインするか、このカードで認証センターのアカウントを紐付けてください。"
     },
     "defaultCannotRemove": "Copilot の既定モデルがこのプロバイダーのものなので、削除できません。先に copilot の /model でほかのプロバイダーのモデルに切り替えてください。",
-    "terminalNeedsAdd": "ターミナルでモデルを選べるよう、先にこのプロバイダーを Copilot に追加してください。"
+    "terminalNeedsAdd": "ターミナルでモデルを選べるよう、先にこのプロバイダーを Copilot に追加してください。",
+    "logoutAll": "すべてのアカウントをログアウト"
   },
   "codexOauth": {
     "authStatus": "認証状態",
@@ -2274,8 +2366,7 @@
     "autoReviewModelMainDefault": "メインモデル自身が承認（既定）",
     "autoReviewModelNoList": "このカードにはモデル一覧がありません。Codex は公式の codex-auto-review で承認しますが、これを受け付けるのは ChatGPT アカウントへ転送する一部の中継だけで、それ以外では 404 になります。上のモデル一覧にモデルを追加すると選べます。",
     "officialSpeedTiersLabel": "公式の Fast ティアを残す",
-    "officialSpeedTiersHint": "モデル一覧の GPT モデルに公式の Fast 速度ティアを残します。Codex で Fast を選ぶと service_tier=priority が送られます。受け付けるのは公式 ChatGPT アカウントへ転送する中継（CPA など）だけで、利用枠の消費も速くなります。それ以外の上流ではエラーになったり、より高い料金で課金されたりすることがあります。Codex デスクトップ版は ChatGPT にサインインしているときだけ Fast を表示します。デスクトップ版でサインインし、設定の「直接切替時に公式ログインを保持」をオンにすれば（またはルーティングモードを使えば）使え、リクエストは引き続きこのカードに送られます。サインインしていない場合は CLI 版（/fast）でのみ使えます。オンにすると、公式カードで選んだ Fast がこのプロバイダーですぐに有効になります。集約モードでは使われません。変更後は Codex を再起動してください。",
-    "officialSpeedTiersNoList": "このカードにはモデル一覧がありません。Fast ティアはモデル一覧の GPT モデルにだけ付くため、今はオンにできません。上のモデル一覧に GPT モデルを追加するとオンにできます。",
+    "officialSpeedTiersHint": "モデル一覧の GPT モデルに公式の Fast 速度ティアを残します。Codex で Fast を選ぶと service_tier=priority が送られます。受け付けるのは公式 ChatGPT アカウントへ転送する中継（CPA など）だけで、利用枠の消費も速くなります。それ以外の上流ではエラーになったり、より高い料金で課金されたりすることがあります。オンにすると、公式カードで選んだ Fast がこのプロバイダーですぐに有効になります。集約モードでは使われません。変更後は Codex を再起動してください。",
     "modelListHint": "変更後は Codex を再起動してください。",
     "modelListDefaultHelp": "これらのモデルは Codex の /model に表示され、先頭の行がデフォルトモデルです。公式 GPT モデル名の行は公式エントリから生成されるため、表示名・ウィンドウ・思考レベルは反映されません。",
     "addCatalogModel": "手動で追加",
@@ -2302,11 +2393,18 @@
     "reasoningEffortHint": "上流が low/high/max などの思考深度に対応しているときにオンにします。思考モードも同時にオンになり、Codex の reasoning.effort を上流の Chat パラメーターに変換します。",
     "reasoningGroupTitle": "思考能力",
     "keyFieldsHint": "エンドポイント、キー、モデル、推論レベル、コンテキストウィンドウ、互換スイッチはプロバイダーに合わせて切り替わります。それ以外は Codex のグローバル設定で、保存するとすべてのプロバイダーに適用されます。",
-    "inactiveFieldsHint": "旧バージョンがこのプロバイダーに保存した設定で、切り替えでは反映されなくなりました。クリックすると TOML をコピーできるので、必要なら上に貼り付けてください。",
+    "inactiveFieldsHint": "このプロバイダーには切り替え時に適用されない設定が {{count}} 件保存されています。クリックすると TOML をコピーできるので、必要なら上に貼り付けてください。保存済みの値は削除されません。",
     "inactiveFieldCopied": "コピーしました",
     "upstreamFormatCopilotRouteHint": "どのモードでもルーティングが必要で、ルーティングが Copilot アカウントの認証情報を注入します。手動指定したプロトコルにモデルが対応していないとエラーになります。",
     "maxOutputTokensWarning": "モデルやゲートウェイの実際の出力上限を超えないでください。超えると 400 が返ります。",
-    "routeOnlySettingsHint": "以下の設定はルーティングモードと集約モードでのみ有効です。"
+    "routeOnlySettingsHint": "以下の設定はルーティングモードと集約モードでのみ有効です。",
+    "writeCommonConfig": "共通設定を適用",
+    "editCommonConfig": "共通設定を編集",
+    "editCommonConfigTitle": "Codex 共通設定スニペットを編集",
+    "commonConfigHint": "「共通設定を適用」がオンの場合、config.toml の末尾に追記されます",
+    "extractFromCurrent": "編集内容から抽出",
+    "extractNoCommonConfig": "編集内容から抽出できる共通設定がありません",
+    "noCommonConfigToApply": "共通設定スニペットが空か、書き込む内容がありません"
   },
   "geminiConfig": {
     "envFile": "環境変数 (.env)",
@@ -2314,8 +2412,23 @@
     "configJson": "設定ファイル (settings.json)",
     "configJsonHint": "Gemini CLI の settings.json（MCP サーバーは MCP パネルで管理します）",
     "keyFieldsHint": "エンドポイント、キー、モデル名、認証方式はプロバイダーに合わせて切り替わります。その他の環境変数と settings.json は Gemini CLI のグローバル設定で、保存するとすべてのプロバイダーに適用されます。",
-    "inactiveFieldsHint": "旧バージョンがこのプロバイダーに保存した設定で、切り替えでは反映されなくなりました。クリックすると上に追加され、保存後はすべてのプロバイダーに適用されます。",
-    "addToGlobalSettings": "グローバル設定に追加"
+    "inactiveFieldsHint": "このプロバイダーには切り替えで反映されない設定が {{count}} 件保存されています。クリックすると上のグローバル設定に追加され、保存時に設定ファイルへ書き込まれます。プロバイダーに保存された元の値は削除されません。",
+    "addToGlobalSettings": "グローバル設定に追加",
+    "writeCommonConfig": "共通設定を適用",
+    "editCommonConfig": "共通設定を編集",
+    "editCommonConfigTitle": "Gemini 共通設定スニペットを編集",
+    "commonConfigHint": "「共通設定を適用」がオンのとき Gemini の .env に書き込みます（GOOGLE_GEMINI_BASE_URL、GEMINI_API_KEY は使用できません）",
+    "extractFromCurrent": "編集内容から抽出",
+    "extractNoCommonConfig": "編集内容から抽出できる共通設定がありません",
+    "extractFailed": "抽出に失敗しました: {{error}}",
+    "saveFailed": "保存に失敗しました: {{error}}",
+    "extractedConfigInvalid": "抽出した設定のフォーマットが不正です",
+    "invalidJsonFormat": "共通設定スニペットの形式が不正です（有効な JSON でなければなりません）",
+    "commonConfigInvalidKeys": "共通設定スニペットに GOOGLE_GEMINI_BASE_URL または GEMINI_API_KEY を含めることはできません（検出: {{keys}}）",
+    "commonConfigInvalidValues": "共通設定スニペットの値は文字列である必要があります",
+    "noCommonConfigToApply": "共通設定スニペットが空、または適用できる項目がありません",
+    "configMergeFailed": "設定のマージに失敗しました: {{error}}",
+    "configReplaceFailed": "設定の置換に失敗しました: {{error}}"
   },
   "opencode": {
     "npmPackage": "API フォーマット",
@@ -2412,7 +2525,6 @@
     "loginWith": {
       "deepseek": "DeepSeek アカウントでログイン",
       "workbuddy": "WorkBuddy アカウントでログイン",
-      "codebuddy": "CodeBuddy アカウントでログイン",
       "kimi": "Kimi アカウントでログイン",
       "claude": "Claude アカウントでログイン",
       "chatgpt": "ChatGPT アカウントでログイン",
@@ -2806,7 +2918,6 @@
       "duration": "所要時間",
       "durationEstimated": "所要時間（推定）",
       "speedTooFew": "出力が 100 トークン未満のため速度は出しません",
-      "speedBurst": "バッファ後の一括到着とみられるため速度は出しません",
       "speedEstimateTooFew": "出力が 200 トークン未満のため速度は推定しません",
       "noTimingSession": "セッションログには計測データがありません",
       "noFirstToken": "最初のトークンの計測がないため速度は出しません",
@@ -3148,7 +3259,10 @@
     "disableFailed": "無効化に失敗しました",
     "importSuccess": "インポートしました",
     "importFailed": "インポートに失敗しました",
-    "confirm": {},
+    "confirm": {
+      "deleteTitle": "削除の確認",
+      "deleteMessage": "プロンプト「{{name}}」を削除してもよろしいですか？"
+    },
     "appSelect": "アプリを選択",
     "helpTitle": "プロンプトの反映のしかた",
     "helpText": "各アプリで同時に有効にできるのは 1 件で、その内容が対象ファイルになります。ほかで編集した内容は次にこのページを開いたとき有効なプロンプトに取り込まれます。ここにない内容がファイルにある場合は、別のプロンプトを有効にする前に「元のプロンプト」として保存されます。",
@@ -3241,7 +3355,19 @@
       "imported": "{{path}} の内容を取り込みました。ファイルは変更していません",
       "importedPi": "AGENTS.md をライブラリに保存しました。ファイルは変更していません",
       "copied": "「{{name}}」を {{apps}} にコピーしました"
-    }
+    },
+    "manage": "プロンプト",
+    "title": "{{appName}} プロンプト管理",
+    "claudeTitle": "Claude プロンプト管理",
+    "codexTitle": "Codex プロンプト管理",
+    "edit": "プロンプトを編集",
+    "import": "既存をインポート",
+    "count": "{{count}} 件のプロンプト",
+    "enabledName": "有効: {{name}}",
+    "noneEnabled": "有効なプロンプトがありません",
+    "currentFile": "現在の {{filename}} の内容",
+    "empty": "まだプロンプトがありません",
+    "emptyDescription": "上のボタンからプロンプトを追加またはインポートしてください"
   },
   "profiles": {
     "switcherAriaLabel": "プロジェクト：{{name}}",
@@ -3487,7 +3613,15 @@
       "remaining": "残り {{remaining}} / {{limit}} 文字",
       "overLimitBy": "上限を {{over}} 文字超えています。Hermes は次回読み込み時に切り詰めます",
       "toggledOn": "{{name}}を有効にしました。Hermes の再起動または新規セッション時に反映されます。",
-      "toggledOff": "{{name}}を無効にしました。Hermes の再起動または新規セッション時に反映されます。"
+      "toggledOff": "{{name}}を無効にしました。Hermes の再起動または新規セッション時に反映されます。",
+      "title": "メモリ",
+      "agentTab": "エージェント記憶 (MEMORY.md)",
+      "userTab": "ユーザープロファイル (USER.md)",
+      "usage": "{{current}} / {{limit}} 文字",
+      "overLimit": "上限を超えました。Hermes は次回読み込み時に切り詰めます",
+      "enableOn": "有効",
+      "enableOff": "無効",
+      "runtimeNote": "変更は Hermes の再起動または新規セッション時に反映されます。"
     }
   },
   "env": {
@@ -4086,29 +4220,14 @@
     "reachableSlow": "{{providerName}} は接続可能だが低速 ({{responseTimeMs}}ms)",
     "unreachable": "{{providerName}} に接続できません: {{message}}",
     "unreachableHint": "接続を確立できませんでした（DNS / 接続 / TLS / タイムアウト）。base_url とネットワークを確認してください。",
-    "hint": {
-      "blocked": "システムが接続を拒否しました。多くの場合、ファイアウォールやセキュリティソフトが CC Switch をブロックしています。ファイアウォールで CC Switch のネットワーク接続を許可してください（ローカルネットワークのアドレスへの接続にも必要です）。",
-      "refused": "アドレスには到達できますが、このポートで動いているサービスがありません。サービスが起動しているか、ポートが正しいか確認してください。",
-      "timeout": "接続がタイムアウトしました。ネットワークとアドレスを確認してください。ファイアウォールやセキュリティソフトが応答せずに接続を遮断している可能性もあります。",
-      "dns": "ドメイン名を解決できませんでした。アドレスのドメインに誤りがないか、ネットワークと DNS が正常か確認してください。",
-      "tls": "HTTPS 接続に失敗しました（証明書またはハンドシェイクのエラー）。アドレスが http と https のどちらを使うべきか、サーバー証明書が有効か確認してください。"
-    },
-    "error": "{{providerName}} のチェックでエラーが発生しました: {{error}}"
-  },
-  "backgroundTask": {
-    "updateCheckFailed": {
-      "title": "CC Switch の更新を確認できませんでした",
-      "description": "CC Switch は起動時に dl.ccswitch.io（予備として github.com）に新しいバージョンを問い合わせますが、今回は失敗しました：{{detail}}。ほかの機能には影響しません。ネットワークやファイアウォールで遮断している場合は無視してかまいません。"
-    },
-    "modelsDevSyncFailed": {
-      "title": "モデル料金を同期できませんでした",
-      "description": "CC Switch は利用料金の計算のため、定期的に models.dev からモデル料金を取得しますが、今回は失敗しました：{{detail}}。ほかの機能には影響しません。"
-    },
-    "networkError": "サーバーに接続できませんでした",
-    "mute": "今後表示しない",
-    "disableModelsDevSync": "自動同期をオフにする",
-    "modelsDevSyncDisabled": "モデル料金の自動同期をオフにしました。「利用統計 → モデル料金」で再びオンにできます。",
-    "disableFailed": "オフにできませんでした：{{error}}"
+    "error": "{{providerName}} のチェックでエラーが発生しました: {{error}}",
+    "connectivityNote": "接続チェックはプロバイダーのアドレスに到達できるかを確認するだけで、実際のモデルリクエストは送信しません。何らかの応答があれば「到達可能」とみなされますが、認証やモデル設定が正しいことを保証するものではありません。",
+    "configSaved": "接続チェック設定を保存しました",
+    "configSaveFailed": "保存に失敗しました",
+    "checkParams": "チェックパラメーター",
+    "timeout": "タイムアウト（秒）",
+    "maxRetries": "最大リトライ回数",
+    "degradedThreshold": "低速判定しきい値（ミリ秒）"
   },
   "proxyConfig": {
     "proxyEnabled": "ルーティング総スイッチ",
@@ -4729,7 +4848,6 @@
     },
     "updatedAt": "{{time}}に更新",
     "clickToRefresh": "クリックで再取得",
-    "manualIdle": "更新をクリックして残量を取得",
     "resetCredits": {
       "label": "リセット",
       "left": "リセット 残り {{count}} 回",
@@ -4753,7 +4871,8 @@
     "windows": {
       "title": "各枠の残量",
       "showAll": "各枠の残量を表示"
-    }
+    },
+    "balanceUsedUp": "残高なし"
   },
   "appMatrix": {
     "clearSearch": "検索をクリア",
@@ -4857,7 +4976,6 @@
       "failedTitle": "読み込めなかったアプリがあります",
       "filesTitle": "読み込んだファイル",
       "claudeNote": "（トップレベルの mcpServers）",
-      "codebuddyNote": "（.mcp.json → mcp.json → ~/.codebuddy.json の順で最初に見つかったファイル）",
       "dshNote": "（初期化済みのすべての profile に書き込みます：web、desktop、headless、acp。ホームレベルの ~/.dsh/cordis.patch.yml は読み書きしません。そこにある MCP はそのファイルで管理してください）",
       "ok": "OK"
     },
@@ -5009,9 +5127,9 @@
       "disableAria": "選択した {{count}} 件の Skill をこのアプリでオフ",
       "uninstall": "アンインストール"
     },
-    "piColumnTitle": "Pi は ~/.agents/skills も読み込むため、未選択でもそのパスにあるスキルはそのまま利用できます",
+    "piColumnTitle": "Pi は ~/.pi/agent/skills にそのフォルダーがあるかで判定します",
     "piHelpTitle": "Pi の有効の判定",
-    "piHelp": "Pi は ~/.agents/skills も読み込むため、未選択でもそのパスにあるスキルはそのまま利用できます。",
+    "piHelp": "~/.pi/agent/skills にそのフォルダーがあるかどうかです。",
     "pop": {
       "onlyApp": "{{app}} で有効なものだけ表示",
       "showAll": "すべての Skill を表示"
@@ -5245,7 +5363,6 @@
       "chatgptHelp": "Claude Code、Claude Desktop の ChatGPT プリセットと、Codex の公式ログインのバインドで使います。アカウントを指定していないプロバイダーは「デフォルト」のアカウントを使います。",
       "xaiHelp": "Claude Code、Claude Desktop、Codex の xAI プリセットで使います。アカウントを指定していないプロバイダーは「デフォルト」のアカウントを使います。",
       "agyHelp": "Antigravity CLI（agy）の公式ログインです。agy は同時に 1 つのアカウントにしかログインできません。「切り替え」で agy のログインを選んだアカウントに置き換え、以降に起動する agy はそのアカウントを使います。agy に元々ログインしていたアカウントは自動でここに追加されるため、切り替えても失われません。",
-      "codebuddyHelp": "CodeBuddy の公式ログイン（中国版・国際版の両方）。アカウントを切り替えるには、アカウントの「…」から「CodeBuddy をこのアカウントに切り替え」を選ぶか、プロバイダー一覧でそのアカウントを紐付けた「CodeBuddy 公式ログイン」カードを追加します。「アカウントを追加」はターミナルで codebuddy を起動し、ログイン後ここに自動で追加します。ログイン中の場合はいったんログアウトさせ、やめれば元に戻せます。トークンは CodeBuddy 自身が更新します。",
       "workbuddyHelp": "WorkBuddy デスクトップ版の公式ログインです。CC Switch は WorkBuddy に代わってログインできず、WorkBuddy が現在ログインしているアカウント（ログインファイル一式のスナップショット）を取り込むだけです。アカウントを切り替えるには、アカウントの「…」から「WorkBuddy をこのアカウントに切り替え」を選ぶか、プロバイダー一覧でそのアカウントを紐付けた「WorkBuddy 公式ログイン」カードを追加してください（追加済みにできる公式カードは同時に 1 枚だけです）。スナップショットはこのコンピューターでのみ有効で、クラウド同期されません。",
       "claudeHelpTerminal": "Claude Code の公式サブスクリプションアカウント（Pro / Max / Team）。設定で Claude の設定フォルダーが上書きされているため、カードを切り替えても Claude Code のログインは変わりません。公式カードでアカウントを選び、カードの「ターミナルを開く」から使ってください。",
       "claudeHelpWsl": "Claude Code の公式サブスクリプションアカウント（Pro / Max / Team）。Claude の設定フォルダーが WSL にある場合はまだ対応していません。",
@@ -5292,6 +5409,7 @@
       "reauthed": "{{login}} に再ログインしました。"
     },
     "quota": {
+      "updating": "更新中…",
       "loading": "残量を確認中…",
       "refresh": "残量を更新",
       "refreshAria": "{{login}} の残量を更新",
@@ -5305,33 +5423,6 @@
       "removeNote": "agy からはログアウトしません。agy が現在このアカウントを使っている場合、削除後もそのまま使えます。",
       "switched": "切り替えました。新しく起動する agy はこのアカウントを使います。",
       "switchedWhileRunning": "切り替えました。agy が実行中です。開いている agy は元のアカウントのままで、元のアカウントを書き戻す可能性があります。agy を終了してから開き直してください。"
-    },
-    "codebuddy": {
-      "mainland": "国内版",
-      "global": "国際版",
-      "expiredNote": "ログインの有効期限切れ、再ログインが必要です",
-      "addedOn": "{{date}}に追加",
-      "imported": "{{login}} を追加しました。",
-      "uncollected": "CodeBuddy は {{login}} でログイン中ですが、まだここに追加されていません。",
-      "importCurrent": "現在のアカウントを追加",
-      "unrecognized": "CodeBuddy のログインファイルの形式を認識できません",
-      "unrecognizedNote": "WorkBuddy によって暗号化管理されている可能性があります。CC Switch はこのファイルを変更せず、アカウントを切り替えることもできません。",
-      "statusLoadFailed": "CodeBuddy のアカウントを読み込めませんでした。もう一度お試しください。",
-      "empty": "CodeBuddy のアカウントはまだありません。「アカウントを追加」からログインするか、CodeBuddy で現在ログイン中のアカウントを追加してください。",
-      "login": "新しいアカウントでログイン",
-      "current": "CodeBuddy で使用中",
-      "pendingNote": "ターミナルで codebuddy を起動しました。案内に従ってログインしてください（ログイン画面が出ない場合は /login を入力）。完了するとここに自動で追加されます。",
-      "reopenTerminal": "ターミナルを再度開く",
-      "removeNote": "CC Switch 内のコピーだけを削除します。CodeBuddy からはログアウトしません。",
-      "localOnly": "アカウントのコピーはこのコンピューターにのみ保存され、クラウド同期されません。別のコンピューターでは取り込み直してください。",
-      "quota": {
-        "credits": "クレジット",
-        "enterprise": "エンタープライズ",
-        "unlimited": "無制限",
-        "detail": "クレジット残り {{remaining}} / 合計 {{total}}、使用済み {{used}}",
-        "usedDetail": "今期の使用済みクレジット {{used}}",
-        "refreshPending": "トークンは CodeBuddy による更新待ちです。このアカウントに切り替えて一度使ってから再確認してください。"
-      }
     },
     "workbuddy": {
       "addedOn": "{{date}}に取り込み",
@@ -5385,10 +5476,6 @@
     "openBrowser": {
       "title": "ログイン時にブラウザを自動で開く",
       "description": "オフにするとログインリンクをコピーするだけになり、使うブラウザを自分で選べます。アカウントごとに独立したブラウザ環境を使う場合に便利です。"
-    },
-    "autoQuota": {
-      "title": "残量を自動で取得",
-      "description": "オフにすると、公式アカウントの残量は更新をクリックしたときだけ取得します。認証センターを開いたとき、カードの定期更新、トレイへのホバーでは取得しません。DeepSeek アカウントの残高はログイン状態と一緒に表示されるため、このスイッチの影響を受けません。"
     }
   },
   "kimi": {
@@ -5413,7 +5500,7 @@
       "primaryHidden": "Kimi Code 自身のログインは一覧から外されています。同じアカウントで再ログインすると戻ります",
       "removeCurrentHint": "このアカウントは使用中です。別のアカウントに切り替えてから削除してください",
       "manageAccounts": "Kimi アカウントを管理",
-      "managedHint": "先にこの公式アカウントを「削除」で Kimi の設定から外すか、認証センターでログインごと削除してください。",
+      "managedHint": "Kimi 公式アカウントは認証センターで管理してください。",
       "connectionManaged": "接続とログインは認証センターで管理されます。ここではモデルのみ編集できます。モデルを取得すると、このアカウントで現在使える公式モデルを読み込みます。",
       "primaryShort": "Kimi Code 自身のログイン",
       "empty": "Kimi アカウントはまだありません。Kimi Code でログイン中のアカウントは自動的にここに表示されます。",
@@ -5485,49 +5572,6 @@
       "legacyModelsJson": "Oh My Pi にはまだ旧形式の models.json があり、omp は次回起動時にこれを models.yml へ移行します。omp を一度起動してから、もう一度プロバイダを追加してください。"
     }
   },
-  "codebuddy": {
-    "empty": {
-      "title": "カスタムモデルがまだありません",
-      "description": "CodeBuddy の公式モデルは CodeBuddy 自身が管理します。公式アカウントを切り替えるには、アカウントごとに「CodeBuddy 公式ログイン」カードを作成し、ここで「追加」を押します。~/.codebuddy/models.json に既にあるカスタムモデルはここに自動で表示されます。右上の + から、プリセットまたはカスタムモデルを追加できます。"
-    },
-    "modelsHint": "モデル ID は models.json に書き込まれる id で、/model で選ぶ名前です。通常はエンドポイントのモデル名で、追加後は変更できません。表示名は上の「名前」と同じ値です。",
-    "modelIdDuplicate": "このモデル ID は既に使用されています",
-    "modelIdInvalid": "モデル ID の先頭と末尾に空白は使えません。",
-    "vendor": "ベンダー表示名",
-    "urlHint": "完全なパスを入力します（通常は /chat/completions で終わります）。${VAR} の環境変数参照も使えます。",
-    "urlInvalid": "有効な http(s) URL を入力してください。",
-    "apiKeyPlaceholder": "API キーを入力するか、${MY_API_KEY} で環境変数を参照します",
-    "maxInputTokens": "最大入力トークン",
-    "maxOutputTokens": "最大出力トークン",
-    "jsonHint": "models.json のモデル 1 件分の設定です（id は上のモデル ID で決まります）。保存すると CodeBuddy が自動で再読み込みします。",
-    "official": {
-      "presetName": "CodeBuddy 公式ログイン",
-      "account": "ログインアカウント",
-      "accountHint": "このカードで使う CodeBuddy アカウントを選びます。CodeBuddy は同時に 1 つのアカウントにしかログインできません。プロバイダー一覧でこのカードの「追加」を押すと CodeBuddy のログインがこのアカウントに切り替わり、実行中の CodeBuddy も自動で切り替わります。",
-      "accountDeleted": "アカウントが削除されました。選び直してください",
-      "accountDeletedChip": "アカウント削除済み",
-      "unbound": "アカウントが未選択です。カードを編集して選んでください",
-      "statusLoading": "アカウントを読み込み中…",
-      "expired": "このアカウントのログインは期限切れです。認証センターで再ログインしてから追加してください",
-      "importCurrent": "現在のログインを追加（{{login}}）",
-      "adding": "追加しています…",
-      "added": "{{name}} を追加しました。CodeBuddy はこのアカウントでログイン中です。実行中の CodeBuddy も自動で切り替わり、新しいセッションもこのアカウントを使います。",
-      "addFailed": "追加に失敗しました：{{error}}",
-      "switched": "CodeBuddy を {{name}} に切り替えました。実行中の CodeBuddy も自動で切り替わり、新しいセッションもこのアカウントを使います。",
-      "switchFailed": "切り替えに失敗しました：{{error}}",
-      "removeHint": "CodeBuddy は同時に 1 つのアカウントにしかログインできません。別の公式カードを追加すると切り替わります"
-    },
-    "login": {
-      "confirmTitle": "別の CodeBuddy アカウントでログイン",
-      "confirmMessage": "CodeBuddy は現在 {{login}} でログインしていて、同時に使えるのは 1 アカウントだけです。続行すると、まずこのアカウントを認証センターに追加し、CodeBuddy を一時的にログアウトさせて（ログイン情報は削除せず、サーバーにも通知しません）、ターミナルを開いて新しいアカウントでログインします。\n\nこの後、ログインが完了するまで実行中の CodeBuddy セッションは未ログイン状態になります。途中でやめる場合は、ワンクリックで元のログインに戻せます。",
-      "confirm": "続行",
-      "signedInHint": "CodeBuddy がログイン中の場合、新しいアカウントでログインするとまず現在のログインが一時的に解除されます。ログインが完了するまで、実行中の CodeBuddy セッションは未ログイン状態になります。",
-      "pendingReplacing": "CodeBuddy の現在のログインを一時的に解除し、ターミナルで codebuddy を起動しました。案内に従って新しいアカウントでログインすると、ここに自動で追加されます。",
-      "restore": "元のログインに戻す",
-      "restored": "元の CodeBuddy ログインに戻しました。",
-      "restoreFailed": "元のログインに戻せませんでした（CodeBuddy がログインファイルを書き込み中の可能性があります）。認証センターまたはターミナルで再ログインしてください。"
-    }
-  },
   "dsh": {
     "empty": {
       "title": "DeepSeek Harness プロバイダーを追加",
@@ -5578,5 +5622,52 @@
     "hint": "新しいバージョンの CC Switch で保存された可能性があります。データはそのまま保持され、編集や有効化はできません。アップグレードすると復元されます。削除することもできます。",
     "confirmTitle": "読み取れない項目を削除",
     "confirmMessage": "「{{name}}」を削除しますか？CC Switch のこの記録だけを削除し、各アプリの設定ファイルは変更しません。"
+  },
+  "connectivityTest": {
+    "title": "接続テスト",
+    "selectAll": "すべて選択",
+    "prompt": "テストプロンプト",
+    "defaultTestModel": "既定のテストモデル",
+    "defaultTestModelNone": "指定しない",
+    "stream": "ストリームリクエスト",
+    "advancedParams": "詳細パラメータ",
+    "temperature": "温度 (temperature)",
+    "maxTokens": "最大トークン数 (maxTokens)",
+    "timeoutSecs": "タイムアウト（秒）",
+    "customHeaders": "カスタムヘッダー (JSON)",
+    "customBody": "カスタムボディ (JSON)",
+    "start": "テスト開始",
+    "saveParams": "パラメータを保存",
+    "results": "テスト結果",
+    "running": "テスト中",
+    "success": "成功",
+    "failed": "失敗",
+    "waiting": "未テスト",
+    "statSelected": "選択中",
+    "statRunning": "実行中",
+    "statSuccess": "成功",
+    "statFailed": "失敗",
+    "statPending": "未テスト",
+    "model": "モデル",
+    "status": "ステータス",
+    "firstByteMs": "初バイト (ms)",
+    "totalMs": "合計 (ms)",
+    "errorInfo": "エラー",
+    "requestDetails": "リクエスト詳細",
+    "selectModelFirst": "テストするモデルを先に選択してください",
+    "noTestableModels": "テスト可能なモデルがありません",
+    "searchAdd": "検索して追加",
+    "addToTest": "テストに追加",
+    "alreadyInList": "追加済み",
+    "selectedCount": "選択済み {{count}}",
+    "invalidJson": "{{field}} は有効な JSON ではありません",
+    "disclaimer": "注意：テストは上流に実際のリクエストを送信し、費用と使用量が発生する可能性があります。結果は参考としてご利用ください。",
+    "paramsSaved": "テストパラメータを保存しました",
+    "paramsSaveFailed": "テストパラメータの保存に失敗しました",
+    "requestUrl": "リクエスト URL",
+    "requestHeaders": "リクエストヘッダー",
+    "requestBody": "リクエストボディ",
+    "responseHeaders": "レスポンスヘッダー",
+    "responseBody": "レスポンスボディ"
   }
 }
