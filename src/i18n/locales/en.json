@@ -3860,6 +3860,7 @@
     "stoppedWithRestore": "Routing service stopped; all apps are back on direct connections",
     "stopWithRestoreFailed": "Stop failed: {{detail}}"
   },
+<<<<<<< HEAD
   "streamCheck": {
     "reachable": "{{providerName}} is reachable ({{responseTimeMs}}ms)",
     "reachableSlow": "{{providerName}} reachable but slow ({{responseTimeMs}}ms)",
@@ -3874,6 +3875,8 @@
     "maxRetries": "Max Retries",
     "degradedThreshold": "Slow-response threshold (ms)"
   },
+=======
+>>>>>>> ce86032b (refactor(connectivity-test): 移除旧 stream_check 可达性探测全链路（保留表结构）)
   "proxyConfig": {
     "proxyEnabled": "Routing Master Switch",
     "appTakeover": "Routing Enabled",
