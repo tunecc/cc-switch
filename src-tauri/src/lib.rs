@@ -1858,9 +1858,7 @@ pub fn run() {
             commands::get_session_usage_last_sync,
             commands::get_usage_data_sources,
             commands::fetch_exchange_rates,
-            // Stream health check
-            commands::stream_check_provider,
-            // Per-model connectivity test（fork；旧 stream_check 批量链路已移除）
+            // Per-model connectivity test
             commands::connectivity_test_provider_models,
             commands::connectivity_probe_provider,
             // Session manager
