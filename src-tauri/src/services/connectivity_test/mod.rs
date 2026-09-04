@@ -309,14 +309,12 @@ where
                     "stream was idle for {} seconds",
                     idle_timeout.as_secs()
                 ));
-                ()
             })?;
         let Some(chunk_result) = next_chunk else {
             break;
         };
         let chunk = chunk_result.map_err(|e| {
             *stream_error = Some(e.to_string());
-            ()
         })?;
         if chunk.is_empty() {
             continue;
@@ -390,7 +388,7 @@ fn error_result(
 }
 
 /// 连通性测试请求参数（camelCase 序列化，缺省字段视为默认值）。
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ConnectivityTestParams {
     /// 测试用的用户提示词
@@ -407,20 +405,6 @@ pub struct ConnectivityTestParams {
     pub custom_body: Option<serde_json::Map<String, serde_json::Value>>,
     /// 总超时（秒）
     pub timeout_secs: Option<u64>,
-}
-
-impl Default for ConnectivityTestParams {
-    fn default() -> Self {
-        Self {
-            prompt: None,
-            stream: None,
-            temperature: None,
-            max_tokens: None,
-            custom_headers: None,
-            custom_body: None,
-            timeout_secs: None,
-        }
-    }
 }
 
 #[cfg(test)]
