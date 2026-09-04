@@ -173,6 +173,7 @@ pub(crate) fn sanitize_claude_settings_for_live(settings: &Value) -> Value {
         obj.remove("apiFormat");
         obj.remove("openrouter_compat_mode");
         obj.remove("openrouterCompatMode");
+        obj.remove("connectivityTest");
     }
     v
 }
@@ -2442,6 +2443,21 @@ mod tests {
             .as_str()
             .expect("config")
             .contains("requires_openai_auth = true"));
+    }
+
+    #[test]
+    fn sanitize_claude_settings_for_live_strips_internal_connectivity_test() {
+        let settings = json!({
+            "env": { "ANTHROPIC_BASE_URL": "https://relay.example/v1" },
+            "connectivityTest": { "prompt": "ping", "timeoutSecs": 15 },
+            "apiFormat": "anthropic"
+        });
+        let sanitized = sanitize_claude_settings_for_live(&settings);
+        // internal-only 字段绝不写入 Claude settings.json
+        assert!(sanitized.get("connectivityTest").is_none());
+        assert!(sanitized.get("apiFormat").is_none());
+        // 非内部字段保留
+        assert!(sanitized.get("env").is_some());
     }
 
     #[test]

@@ -1600,6 +1600,9 @@ pub fn run() {
             commands::stream_check_all_providers,
             commands::get_stream_check_config,
             commands::save_stream_check_config,
+            // Per-model connectivity test
+            commands::connectivity_test_provider_models,
+            commands::connectivity_probe_provider,
             // Session manager
             commands::list_sessions,
             commands::get_session_messages,
