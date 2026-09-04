@@ -3,9 +3,9 @@ import type { AppId } from "./types";
 import type { ConnectivityTestSettings } from "@/lib/connectivityTestSettings";
 
 // ===== 按模型真实请求连通性测试 API =====
-// 与旧 base_url 可达性探测（connectivity-check.ts，后续任务移除）不同：直接
-// 向供应商端点发真实最小化请求，逐模型度量 first_byte_ms / total_ms，不经由
-// 本地代理网关，也不触碰故障转移熔断器（与后端 commands/connectivity_test.rs 对应）。
+// 本模块是按模型真实请求连通性测试的前端 API 绑定：直接向上游供应商端点
+// 发最小化请求，逐模型度量 first_byte_ms / total_ms，不经由本地代理网关，
+// 也不触碰故障转移熔断器（对应后端 commands/connectivity_test.rs）。
 
 export type ConnectivityTestStatus = "success" | "error";
 
