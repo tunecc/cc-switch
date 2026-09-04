@@ -63,9 +63,6 @@ export function getConnectivityTestSettings(
   };
 }
 
-// Alias kept for the plan's naming; reads identically to get above.
-export const settingsConfigConnectivityTest = getConnectivityTestSettings;
-
 // Writes only fields that differ from the defaults (undefined optionals are
 // always skipped) so the persisted payload stays minimal; a saved block whose
 // values are all defaults is removed outright. The input settingsConfig is
