@@ -377,7 +377,7 @@ git commit -m "feat(connectivity-test): 后端直连执行器（reqwest+SSE，�
 ---
 
 ### Task 3: Tauri 命令 + lib.rs 注册 + 鉴权/模型源复用
-- [ ] Task 3: Tauri 命令 + lib.rs 注册 + 鉴权/模型源复用
+- [x] Task 3: Tauri 命令 + lib.rs 注册 + 鉴权/模型源复用
 
 暴露 2 个命令：多模型测试（弹窗用）与单模型探针（批量徽标用），注册到 `lib.rs`；命令层做官方/动态端点供应商过滤，**不写**网关/熔断状态。
 
