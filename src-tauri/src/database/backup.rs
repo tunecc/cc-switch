@@ -83,7 +83,6 @@ fn import_authorizer(context: rusqlite::hooks::AuthContext<'_>) -> rusqlite::hoo
 /// Tables whose data rows are skipped when exporting for WebDAV sync.
 const SYNC_SKIP_TABLES: &[&str] = &[
     "proxy_request_logs",
-    "stream_check_logs",
     "provider_health",
     "proxy_live_backup",
     "usage_daily_rollups",
@@ -95,7 +94,6 @@ const SYNC_SKIP_TABLES: &[&str] = &[
 /// Excludes ephemeral tables like provider_health that can safely rebuild at runtime.
 const SYNC_PRESERVE_TABLES: &[&str] = &[
     "proxy_request_logs",
-    "stream_check_logs",
     "proxy_live_backup",
     "usage_daily_rollups",
     "session_log_sync",
@@ -451,9 +449,6 @@ impl Database {
     /// fails, so a broken backup destination cannot prevent log retention.
     pub(crate) fn periodic_backup_if_needed(&self) -> Result<(), AppError> {
         let backup_result = self.backup_if_needed();
-        if let Err(e) = self.cleanup_old_stream_check_logs(7) {
-            log::warn!("Periodic stream_check_logs cleanup failed: {e}");
-        }
         if let Err(e) = self.rollup_and_prune(30) {
             log::warn!("Periodic rollup_and_prune failed: {e}");
         }
@@ -2256,10 +2251,6 @@ mod tests {
                      input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
                      total_cost_usd, avg_latency_ms
                  ) VALUES ('2099-01-01', 'claude', 'remote-provider', 'remote-model', 1, 1, 1, 1, 0, 0, '1', 1);
-                 INSERT INTO stream_check_logs (
-                     provider_id, provider_name, app_type, status, success, message,
-                     response_time_ms, http_status, model_used, retry_count, tested_at
-                 ) VALUES ('remote-provider', 'Remote Provider', 'claude', 'failed', 0, 'remote', 1, 500, 'remote-model', 0, 1);
                  INSERT INTO proxy_live_backup (app_type, original_config, backed_up_at)
                  VALUES ('claude', 'remote-live', '2099-01-01');
                  INSERT INTO provider_health (
@@ -2273,10 +2264,9 @@ mod tests {
         let remote_sql = remote_db.export_sql_string_for_sync()?;
         let exported = Connection::open_in_memory()?;
         exported.execute_batch(&remote_sql)?;
-        let skipped_counts: (i64, i64, i64, i64, i64, i64) = exported.query_row(
+        let skipped_counts: (i64, i64, i64, i64, i64) = exported.query_row(
             "SELECT
                 (SELECT COUNT(*) FROM proxy_request_logs),
-                (SELECT COUNT(*) FROM stream_check_logs),
                 (SELECT COUNT(*) FROM provider_health),
                 (SELECT COUNT(*) FROM proxy_live_backup),
                 (SELECT COUNT(*) FROM usage_daily_rollups),
@@ -2289,11 +2279,10 @@ mod tests {
                     row.get(2)?,
                     row.get(3)?,
                     row.get(4)?,
-                    row.get(5)?,
                 ))
             },
         )?;
-        assert_eq!(skipped_counts, (0, 0, 0, 0, 0, 0));
+        assert_eq!(skipped_counts, (0, 0, 0, 0, 0));
 
         let local_db = Database::memory()?;
         {
@@ -2311,10 +2300,6 @@ mod tests {
                      input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
                      total_cost_usd, avg_latency_ms
                  ) VALUES ('2026-03-01', 'claude', 'local-provider', 'claude-3', 7, 7, 700, 350, 0, 0, '0.07', 120);
-                 INSERT INTO stream_check_logs (
-                     provider_id, provider_name, app_type, status, success, message,
-                     response_time_ms, http_status, model_used, retry_count, tested_at
-                 ) VALUES ('local-provider', 'Local Provider', 'claude', 'operational', 1, 'local-ok', 42, 200, 'claude-3', 0, 1000);
                  INSERT INTO proxy_live_backup (app_type, original_config, backed_up_at)
                  VALUES ('claude', '{\"local\":true}', '2026-03-01');
                  INSERT INTO provider_health (
@@ -2335,10 +2320,9 @@ mod tests {
             .collect::<Result<Vec<_>, _>>()?;
         assert_eq!(providers, vec!["remote-provider"]);
 
-        let preserved_counts: (i64, i64, i64, i64, i64) = conn.query_row(
+        let preserved_counts: (i64, i64, i64, i64) = conn.query_row(
             "SELECT
                 (SELECT COUNT(*) FROM proxy_request_logs),
-                (SELECT COUNT(*) FROM stream_check_logs),
                 (SELECT COUNT(*) FROM proxy_live_backup),
                 (SELECT COUNT(*) FROM usage_daily_rollups),
                 (SELECT COUNT(*) FROM session_log_sync)",
@@ -2349,25 +2333,22 @@ mod tests {
                     row.get(1)?,
                     row.get(2)?,
                     row.get(3)?,
-                    row.get(4)?,
                 ))
             },
         )?;
         assert_eq!(
             preserved_counts,
-            (1, 1, 1, 1, 1),
+            (1, 1, 1, 1),
             "同步导入必须替换配置，同时保留本机日志、Live 备份与会话游标"
         );
 
-        let preserved_values: (String, String, i64, String, i64, String, i64) = conn.query_row(
+        let preserved_values: (String, String, i64, String, i64) = conn.query_row(
             "SELECT
                 (SELECT request_id FROM proxy_request_logs),
                 (SELECT model FROM proxy_request_logs),
                 (SELECT input_tokens FROM proxy_request_logs),
                 (SELECT date FROM usage_daily_rollups),
-                (SELECT request_count FROM usage_daily_rollups),
-                (SELECT message FROM stream_check_logs),
-                (SELECT response_time_ms FROM stream_check_logs)",
+                (SELECT request_count FROM usage_daily_rollups)",
             [],
             |row| {
                 Ok((
@@ -2376,8 +2357,6 @@ mod tests {
                     row.get(2)?,
                     row.get(3)?,
                     row.get(4)?,
-                    row.get(5)?,
-                    row.get(6)?,
                 ))
             },
         )?;
@@ -2389,8 +2368,6 @@ mod tests {
                 100,
                 "2026-03-01".into(),
                 7,
-                "local-ok".into(),
-                42,
             )
         );
 
@@ -2657,10 +2634,6 @@ mod tests {
                          input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
                          total_cost_usd, avg_latency_ms
                      ) VALUES ('2026-08-04', 'claude', 'local-provider', 'late-model', 1, 1, 1, 1, 0, 0, '0', 1);
-                     INSERT INTO stream_check_logs (
-                         provider_id, provider_name, app_type, status, success, message,
-                         response_time_ms, http_status, model_used, retry_count, tested_at
-                     ) VALUES ('local-provider', 'Local Provider', 'claude', 'operational', 1, 'late', 1, 200, 'late-model', 0, 1);
                      INSERT INTO proxy_live_backup (app_type, original_config, backed_up_at)
                      VALUES ('claude', 'late-live', '2026-08-04');
                      INSERT INTO session_log_sync (
@@ -2677,11 +2650,10 @@ mod tests {
             .query_map([], |row| row.get::<_, String>(0))?
             .collect::<Result<Vec<_>, _>>()?;
         assert_eq!(providers, vec!["remote-provider"]);
-        let preserved_counts: (i64, i64, i64, i64, i64) = conn.query_row(
+        let preserved_counts: (i64, i64, i64, i64) = conn.query_row(
             "SELECT
                 (SELECT COUNT(*) FROM proxy_request_logs WHERE request_id = 'late-request'),
                 (SELECT COUNT(*) FROM usage_daily_rollups WHERE date = '2026-08-04'),
-                (SELECT COUNT(*) FROM stream_check_logs WHERE message = 'late'),
                 (SELECT COUNT(*) FROM proxy_live_backup WHERE original_config = 'late-live'),
                 (SELECT COUNT(*) FROM session_log_sync WHERE file_path = '/local/sessions/late.jsonl')",
             [],
@@ -2691,11 +2663,10 @@ mod tests {
                     row.get(1)?,
                     row.get(2)?,
                     row.get(3)?,
-                    row.get(4)?,
                 ))
             },
         )?;
-        assert_eq!(preserved_counts, (1, 1, 1, 1, 1));
+        assert_eq!(preserved_counts, (1, 1, 1, 1));
         Ok(())
     }
 
@@ -3118,7 +3089,6 @@ mod tests {
         let db = Database::init()?;
         let now = chrono::Utc::now().timestamp();
         let old_ts = now - 40 * 86400;
-        let old_stream_ts = now - 8 * 86400;
 
         {
             let conn = crate::database::lock_conn!(db.conn);
@@ -3130,13 +3100,6 @@ mod tests {
                 ) VALUES ('old-req', 'p1', 'claude', 'claude-3', 100, 50, '0.01', 100, 200, ?1)",
                 [old_ts],
             )?;
-            conn.execute(
-                "INSERT INTO stream_check_logs (
-                    provider_id, provider_name, app_type, status, success, message,
-                    response_time_ms, http_status, model_used, retry_count, tested_at
-                ) VALUES ('p1', 'Provider 1', 'claude', 'operational', 1, 'ok', 42, 200, 'claude-3', 0, ?1)",
-                [old_stream_ts],
-            )?;
         }
 
         drop(db);
@@ -3145,40 +3108,26 @@ mod tests {
             let conn = crate::database::lock_conn!(db.conn);
             let logs: i64 =
                 conn.query_row("SELECT COUNT(*) FROM proxy_request_logs", [], |r| r.get(0))?;
-            let stream_logs: i64 =
-                conn.query_row("SELECT COUNT(*) FROM stream_check_logs", [], |r| r.get(0))?;
-            assert_eq!(
-                (logs, stream_logs),
-                (1, 1),
-                "database opening must defer log cleanup"
-            );
+            assert_eq!(logs, 1, "database opening must defer log cleanup");
         }
         db.periodic_backup_if_needed()?;
 
-        let (remaining_request_logs, stream_logs, rollups): (i64, i64, i64) = {
+        let (remaining_request_logs, rollups): (i64, i64) = {
             let conn = crate::database::lock_conn!(db.conn);
             let remaining_request_logs =
                 conn.query_row("SELECT COUNT(*) FROM proxy_request_logs", [], |row| {
-                    row.get(0)
-                })?;
-            let stream_logs =
-                conn.query_row("SELECT COUNT(*) FROM stream_check_logs", [], |row| {
                     row.get(0)
                 })?;
             let rollups =
                 conn.query_row("SELECT COUNT(*) FROM usage_daily_rollups", [], |row| {
                     row.get(0)
                 })?;
-            (remaining_request_logs, stream_logs, rollups)
+            (remaining_request_logs, rollups)
         };
 
         assert_eq!(
             remaining_request_logs, 0,
             "old request logs should still be pruned when auto backup is disabled"
-        );
-        assert_eq!(
-            stream_logs, 0,
-            "old stream check logs should still be pruned when auto backup is disabled"
         );
         assert_eq!(rollups, 1, "old request logs should be rolled up");
 
