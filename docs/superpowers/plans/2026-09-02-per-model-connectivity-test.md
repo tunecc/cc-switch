@@ -288,7 +288,7 @@ git commit -m "feat(connectivity-test): 新增后端连通性测试服务类型/
 ---
 
 ### Task 2: 后端连通性测试执行器（reqwest 直连 + SSE 流读取 + 度量 + 结果）
-- [ ] Task 2: 后端连通性测试执行器（reqwest 直连 + SSE 流读取 + 度量 + 结果）
+- [x] Task 2: 后端连通性测试执行器（reqwest 直连 + SSE 流读取 + 度量 + 结果）
 
 在服务模块内实现执行器，复用 ai-toolbox 的「总超时 + 空闲超时」双保险与成功判定（2xx ∧ 无流错误 ∧ 体非空 ∧ 无错误事件）。
 
