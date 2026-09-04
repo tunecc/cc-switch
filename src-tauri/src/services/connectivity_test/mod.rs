@@ -4,7 +4,8 @@
 //! 本模块包含类型定义、模型清单解析、协议/请求构造，以及直连执行器：
 //! 通过全局 reqwest 客户端（`crate::proxy::http_client::get()`，已跟随系统/配置代理）
 //! 直接 `POST` 上游供应商，流式读取 SSE 响应，度量首字节 / 总耗时并给出连通性判定。
-#![allow(dead_code)] // 供后续任务的执行器 / Tauri 命令消费，Task 2 阶段尚未被外部调用
+//! 类型 / 解析 / 协议构造与直连执行器已被 `commands::connectivity_test` 的
+//! `connectivity_test_provider_models` / `connectivity_probe_provider` 命令消费。
 
 pub mod model_ids;
 pub mod protocol;

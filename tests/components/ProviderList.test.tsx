@@ -120,20 +120,12 @@ vi.mock("@dnd-kit/sortable", async () => {
 });
 
 // Mock hooks that use QueryClient
-<<<<<<< HEAD
-vi.mock("@/hooks/useStreamCheck", () => ({
-  useStreamCheck: () => ({
-    checkProvider: vi.fn(),
-    isChecking: () => false,
-  }),
-=======
 vi.mock("@/lib/query/failover", () => ({
   useAutoFailoverEnabled: () => ({ data: false }),
   useFailoverQueue: () => ({ data: [] }),
   useAddToFailoverQueue: () => ({ mutate: vi.fn() }),
   useRemoveFromFailoverQueue: () => ({ mutate: vi.fn() }),
   useReorderFailoverQueue: () => ({ mutate: vi.fn() }),
->>>>>>> ce86032b (refactor(connectivity-test): 移除旧 stream_check 可达性探测全链路（保留表结构）)
 }));
 
 function createProvider(overrides: Partial<Provider> = {}): Provider {
