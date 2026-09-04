@@ -144,7 +144,6 @@ fn read_sql_file_bounded(source_path: &Path, max_bytes: u64) -> Result<String, A
 /// Tables whose data rows are skipped when exporting for WebDAV sync.
 const SYNC_SKIP_TABLES: &[&str] = &[
     "proxy_request_logs",
-    "stream_check_logs",
     "provider_health",
     "proxy_live_backup",
     "usage_daily_rollups",
@@ -156,7 +155,6 @@ const SYNC_SKIP_TABLES: &[&str] = &[
 /// Excludes ephemeral tables like provider_health that can safely rebuild at runtime.
 const SYNC_PRESERVE_TABLES: &[&str] = &[
     "proxy_request_logs",
-    "stream_check_logs",
     "proxy_live_backup",
     "usage_daily_rollups",
     "session_log_sync",
@@ -585,9 +583,6 @@ impl Database {
         // by a crashed backup don't wait for the next backup.
         if let Err(e) = Self::tidy_backup_dir() {
             log::warn!("Periodic backup retention failed: {e}");
-        }
-        if let Err(e) = self.cleanup_old_stream_check_logs(7) {
-            log::warn!("Periodic stream_check_logs cleanup failed: {e}");
         }
         if let Err(e) = self.rollup_and_prune(30) {
             log::warn!("Periodic rollup_and_prune failed: {e}");
