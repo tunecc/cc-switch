@@ -105,6 +105,46 @@ describe("useConnectivityTest", () => {
     expect(result.current.results).toEqual({});
   });
 
+  it("maps full ConnectivityTestSettings onto backend params (headers/body → customHeaders/customBody)", async () => {
+    invokeMock.mockResolvedValue({ results: [] });
+
+    const { result } = renderHook(() =>
+      useConnectivityTest(provider, "claude"),
+    );
+
+    await act(async () => {
+      await result.current.runTest(["model-a"], {
+        prompt: "ping",
+        defaultTestModelId: "model-a",
+        stream: false,
+        temperature: 0.7,
+        maxTokens: 512,
+        headers: { "X-Custom": "value" },
+        body: { max_tokens: 64 },
+        timeoutSecs: 15,
+      });
+    });
+
+    // 锁定 toBackendParams 字段映射：后端 serde 只认 customHeaders/customBody；
+    // defaultTestModelId 是纯前端字段，不进入命令参数
+    expect(invokeMock).toHaveBeenCalledWith(
+      "connectivity_test_provider_models",
+      {
+        appType: "claude",
+        providerId: "provider-1",
+        params: {
+          prompt: "ping",
+          stream: false,
+          temperature: 0.7,
+          maxTokens: 512,
+          customHeaders: { "X-Custom": "value" },
+          customBody: { max_tokens: 64 },
+          timeoutSecs: 15,
+        },
+      },
+    );
+  });
+
   it("marks every running model error with the invoke rejection message", async () => {
     invokeMock.mockRejectedValue("供应商 provider-1 不支持连通性测试");
 
