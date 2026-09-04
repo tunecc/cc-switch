@@ -52,7 +52,8 @@ import {
   mergeConnectivityTestSettings,
   type ConnectivityTestSettings,
 } from "@/lib/connectivityTestSettings";
-import { extractCodexModelName } from "@/utils/providerConfigUtils";
+import { listProviderModelIds } from "@/lib/providerModelIds";
+import { isPlainObject } from "@/lib/requestOverrides";
 import type { Provider } from "@/types";
 
 interface ConnectivityTestDialogProps {
@@ -62,60 +63,8 @@ interface ConnectivityTestDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
 /** 「默认测试模型」下拉的空选项哨兵值 */
 const DEFAULT_MODEL_NONE = "__none__";
-
-/**
- * 供应商可测模型清单（与后端 model_ids_from_settings 同口径）：
- * modelCatalog.models（数组条目取 model/id/name 字段，退化对象取键）→
- * claude 回退 env.ANTHROPIC_MODEL / codex 回退 config.toml 顶层 model。
- * 与 useConnectivityProbe 的 firstModelId 逻辑同源，此处取全量列表。
- */
-function listProviderModelIds(
-  appId: AppId,
-  settingsConfig: Record<string, any> | undefined,
-): string[] {
-  const config = isRecord(settingsConfig) ? settingsConfig : {};
-  const catalog = isRecord(config.modelCatalog) ? config.modelCatalog : {};
-  const models = isRecord(catalog) ? catalog.models : undefined;
-
-  const ids: string[] = [];
-  const push = (value: unknown) => {
-    if (typeof value !== "string") return;
-    const trimmed = value.trim();
-    if (trimmed && !ids.includes(trimmed)) ids.push(trimmed);
-  };
-
-  if (Array.isArray(models)) {
-    for (const entry of models) {
-      if (!isRecord(entry)) continue;
-      for (const field of ["model", "id", "name"]) {
-        push(entry[field]);
-      }
-    }
-  } else if (isRecord(models)) {
-    for (const key of Object.keys(models)) {
-      push(key);
-    }
-  }
-
-  if (ids.length === 0) {
-    if (appId === "claude") {
-      const env = isRecord(config.env) ? config.env : {};
-      push(env["ANTHROPIC_MODEL"]);
-    } else if (appId === "codex") {
-      push(
-        extractCodexModelName(
-          typeof config.config === "string" ? config.config : undefined,
-        ),
-      );
-    }
-  }
-  return ids;
-}
 
 /** 弹窗表单态：数字/JSON 字段以文本承载，便于清空与即时校验反馈 */
 interface FormState {
@@ -161,7 +110,7 @@ function parseJsonObject(text: string): {
   } catch {
     return { error: true };
   }
-  if (!isRecord(parsed)) return { error: true };
+  if (!isPlainObject(parsed)) return { error: true };
   return { value: parsed };
 }
 
@@ -222,8 +171,8 @@ export function ConnectivityTestDialog({
   const { t } = useTranslation();
 
   const modelIds = useMemo(
-    () => listProviderModelIds(appId, provider.settingsConfig),
-    [appId, provider.settingsConfig],
+    () => listProviderModelIds(provider.settingsConfig, appId),
+    [provider.settingsConfig, appId],
   );
 
   const [form, setForm] = useState<FormState>(() =>
