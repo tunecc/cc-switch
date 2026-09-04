@@ -3853,6 +3853,7 @@
     "stoppedWithRestore": "路由服务已关闭，所有应用已退回直连",
     "stopWithRestoreFailed": "停止失败: {{detail}}"
   },
+<<<<<<< HEAD
   "streamCheck": {
     "reachable": "{{providerName}} 连通正常 ({{responseTimeMs}}ms)",
     "reachableSlow": "{{providerName}} 连通但较慢 ({{responseTimeMs}}ms)",
@@ -3867,6 +3868,8 @@
     "maxRetries": "最大重试次数",
     "degradedThreshold": "较慢阈值（毫秒）"
   },
+=======
+>>>>>>> ce86032b (refactor(connectivity-test): 移除旧 stream_check 可达性探测全链路（保留表结构）)
   "proxyConfig": {
     "proxyEnabled": "路由总开关",
     "appTakeover": "路由启用",
