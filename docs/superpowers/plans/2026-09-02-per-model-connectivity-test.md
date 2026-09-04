@@ -587,7 +587,7 @@ git commit -m "feat(connectivity-test): 前端命令绑定与测试/探针状态
 ---
 
 ### Task 6: 前端弹窗 + 详情 + 徽标组件（shadcn/ui）
-- [ ] Task 6: 前端弹窗 + 详情 + 徽标组件（shadcn/ui）
+- [x] Task 6: 前端弹窗 + 详情 + 徽标组件（shadcn/ui）
 
 三个组件：测试弹窗（模型多选/prompt/默认测试模型/流式/高级参数/结果表格/免责）、单模型详情子弹窗、卡片徽标。
 
