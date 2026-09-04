@@ -1,0 +1,14 @@
+{
+  "change": "per-model-connectivity-test",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "b7dd3b5c75e42fbeac273ad433baa008a3900978fa136403320d3c8249eecff2",
+  "files": [
+    { "path": "docs/openspec/changes/per-model-connectivity-test/proposal.md", "sha256": "6523d9da7bf15c6fa14cdc70420d26586910eee19ec0479d6a072ec177d5e7ed" },
+    { "path": "docs/openspec/changes/per-model-connectivity-test/design.md", "sha256": "432b8239b65c1e3ec4b52aa640bda64a8a8dee4db14d54f9e82a4088a610c212" },
+    { "path": "docs/openspec/changes/per-model-connectivity-test/tasks.md", "sha256": "d401a0ca7c711ad196aa00e3915d7a9760f74c2c34d4475e93d125ccdb43aeaf" },
+    { "path": "docs/openspec/changes/per-model-connectivity-test/specs/provider-connectivity-test/spec.md", "sha256": "81d8985499cac6f3efc46b8202cd53734fc578bf5531f62ba06b8833830ee4ce" }
+  ]
+}
