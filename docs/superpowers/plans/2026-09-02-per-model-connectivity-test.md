@@ -660,7 +660,7 @@ git commit -m "feat(connectivity-test): 连通性测试弹窗/详情/徽标组�
 ---
 
 ### Task 7: 供应商列表集成（替换检测入口 + 批量探针徽标）
-- [ ] Task 7: 供应商列表集成（替换检测入口 + 批量探针徽标）
+- [x] Task 7: 供应商列表集成（替换检测入口 + 批量探针徽标）
 
 把新弹窗与批量探针接入 `ProviderList`/`ProviderCard`/`ProviderActions`，替换旧「检测连通」按钮行为与旧批量检查。
 
