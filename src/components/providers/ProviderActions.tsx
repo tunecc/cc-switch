@@ -420,7 +420,9 @@ export function ProviderActions({
           variant="ghost"
           onClick={onTest || undefined}
           disabled={isTesting}
-          title={t("provider.connectivityCheck", "检测连通")}
+          title={t("provider.connectivityCheck", {
+            defaultValue: "连通性测试",
+          })}
           className={cn(
             iconButtonClass,
             !onTest && "opacity-40 cursor-not-allowed text-muted-foreground",
