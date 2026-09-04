@@ -18,6 +18,161 @@ use crate::store::AppState;
 
 use super::normalize_claude_models_in_value;
 
+/// ChatGPT Codex catalogs gpt-5.6 at a 372K context window with a ~353K
+/// effective budget (openai/codex#31860), far below the 1.05M API spec.
+/// Declare the catalog window for both knobs: Claude Code's built-in output
+/// reserve and compact buffer already keep the actual compact trigger
+/// (~278K-339K) below the effective budget, so anything lower only wastes
+/// usable context.
+const CODEX_OAUTH_CLAUDE_MAX_CONTEXT_TOKENS: &str = "372000";
+const CODEX_OAUTH_CLAUDE_AUTO_COMPACT_WINDOW: &str = "372000";
+const KIMI_FOR_CODING_CONTEXT_TOKENS: &str = "262144";
+
+/// Model env keys Claude Code may route requests through. The defaults above
+/// are calibrated against gpt-5.6's Codex catalog, so every configured model
+/// must belong to that family before they are injected — gpt-5.5's upstream
+/// catalog oscillates between 272K and 372K and must not inherit them.
+const CODEX_OAUTH_MODEL_ENV_KEYS: [&str; 6] = [
+    "ANTHROPIC_MODEL",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL",
+    "CLAUDE_CODE_SUBAGENT_MODEL",
+];
+
+fn provider_env_targets_gpt56(provider_env: Option<&serde_json::Map<String, Value>>) -> bool {
+    let Some(env) = provider_env else {
+        return false;
+    };
+    let mut saw_model = false;
+    for key in CODEX_OAUTH_MODEL_ENV_KEYS {
+        let Some(value) = env.get(key) else {
+            continue;
+        };
+        let Some(model) = value.as_str() else {
+            return false;
+        };
+        let model = model.trim();
+        if model.is_empty() {
+            continue;
+        }
+        saw_model = true;
+        if !model.to_ascii_lowercase().starts_with("gpt-5.6") {
+            return false;
+        }
+    }
+    saw_model
+}
+
+fn is_kimi_for_coding_provider(provider: &Provider) -> bool {
+    provider
+        .settings_config
+        .pointer("/env/ANTHROPIC_BASE_URL")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .map(|url| url.trim_end_matches('/'))
+        == Some("https://api.kimi.com/coding")
+}
+
+/// Claude Code assigns unknown non-Claude model ids a 200K context window.
+/// Codex OAuth deliberately exposes GPT ids through Claude Code, so enrich the
+/// effective live settings for both newly-created and already-saved providers.
+/// Explicit user values always win; the defaults are only injected when every
+/// configured model targets gpt-5.6.
+fn apply_codex_oauth_claude_context_defaults(settings: &mut Value, provider: &Provider) {
+    if !provider.is_codex_oauth() {
+        return;
+    }
+
+    // Read provider-owned values before mutably borrowing the effective
+    // settings. This also deliberately prevents a legacy common-config
+    // snippet from overriding model-specific context limits.
+    let provider_env = provider
+        .settings_config
+        .get("env")
+        .and_then(Value::as_object);
+    let Some(root) = settings.as_object_mut() else {
+        return;
+    };
+    let env = root.entry("env".to_string()).or_insert_with(|| json!({}));
+    let Some(env) = env.as_object_mut() else {
+        log::warn!(
+            "Cannot apply Codex OAuth Claude context defaults for '{}': env is not an object",
+            provider.id
+        );
+        return;
+    };
+
+    let inject_defaults = provider_env_targets_gpt56(provider_env);
+    for (key, default_value) in [
+        (
+            "CLAUDE_CODE_MAX_CONTEXT_TOKENS",
+            CODEX_OAUTH_CLAUDE_MAX_CONTEXT_TOKENS,
+        ),
+        (
+            "CLAUDE_CODE_AUTO_COMPACT_WINDOW",
+            CODEX_OAUTH_CLAUDE_AUTO_COMPACT_WINDOW,
+        ),
+    ] {
+        match provider_env.and_then(|provider_env| provider_env.get(key)) {
+            Some(value) => {
+                env.insert(key.to_string(), value.clone());
+            }
+            None if inject_defaults => {
+                env.insert(key.to_string(), Value::String(default_value.to_string()));
+            }
+            // 老模型不注入默认值，同时剥掉遗留共享片段可能带进来的值
+            None => {
+                env.remove(key);
+            }
+        }
+    }
+}
+
+/// Kimi For Coding serves a 256K window, but Claude Code caps unknown models at
+/// 200K unless `CLAUDE_CODE_MAX_CONTEXT_TOKENS` is set — and that env is ignored
+/// for `claude-`-prefixed ids, so these defaults only bite when the provider also
+/// routes the endpoint's `kimi-for-coding` alias (the preset does). Keep the
+/// defaults provider-owned so an old shared snippet cannot override them.
+fn apply_kimi_for_coding_context_defaults(settings: &mut Value, provider: &Provider) {
+    if !is_kimi_for_coding_provider(provider) {
+        return;
+    }
+
+    let provider_env = provider
+        .settings_config
+        .get("env")
+        .and_then(Value::as_object);
+    let Some(env) = settings.get_mut("env").and_then(Value::as_object_mut) else {
+        return;
+    };
+
+    for key in [
+        "CLAUDE_CODE_MAX_CONTEXT_TOKENS",
+        "CLAUDE_CODE_AUTO_COMPACT_WINDOW",
+    ] {
+        let value = provider_env
+            .and_then(|provider_env| provider_env.get(key))
+            .cloned()
+            .unwrap_or_else(|| Value::String(KIMI_FOR_CODING_CONTEXT_TOKENS.to_string()));
+        env.insert(key.to_string(), value);
+    }
+}
+
+pub(crate) fn sanitize_claude_settings_for_live(settings: &Value) -> Value {
+    let mut v = settings.clone();
+    if let Some(obj) = v.as_object_mut() {
+        // Internal-only fields - never write to Claude Code settings.json
+        obj.remove("api_format");
+        obj.remove("apiFormat");
+        obj.remove("openrouter_compat_mode");
+        obj.remove("openrouterCompatMode");
+        obj.remove("connectivityTest");
+    }
+    v
+}
+
 pub(crate) fn provider_exists_in_live_config(
     app_type: &AppType,
     provider_id: &str,
@@ -1526,6 +1681,442 @@ mod tests {
             },
             "config": "model_provider = \"openai\"\n[general]\nmodel = \"gpt-5\"\n\n[shared]\nreasoning = \"medium\"\n"
         });
+
+        let stripped =
+            remove_common_config_from_settings(&AppType::Codex, &applied, snippet).unwrap();
+        assert_eq!(stripped, settings);
+    }
+
+    #[test]
+    fn sanitize_claude_settings_for_live_strips_internal_connectivity_test() {
+        let settings = json!({
+            "env": { "ANTHROPIC_BASE_URL": "https://relay.example/v1" },
+            "connectivityTest": { "prompt": "ping", "timeoutSecs": 15 },
+            "apiFormat": "anthropic"
+        });
+        let sanitized = sanitize_claude_settings_for_live(&settings);
+        // internal-only 字段绝不写入 Claude settings.json
+        assert!(sanitized.get("connectivityTest").is_none());
+        assert!(sanitized.get("apiFormat").is_none());
+        // 非内部字段保留
+        assert!(sanitized.get("env").is_some());
+    }
+
+    #[test]
+    fn kimi_for_coding_effective_settings_backfill_256k_context() {
+        let db = Database::memory().expect("create memory db");
+        let provider = Provider::with_id(
+            "kimi-for-coding".to_string(),
+            "Kimi For Coding".to_string(),
+            json!({
+                "env": {
+                    "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding/",
+                    "ANTHROPIC_MODEL": "kimi-for-coding",
+                    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "262144"
+                }
+            }),
+            None,
+        );
+
+        let effective =
+            build_effective_settings_with_common_config(&db, &AppType::Claude, &provider)
+                .expect("build effective settings");
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_MAX_CONTEXT_TOKENS"],
+            json!("262144")
+        );
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"],
+            json!("262144")
+        );
+    }
+
+    #[test]
+    fn kimi_for_coding_context_defaults_preserve_user_overrides() {
+        let db = Database::memory().expect("create memory db");
+        let provider = Provider::with_id(
+            "kimi-for-coding".to_string(),
+            "Kimi For Coding".to_string(),
+            json!({
+                "env": {
+                    "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding",
+                    "CLAUDE_CODE_MAX_CONTEXT_TOKENS": "300000",
+                    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "250000"
+                }
+            }),
+            None,
+        );
+
+        let effective =
+            build_effective_settings_with_common_config(&db, &AppType::Claude, &provider)
+                .expect("build effective settings");
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_MAX_CONTEXT_TOKENS"],
+            json!("300000")
+        );
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"],
+            json!("250000")
+        );
+    }
+
+    #[test]
+    fn kimi_for_coding_backfill_strips_only_injected_context_default() {
+        let db = Database::memory().expect("create memory db");
+        let provider = Provider::with_id(
+            "kimi-for-coding".to_string(),
+            "Kimi For Coding".to_string(),
+            json!({
+                "env": {
+                    "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding/",
+                    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "262144"
+                }
+            }),
+            None,
+        );
+
+        let live = build_effective_settings_with_common_config(&db, &AppType::Claude, &provider)
+            .expect("build effective settings");
+        let backfilled =
+            strip_common_config_from_live_settings(&db, &AppType::Claude, &provider, live);
+        assert!(backfilled["env"]
+            .get("CLAUDE_CODE_MAX_CONTEXT_TOKENS")
+            .is_none());
+        assert_eq!(
+            backfilled["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"],
+            json!("262144")
+        );
+    }
+
+    #[test]
+    fn codex_oauth_effective_settings_backfill_gpt_context_defaults() {
+        let db = Database::memory().expect("create memory db");
+        let mut provider = Provider::with_id(
+            "codex-oauth".to_string(),
+            "Codex".to_string(),
+            json!({
+                "env": {
+                    "ANTHROPIC_MODEL": "gpt-5.6"
+                }
+            }),
+            None,
+        );
+        provider.meta = Some(crate::provider::ProviderMeta {
+            provider_type: Some("codex_oauth".to_string()),
+            ..Default::default()
+        });
+
+        let effective =
+            build_effective_settings_with_common_config(&db, &AppType::Claude, &provider)
+                .expect("build effective settings");
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_MAX_CONTEXT_TOKENS"],
+            json!("372000")
+        );
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"],
+            json!("372000")
+        );
+    }
+
+    #[test]
+    fn codex_oauth_context_defaults_preserve_user_overrides() {
+        let db = Database::memory().expect("create memory db");
+        let mut provider = Provider::with_id(
+            "codex-oauth".to_string(),
+            "Codex".to_string(),
+            json!({
+                "env": {
+                    "CLAUDE_CODE_MAX_CONTEXT_TOKENS": "500000",
+                    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "350000"
+                }
+            }),
+            None,
+        );
+        provider.meta = Some(crate::provider::ProviderMeta {
+            provider_type: Some("codex_oauth".to_string()),
+            ..Default::default()
+        });
+
+        let effective =
+            build_effective_settings_with_common_config(&db, &AppType::Claude, &provider)
+                .expect("build effective settings");
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_MAX_CONTEXT_TOKENS"],
+            json!("500000")
+        );
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"],
+            json!("350000")
+        );
+    }
+
+    #[test]
+    fn codex_oauth_context_defaults_ignore_legacy_common_config_values() {
+        let db = Database::memory().expect("create memory db");
+        db.set_config_snippet(
+            AppType::Claude.as_str(),
+            Some(
+                json!({
+                    "env": {
+                        "CLAUDE_CODE_MAX_CONTEXT_TOKENS": "262144",
+                        "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "262144"
+                    }
+                })
+                .to_string(),
+            ),
+        )
+        .expect("save legacy common config");
+        let mut provider = Provider::with_id(
+            "codex-oauth".to_string(),
+            "Codex".to_string(),
+            json!({ "env": { "ANTHROPIC_MODEL": "gpt-5.6" } }),
+            None,
+        );
+        provider.meta = Some(crate::provider::ProviderMeta {
+            provider_type: Some("codex_oauth".to_string()),
+            common_config_enabled: Some(true),
+            ..Default::default()
+        });
+
+        let effective =
+            build_effective_settings_with_common_config(&db, &AppType::Claude, &provider)
+                .expect("build effective settings");
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_MAX_CONTEXT_TOKENS"],
+            json!("372000")
+        );
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"],
+            json!("372000")
+        );
+    }
+
+    #[test]
+    fn codex_oauth_context_defaults_skip_non_gpt56_models() {
+        let db = Database::memory().expect("create memory db");
+        db.set_config_snippet(
+            AppType::Claude.as_str(),
+            Some(
+                json!({
+                    "env": {
+                        "CLAUDE_CODE_MAX_CONTEXT_TOKENS": "262144",
+                        "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "262144"
+                    }
+                })
+                .to_string(),
+            ),
+        )
+        .expect("save legacy common config");
+        let mut provider = Provider::with_id(
+            "codex-oauth".to_string(),
+            "Codex".to_string(),
+            json!({
+                "env": {
+                    "ANTHROPIC_MODEL": "gpt-5.5",
+                    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "300000"
+                }
+            }),
+            None,
+        );
+        provider.meta = Some(crate::provider::ProviderMeta {
+            provider_type: Some("codex_oauth".to_string()),
+            common_config_enabled: Some(true),
+            ..Default::default()
+        });
+
+        let effective =
+            build_effective_settings_with_common_config(&db, &AppType::Claude, &provider)
+                .expect("build effective settings");
+        // 旧模型不注入 372K 默认值，遗留共享片段带进来的值也要剥掉
+        assert!(effective["env"]
+            .get("CLAUDE_CODE_MAX_CONTEXT_TOKENS")
+            .is_none());
+        // 用户显式写在供应商配置里的值仍然生效
+        assert_eq!(
+            effective["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"],
+            json!("300000")
+        );
+    }
+
+    /// 往返不动点：注入产物只活在 live，切走回灌后存储配置必须与注入前一致，
+    /// 否则程序默认值固化成"用户显式值"，之后调默认值永远压不动。
+    #[test]
+    fn codex_oauth_backfill_strips_injected_context_defaults() {
+        let db = Database::memory().expect("create memory db");
+        let mut provider = Provider::with_id(
+            "codex-oauth".to_string(),
+            "Codex".to_string(),
+            json!({ "env": { "ANTHROPIC_MODEL": "gpt-5.6" } }),
+            None,
+        );
+        provider.meta = Some(crate::provider::ProviderMeta {
+            provider_type: Some("codex_oauth".to_string()),
+            ..Default::default()
+        });
+
+        // 模拟写 live：注入了两个上下文默认值
+        let live = build_effective_settings_with_common_config(&db, &AppType::Claude, &provider)
+            .expect("build effective settings");
+        assert_eq!(
+            live["env"]["CLAUDE_CODE_MAX_CONTEXT_TOKENS"],
+            json!("372000")
+        );
+
+        // 模拟切走回灌：注入产物被剥掉，其余字段原样保留
+        let backfilled =
+            strip_common_config_from_live_settings(&db, &AppType::Claude, &provider, live);
+        assert!(backfilled["env"]
+            .get("CLAUDE_CODE_MAX_CONTEXT_TOKENS")
+            .is_none());
+        assert!(backfilled["env"]
+            .get("CLAUDE_CODE_AUTO_COMPACT_WINDOW")
+            .is_none());
+        assert_eq!(backfilled["env"]["ANTHROPIC_MODEL"], json!("gpt-5.6"));
+    }
+
+    #[test]
+    fn codex_oauth_backfill_keeps_user_context_values() {
+        let db = Database::memory().expect("create memory db");
+        let mut provider = Provider::with_id(
+            "codex-oauth".to_string(),
+            "Codex".to_string(),
+            json!({
+                "env": {
+                    "ANTHROPIC_MODEL": "gpt-5.6",
+                    "CLAUDE_CODE_MAX_CONTEXT_TOKENS": "500000"
+                }
+            }),
+            None,
+        );
+        provider.meta = Some(crate::provider::ProviderMeta {
+            provider_type: Some("codex_oauth".to_string()),
+            ..Default::default()
+        });
+
+        // live 里：MAX 是用户显式值；ACW 被用户手改成了非默认数字
+        let live = json!({
+            "env": {
+                "ANTHROPIC_MODEL": "gpt-5.6",
+                "CLAUDE_CODE_MAX_CONTEXT_TOKENS": "500000",
+                "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "300000"
+            }
+        });
+        let backfilled =
+            strip_common_config_from_live_settings(&db, &AppType::Claude, &provider, live);
+        assert_eq!(
+            backfilled["env"]["CLAUDE_CODE_MAX_CONTEXT_TOKENS"],
+            json!("500000")
+        );
+        assert_eq!(
+            backfilled["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"],
+            json!("300000")
+        );
+    }
+
+    /// C5 回归锁：前端表单的合并/剥离必须走 toml_edit 文档模型。
+    /// smol-toml 的 parse→merge→stringify 整文档重序列化会丢注释、
+    /// 按字母序重排键、并为 dotted 表生成多余的空父表头。
+    #[test]
+    fn update_toml_common_config_snippet_preserves_comments_and_key_order() {
+        // 刻意非字母序的键序 + 注释，模拟用户手写格式
+        let config = r#"# my precious comment
+model = "gpt-5.5"
+model_provider = "aprov"
+disable_response_storage = true
+
+[model_providers.aprov]
+# provider comment
+name = "A Prov"
+base_url = "https://a.example/v1"
+"#;
+        let snippet = "[tui]\nnotifications = true\n";
+
+        let merged = update_toml_common_config_snippet(config, snippet, true).unwrap();
+        assert!(merged.contains("# my precious comment"));
+        assert!(merged.contains("# provider comment"));
+        let model_pos = merged.find("model = ").unwrap();
+        let provider_pos = merged.find("model_provider = ").unwrap();
+        let disable_pos = merged.find("disable_response_storage").unwrap();
+        assert!(
+            model_pos < provider_pos && provider_pos < disable_pos,
+            "merge must not reorder user keys, got: {merged}"
+        );
+        assert!(merged.contains("[tui]"));
+        assert!(merged.contains("notifications = true"));
+        assert!(
+            !merged.contains("[model_providers]\n"),
+            "merge must not synthesize an empty parent table header, got: {merged}"
+        );
+
+        let removed = update_toml_common_config_snippet(&merged, snippet, false).unwrap();
+        assert!(!removed.contains("[tui]"), "snippet keys must be stripped");
+        assert!(removed.contains("# my precious comment"));
+        assert!(removed.contains("disable_response_storage = true"));
+    }
+
+    /// 合并时标量=片段覆盖供应商值（与 Claude 侧 deepMerge 一致）；
+    /// 剥离按值匹配：用户改过的值不删（与 strip 路径的
+    /// toml_value_is_subset 语义一致）。
+    #[test]
+    fn update_toml_common_config_snippet_scalar_override_and_value_matched_removal() {
+        let snippet = "[tui]\nnotifications = true\n";
+
+        let merged =
+            update_toml_common_config_snippet("[tui]\nnotifications = false\n", snippet, true)
+                .unwrap();
+        assert!(
+            merged.contains("notifications = true"),
+            "snippet scalar should override provider value, got: {merged}"
+        );
+
+        let removed =
+            update_toml_common_config_snippet("[tui]\nnotifications = false\n", snippet, false)
+                .unwrap();
+        assert!(
+            removed.contains("notifications = false"),
+            "user-modified value must survive removal, got: {removed}"
+        );
+    }
+
+    #[test]
+    fn claude_common_config_apply_and_remove_roundtrip_for_non_overlapping_fields() {
+        let settings = json!({
+            "env": {
+                "ANTHROPIC_API_KEY": "sk-test"
+            }
+        });
+        let snippet = r#"{
+  "includeCoAuthoredBy": false,
+  "env": {
+    "CLAUDE_CODE_USE_BEDROCK": "1"
+  }
+}"#;
+
+        let applied =
+            apply_common_config_to_settings(&AppType::Claude, &settings, snippet).unwrap();
+        assert_eq!(applied["includeCoAuthoredBy"], json!(false));
+        assert_eq!(applied["env"]["CLAUDE_CODE_USE_BEDROCK"], json!("1"));
+
+        let stripped =
+            remove_common_config_from_settings(&AppType::Claude, &applied, snippet).unwrap();
+        assert_eq!(stripped, settings);
+    }
+
+    #[test]
+    fn codex_common_config_apply_and_remove_roundtrip_for_non_overlapping_fields() {
+        let settings = json!({
+            "auth": {
+                "OPENAI_API_KEY": "sk-test"
+            },
+            "config": "model_provider = \"openai\"\n[general]\nmodel = \"gpt-5\"\n"
+        });
+        let snippet = "[shared]\nreasoning = \"medium\"\n";
+
+        let applied = apply_common_config_to_settings(&AppType::Codex, &settings, snippet).unwrap();
+        let applied_config = applied["config"].as_str().unwrap_or_default();
+        assert!(applied_config.contains("[shared]"));
+        assert!(applied_config.contains("reasoning = \"medium\""));
 
         let stripped =
             remove_common_config_from_settings(&AppType::Codex, &applied, snippet).unwrap();
