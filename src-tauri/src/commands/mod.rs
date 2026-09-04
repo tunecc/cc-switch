@@ -33,7 +33,6 @@ mod proxy;
 mod session_manager;
 mod settings;
 pub mod skill;
-mod stream_check;
 mod subscription;
 mod sync_support;
 mod xai_oauth;
@@ -77,7 +76,6 @@ pub use proxy::*;
 pub use session_manager::*;
 pub use settings::*;
 pub use skill::*;
-pub use stream_check::*;
 pub use subscription::*;
 pub use xai_oauth::*;
 
