@@ -267,6 +267,7 @@ mod tests {
             name: "Test Gemini".to_string(),
             settings_config: config,
             website_url: None,
+            website_url_2: None,
             category: Some("gemini".to_string()),
             created_at: None,
             sort_index: None,
