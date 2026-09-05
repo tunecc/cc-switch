@@ -63,3 +63,33 @@ export function listProviderModelIds(
     return true;
   });
 }
+
+/**
+ * 供应商当前生效的模型 ID（连通性测试弹窗打开时的自动勾选回退源）：
+ *
+ * - claude → `env.ANTHROPIC_MODEL`（trim 后非空即命中）；
+ * - codex → `config` TOML 顶层 `model`；
+ * - 其余 app 无定义，返回 undefined。
+ *
+ * 与 `listProviderModelIds` 的回退口径一致；当前模型可能不在
+ * modelCatalog 清单里，调用方需自行判断 `modelIds.includes(...)`。
+ */
+export function currentProviderModelId(
+  settingsConfig: Record<string, any> | undefined,
+  appId: AppId,
+): string | undefined {
+  const config = isPlainObject(settingsConfig) ? settingsConfig : {};
+  if (appId === "claude") {
+    const env = isPlainObject(config.env) ? config.env : {};
+    const model = env["ANTHROPIC_MODEL"];
+    if (typeof model === "string" && model.trim()) return model.trim();
+    return undefined;
+  }
+  if (appId === "codex") {
+    const model = extractCodexModelName(
+      typeof config.config === "string" ? config.config : undefined,
+    );
+    return model?.trim() || undefined;
+  }
+  return undefined;
+}
