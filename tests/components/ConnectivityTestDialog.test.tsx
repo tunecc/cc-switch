@@ -10,6 +10,9 @@ import { fetchModelsForConfig, showFetchModelsError } from "@/lib/api/model-fetc
 import { DEFAULT_CONNECTIVITY_TEST_SETTINGS } from "@/lib/connectivityTestSettings";
 import type { Provider } from "@/types";
 
+// cmdk（选择器内）在 jsdom 中会调用 scrollIntoView（jsdom 未实现），先 mock 掉
+Element.prototype.scrollIntoView = vi.fn();
+
 // 弹窗经由 useConnectivityTest 消费该模块；mock 后可在测试中控制逐模型结果
 vi.mock("@/lib/api/connectivity-test", () => ({
   connectivityTestProviderModels: vi.fn(),
@@ -313,7 +316,7 @@ describe("ConnectivityTestDialog behaviors", () => {
     expect(screen.getByRole("button", { name: "获取模型列表" })).toBeEnabled();
   });
 
-  it("appends fetched remote models to the table, deduped, as untested rows", async () => {
+  it("fetches the model list without appending rows and opens the picker", async () => {
     vi.mocked(fetchModelsForConfig).mockResolvedValue([
       { id: "a", ownedBy: "relay" },
       { id: "c", ownedBy: "relay" },
@@ -325,27 +328,96 @@ describe("ConnectivityTestDialog behaviors", () => {
     expect(screen.getByText("已勾选").parentElement).toHaveTextContent("1");
     expect(screen.getAllByText("待测试")).toHaveLength(3);
 
-    expect(screen.queryByRole("checkbox", { name: "c" })).not.toBeInTheDocument();
-
     fireEvent.click(screen.getByRole("button", { name: "获取模型列表" }));
 
+    // 拉取成功后自动弹出搜索选择器，而不是把全部模型塞进表格
+    expect(
+      await screen.findByPlaceholderText("搜索模型..."),
+    ).toBeInTheDocument();
+    // 选择器中 c 可勾选；a 已在静态清单中标记为已在列表
+    expect(screen.getByRole("checkbox", { name: "c" })).toBeInTheDocument();
+    expect(screen.getByText("已在列表")).toBeInTheDocument();
+    // 表格未追加任何行：待测试仍是 2 行 + 1 标签
+    expect(screen.getAllByText("待测试")).toHaveLength(3);
+  });
+
+  it("adds picked models to the table, auto-checked, via the picker", async () => {
+    vi.mocked(fetchModelsForConfig).mockResolvedValue([
+      { id: "a", ownedBy: "relay" },
+      { id: "c", ownedBy: "relay" },
+    ]);
+
+    openDialog();
+
+    fireEvent.click(screen.getByRole("button", { name: "获取模型列表" }));
+    await screen.findByPlaceholderText("搜索模型...");
+
+    // 选择器中勾选 c（a 已在列表不可勾），添加到测试
+    fireEvent.click(screen.getByRole("checkbox", { name: "c" }));
+    fireEvent.click(screen.getByRole("button", { name: "添加到测试" }));
+
+    // 选择器关闭，c 追加进表格且自动勾选（挑选即意图测试）
     await waitFor(() => {
-      expect(screen.getByRole("checkbox", { name: "c" })).toBeInTheDocument();
+      expect(screen.getByRole("checkbox", { name: "c" })).toBeChecked();
     });
-    // 拉取的行初始未勾选、待测试；重复拉取不产生重复行
-    expect(screen.getByRole("checkbox", { name: "c" })).not.toBeChecked();
-    expect(screen.getAllByRole("checkbox", { name: "a" })).toHaveLength(1);
+    expect(
+      screen.queryByPlaceholderText("搜索模型..."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("已勾选").parentElement).toHaveTextContent("2");
     // 追加 c 后待测试行 +1
+    expect(screen.getAllByText("待测试")).toHaveLength(4);
+  });
+
+  it("reopens the picker with the cached list after adding", async () => {
+    vi.mocked(fetchModelsForConfig).mockResolvedValue([
+      { id: "a", ownedBy: "relay" },
+      { id: "c", ownedBy: "relay" },
+    ]);
+
+    openDialog();
+
+    fireEvent.click(screen.getByRole("button", { name: "获取模型列表" }));
+    await screen.findByPlaceholderText("搜索模型...");
+    fireEvent.click(screen.getByRole("checkbox", { name: "c" }));
+    fireEvent.click(screen.getByRole("button", { name: "添加到测试" }));
     await waitFor(() => {
-      expect(screen.getAllByText("待测试")).toHaveLength(4);
+      expect(screen.getByRole("checkbox", { name: "c" })).toBeChecked();
     });
 
-    // 再次拉取：与静态清单 + 已追加行去重
+    // 「搜索添加」按钮可随时重开；缓存列表保留，不重新拉取
+    fireEvent.click(screen.getByRole("button", { name: "搜索添加" }));
+    expect(
+      await screen.findByPlaceholderText("搜索模型..."),
+    ).toBeInTheDocument();
+    // a（静态清单）与 c（刚添加）都标记为已在列表
+    expect(screen.getAllByText("已在列表")).toHaveLength(2);
+    expect(fetchModelsForConfig).toHaveBeenCalledTimes(1);
+  });
+
+  it("re-fetching refreshes the cached list without clearing added rows", async () => {
+    vi.mocked(fetchModelsForConfig)
+      .mockResolvedValueOnce([{ id: "c", ownedBy: "relay" }])
+      .mockResolvedValueOnce([
+        { id: "c", ownedBy: "relay" },
+        { id: "d", ownedBy: "relay" },
+      ]);
+
+    openDialog();
+
     fireEvent.click(screen.getByRole("button", { name: "获取模型列表" }));
+    await screen.findByPlaceholderText("搜索模型...");
+    fireEvent.click(screen.getByRole("checkbox", { name: "c" }));
+    fireEvent.click(screen.getByRole("button", { name: "添加到测试" }));
     await waitFor(() => {
-      expect(fetchModelsForConfig).toHaveBeenCalledTimes(2);
+      expect(screen.getByRole("checkbox", { name: "c" })).toBeChecked();
     });
-    expect(screen.getAllByRole("checkbox", { name: "c" })).toHaveLength(1);
+
+    // 重新拉取：已添加的行保留并保持勾选，新缓存含 d，选择器重新弹出
+    fireEvent.click(screen.getByRole("button", { name: "获取模型列表" }));
+    await screen.findByPlaceholderText("搜索模型...");
+    expect(screen.getByRole("checkbox", { name: "d" })).toBeInTheDocument();
+    expect(screen.getAllByText("已在列表")).toHaveLength(1);
+    expect(screen.getByRole("checkbox", { name: "c" })).toBeChecked();
   });
 
   it("shows the shared fetch error and keeps local rows usable when fetching fails", async () => {
