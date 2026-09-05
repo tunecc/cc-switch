@@ -17,6 +17,7 @@ const defaultValues: Partial<ProviderFormData> = {
   name: "原供应商",
   notes: "原备注",
   websiteUrl: "https://example.com",
+  websiteUrl2: "https://second.example.com",
   icon: "",
   iconColor: "",
 };
@@ -43,6 +44,7 @@ describe("BasicFormFields", () => {
     ["provider.name", "name", "原供应商"],
     ["provider.notes", "notes", "原备注"],
     ["provider.websiteUrl", "websiteUrl", "https://example.com"],
+    ["provider.websiteUrl2", "websiteUrl2", "https://second.example.com"],
   ] as const)(
     "keeps %s composition local until the IME commits",
     (label, fieldName, initialValue) => {
@@ -77,6 +79,7 @@ describe("BasicFormFields", () => {
     ["provider.name", "name", "原供应商"],
     ["provider.notes", "notes", "原备注"],
     ["provider.websiteUrl", "websiteUrl", "https://example.com"],
+    ["provider.websiteUrl2", "websiteUrl2", "https://second.example.com"],
   ] as const)(
     "force-commits unfinished %s composition on blur",
     (label, fieldName, initialValue) => {
