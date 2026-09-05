@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Info, Loader2 } from "lucide-react";
+import { ChevronRight, Download, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -44,6 +43,10 @@ import {
   type ModelTestEntry,
 } from "@/hooks/useConnectivityTest";
 import type { ConnectivityTestResult } from "@/lib/api/connectivity-test";
+import {
+  fetchModelsForConfig,
+  showFetchModelsError,
+} from "@/lib/api/model-fetch";
 import { providersApi } from "@/lib/api/providers";
 import type { AppId } from "@/lib/api";
 import {
@@ -57,6 +60,7 @@ import {
   listProviderModelIds,
 } from "@/lib/providerModelIds";
 import { isPlainObject } from "@/lib/requestOverrides";
+import { extractCredentials } from "@/utils/providerCredentials";
 import type { Provider } from "@/types";
 
 interface ConnectivityTestDialogProps {
@@ -95,8 +99,7 @@ function settingsToForm(settings: ConnectivityTestSettings): FormState {
       settings.headers !== undefined
         ? JSON.stringify(settings.headers, null, 2)
         : "",
-    bodyText:
-      settings.body !== undefined ? JSON.stringify(settings.body, null, 2) : "",
+    bodyText: settings.body !== undefined ? JSON.stringify(settings.body, null, 2) : "",
   };
 }
 
@@ -152,17 +155,50 @@ function StatusCell({ entry }: { entry: ModelTestEntry | undefined }) {
   }
   return (
     <span className="text-muted-foreground">
-      {t("connectivityTest.waiting", { defaultValue: "等待中" })}
+      {t("connectivityTest.waiting", { defaultValue: "待测试" })}
     </span>
   );
 }
 
+interface SummaryStat {
+  key: "selected" | "running" | "success" | "failed" | "pending";
+  label: string;
+  value: number;
+  tone?: "success" | "failed";
+}
+
+/** 统计卡：已勾选 / 运行中 / 成功 / 失败 / 待测试（模仿 ai-toolbox summaryGrid） */
+function SummaryGrid({ stats }: { stats: SummaryStat[] }) {
+  return (
+    <div className="grid grid-cols-5 gap-2">
+      {stats.map((stat) => (
+        <div
+          key={stat.key}
+          className="rounded-md border border-border-default px-2 py-1.5 text-center"
+        >
+          <div
+            className={cn(
+              "text-base font-semibold tabular-nums",
+              stat.tone === "success" &&
+                "text-green-600 dark:text-green-400",
+              stat.tone === "failed" && "text-red-600 dark:text-red-400",
+            )}
+          >
+            {stat.value}
+          </div>
+          <div className="text-xs text-muted-foreground">{stat.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /**
- * 供应商逐模型连通性测试弹窗。
+ * 供应商逐模型连通性测试弹窗（单一模型表格形态，模仿 ai-toolbox）。
  *
- * 模型多选（全选 + 自动勾选：已保存默认测试模型 / 供应商当前模型 / 清单
- * 首个）→ 一次 invoke 整批测试 → 结果表格
- * （模型/状态/首字节/总耗时/错误 + 请求详情子弹窗）。参数表单打开时经
+ * 打开即展示该供应商全部模型行（静态清单 + 会话内拉取的远端模型追加
+ * 合并去重），勾选行 → 「开始测试」仅对勾选集合逐模型并行发起真实请求
+ * 并行内流式更新；测完自动勾选失败项便于一键重测。参数表单打开时经
  * getConnectivityTestSettings 恢复，「保存参数」仅写回 settings_config
  * 的 connectivityTest 块（mergeConnectivityTestSettings 保留其余字段）。
  */
@@ -174,6 +210,7 @@ export function ConnectivityTestDialog({
 }: ConnectivityTestDialogProps) {
   const { t } = useTranslation();
 
+  /** 静态模型清单（settings_config 解析，与后端同口径） */
   const modelIds = useMemo(
     () => listProviderModelIds(provider.settingsConfig, appId),
     [provider.settingsConfig, appId],
@@ -183,8 +220,9 @@ export function ConnectivityTestDialog({
     settingsToForm(DEFAULT_CONNECTIVITY_TEST_SETTINGS),
   );
   const [selected, setSelected] = useState<string[]>([]);
-  /** 本次测试的行集合：以发起测试时的选中集为准，忽略后端多返回的模型 */
-  const [testedIds, setTestedIds] = useState<string[]>([]);
+  /** 远端拉取追加的模型（仅本次弹窗会话有效，不写回配置） */
+  const [fetchedIds, setFetchedIds] = useState<string[]>([]);
+  const [isFetching, setIsFetching] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -193,6 +231,18 @@ export function ConnectivityTestDialog({
   const [detailOpen, setDetailOpen] = useState(false);
 
   const { results, runTest, reset } = useConnectivityTest(provider, appId);
+
+  /** 全部模型行：静态清单 + 拉取追加（按 ID 去重，静态优先） */
+  const allIds = useMemo(() => {
+    const seen = new Set(modelIds);
+    const appended = fetchedIds.filter((id) => !seen.has(id));
+    return [...modelIds, ...appended];
+  }, [modelIds, fetchedIds]);
+
+  const credentials = useMemo(
+    () => extractCredentials(appId, provider.settingsConfig),
+    [appId, provider.settingsConfig],
+  );
 
   // 打开时从 settings_config 恢复参数并自动勾选模型，避免每次手动选：
   // 已保存默认测试模型 → 供应商当前模型（在清单中时）→ 清单首个
@@ -211,7 +261,8 @@ export function ConnectivityTestDialog({
       if (fallback) initial = [fallback];
     }
     setSelected(initial);
-    setTestedIds([]);
+    setFetchedIds([]);
+    setIsFetching(false);
     setAdvancedOpen(
       settings.temperature !== undefined ||
         settings.maxTokens !== undefined ||
@@ -229,8 +280,16 @@ export function ConnectivityTestDialog({
     setForm((prev) => ({ ...prev, ...patch }));
 
   const allSelected =
-    modelIds.length > 0 && selected.length === modelIds.length;
+    allIds.length > 0 && selected.length === allIds.length;
   const someSelected = selected.length > 0 && !allSelected;
+
+  const anyRunning = useMemo(
+    () =>
+      allIds.some(
+        (modelId) => results[modelId]?.status === "running",
+      ),
+    [allIds, results],
+  );
 
   const toggleModel = (modelId: string, checked: boolean) => {
     setSelected((prev) =>
@@ -243,7 +302,49 @@ export function ConnectivityTestDialog({
   };
 
   const toggleSelectAll = (checked: boolean) => {
-    setSelected(checked ? [...modelIds] : []);
+    setSelected(checked ? [...allIds] : []);
+  };
+
+  /** 获取上游模型列表：与模型快捷切换同链路同错误语义，追加合并去重 */
+  const handleFetchModels = () => {
+    if (!credentials.baseUrl || !credentials.apiKey) {
+      showFetchModelsError(null, t, {
+        hasApiKey: !!credentials.apiKey,
+        hasBaseUrl: !!credentials.baseUrl,
+      });
+      return;
+    }
+    setIsFetching(true);
+    fetchModelsForConfig(credentials.baseUrl, credentials.apiKey, false)
+      .then((fetched) => {
+        const ids = fetched.map((model) => model.id.trim()).filter(Boolean);
+        setFetchedIds((prev) => {
+          const seen = new Set([...modelIds, ...prev]);
+          return [...prev, ...ids.filter((id) => !seen.has(id))];
+        });
+        if (ids.length === 0) {
+          toast.info(
+            t("providerForm.fetchModelsEmpty", {
+              defaultValue: "未找到可用模型",
+            }),
+          );
+        } else {
+          toast.success(
+            t("providerForm.fetchModelsSuccess", {
+              count: ids.length,
+              defaultValue: "获取到 {{count}} 个模型",
+            }),
+          );
+        }
+      })
+      .catch((err) => {
+        console.warn(
+          "[ConnectivityTest] Failed to fetch models:",
+          err,
+        );
+        showFetchModelsError(err, t);
+      })
+      .finally(() => setIsFetching(false));
   };
 
   const invalidJsonMessage = (field: string) =>
@@ -292,15 +393,21 @@ export function ConnectivityTestDialog({
   };
 
   const handleStart = async () => {
-    if (selected.length === 0) return;
+    if (selected.length === 0 || anyRunning) return;
     const parsed = parseSettings();
     if (!parsed.ok) {
       setJsonError(parsed.error);
       return;
     }
     setJsonError(null);
-    setTestedIds([...selected]);
-    await runTest([...selected], parsed.settings);
+    const snapshot = [...selected];
+    const outcome = await runTest(snapshot, parsed.settings);
+    // 测完勾选行为（模仿 ai-toolbox）：有失败项 → 自动勾选失败项便于重测；
+    // 全部成功 → 保持用户原勾选
+    const failed = snapshot.filter(
+      (modelId) => outcome[modelId]?.status === "error",
+    );
+    setSelected(failed.length > 0 ? failed : snapshot);
   };
 
   const handleSave = async () => {
@@ -337,10 +444,42 @@ export function ConnectivityTestDialog({
     }
   };
 
-  const anyRunning = useMemo(
-    () => Object.values(results).some((entry) => entry.status === "running"),
-    [results],
-  );
+  const stats: SummaryStat[] = useMemo(() => {
+    const countBy = (status: ModelTestEntry["status"]) =>
+      allIds.filter((modelId) => results[modelId]?.status === status).length;
+    return [
+      {
+        key: "selected",
+        label: t("connectivityTest.statSelected", { defaultValue: "已勾选" }),
+        value: selected.length,
+      },
+      {
+        key: "running",
+        label: t("connectivityTest.statRunning", { defaultValue: "运行中" }),
+        value: countBy("running"),
+      },
+      {
+        key: "success",
+        label: t("connectivityTest.statSuccess", { defaultValue: "成功" }),
+        value: countBy("success"),
+        tone: "success",
+      },
+      {
+        key: "failed",
+        label: t("connectivityTest.statFailed", { defaultValue: "失败" }),
+        value: countBy("error"),
+        tone: "failed",
+      },
+      {
+        key: "pending",
+        label: t("connectivityTest.statPending", { defaultValue: "待测试" }),
+        value: allIds.filter(
+          (modelId) =>
+            !results[modelId] || results[modelId].status === "waiting",
+        ).length,
+      },
+    ];
+  }, [allIds, results, selected.length, t]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -353,69 +492,6 @@ export function ConnectivityTestDialog({
         </DialogHeader>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-4">
-          {/* 模型多选 */}
-          <div className="space-y-2">
-            <div className="text-sm font-medium">
-              {t("connectivityTest.modelSelection", {
-                defaultValue: "选择模型",
-              })}
-            </div>
-            {modelIds.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border-default p-3 text-sm text-muted-foreground">
-                {t("connectivityTest.noTestableModels", {
-                  defaultValue: "无模型可测试",
-                })}
-              </p>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 border-b border-border-default pb-2">
-                  <Checkbox
-                    id="conn-select-all"
-                    checked={
-                      allSelected
-                        ? true
-                        : someSelected
-                          ? "indeterminate"
-                          : false
-                    }
-                    onCheckedChange={toggleSelectAll}
-                  />
-                  <Label htmlFor="conn-select-all" className="cursor-pointer">
-                    {t("connectivityTest.selectAll", { defaultValue: "全选" })}
-                  </Label>
-                </div>
-                <ScrollArea className="max-h-48 pr-3">
-                  <div className="space-y-1.5">
-                    {modelIds.map((modelId, index) => (
-                      <div key={modelId} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`conn-model-${index}`}
-                          checked={selected.includes(modelId)}
-                          onCheckedChange={(checked) =>
-                            toggleModel(modelId, checked)
-                          }
-                        />
-                        <Label
-                          htmlFor={`conn-model-${index}`}
-                          className="cursor-pointer font-normal"
-                        >
-                          {modelId}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-                {selected.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    {t("connectivityTest.selectModelFirst", {
-                      defaultValue: "请先选择要测试的模型",
-                    })}
-                  </p>
-                ) : null}
-              </>
-            )}
-          </div>
-
           {/* 基础参数 */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -452,7 +528,7 @@ export function ConnectivityTestDialog({
                       defaultValue: "不指定",
                     })}
                   </SelectItem>
-                  {modelIds.map((modelId) => (
+                  {allIds.map((modelId) => (
                     <SelectItem key={modelId} value={modelId}>
                       {modelId}
                     </SelectItem>
@@ -584,50 +660,110 @@ export function ConnectivityTestDialog({
             </p>
           ) : null}
 
-          {/* 结果表格：仅渲染发起测试时选中的模型行 */}
-          {testedIds.length > 0 ? (
-            <div className="space-y-2">
+          {/* 模型表格：勾选即测试范围，行内流式更新结果 */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
               <div className="text-sm font-medium">
                 {t("connectivityTest.results", { defaultValue: "测试结果" })}
               </div>
-              <div className="rounded-md border border-border-default">
-                <Table>
-                  <TableHeader>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isFetching}
+                onClick={handleFetchModels}
+              >
+                {isFetching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                {isFetching
+                  ? t("providerForm.fetchingModels", {
+                      defaultValue: "正在获取...",
+                    })
+                  : t("providerForm.fetchModels", {
+                      defaultValue: "获取模型列表",
+                    })}
+              </Button>
+            </div>
+            <SummaryGrid stats={stats} />
+            <div className="rounded-md border border-border-default">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        aria-label={t("connectivityTest.selectAll", {
+                          defaultValue: "全选",
+                        })}
+                        checked={
+                          allSelected
+                            ? true
+                            : someSelected
+                              ? "indeterminate"
+                              : false
+                        }
+                        onCheckedChange={toggleSelectAll}
+                        disabled={anyRunning || allIds.length === 0}
+                      />
+                    </TableHead>
+                    <TableHead>
+                      {t("connectivityTest.model", { defaultValue: "模型" })}
+                    </TableHead>
+                    <TableHead>
+                      {t("connectivityTest.status", { defaultValue: "状态" })}
+                    </TableHead>
+                    <TableHead>
+                      {t("connectivityTest.firstByteMs", {
+                        defaultValue: "首字节 (ms)",
+                      })}
+                    </TableHead>
+                    <TableHead>
+                      {t("connectivityTest.totalMs", {
+                        defaultValue: "总耗时 (ms)",
+                      })}
+                    </TableHead>
+                    <TableHead>
+                      {t("connectivityTest.errorInfo", {
+                        defaultValue: "错误信息",
+                      })}
+                    </TableHead>
+                    <TableHead className="w-24 text-right">
+                      {t("common.actions")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allIds.length === 0 ? (
                     <TableRow>
-                      <TableHead>
-                        {t("connectivityTest.model", { defaultValue: "模型" })}
-                      </TableHead>
-                      <TableHead>
-                        {t("connectivityTest.status", { defaultValue: "状态" })}
-                      </TableHead>
-                      <TableHead>
-                        {t("connectivityTest.firstByteMs", {
-                          defaultValue: "首字节 (ms)",
+                      <TableCell
+                        colSpan={7}
+                        className="py-6 text-center text-muted-foreground"
+                      >
+                        {t("connectivityTest.noTestableModels", {
+                          defaultValue: "无模型可测试",
                         })}
-                      </TableHead>
-                      <TableHead>
-                        {t("connectivityTest.totalMs", {
-                          defaultValue: "总耗时 (ms)",
-                        })}
-                      </TableHead>
-                      <TableHead>
-                        {t("connectivityTest.errorInfo", {
-                          defaultValue: "错误信息",
-                        })}
-                      </TableHead>
-                      <TableHead className="w-24 text-right">
-                        {t("common.actions")}
-                      </TableHead>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {testedIds.map((modelId) => {
+                  ) : (
+                    allIds.map((modelId) => {
                       const entry = results[modelId];
                       const result = entry?.result;
                       const errorMessage =
                         entry?.errorMessage ?? result?.errorMessage;
                       return (
                         <TableRow key={modelId}>
+                          <TableCell>
+                            <Checkbox
+                              aria-label={modelId}
+                              checked={selected.includes(modelId)}
+                              onCheckedChange={(checked) =>
+                                toggleModel(modelId, checked)
+                              }
+                              disabled={anyRunning}
+                            />
+                          </TableCell>
                           <TableCell className="font-medium">
                             {modelId}
                           </TableCell>
@@ -670,12 +806,19 @@ export function ConnectivityTestDialog({
                           </TableCell>
                         </TableRow>
                       );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                    })
+                  )}
+                </TableBody>
+              </Table>
             </div>
-          ) : null}
+            {selected.length === 0 && allIds.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {t("connectivityTest.selectModelFirst", {
+                  defaultValue: "请先选择要测试的模型",
+                })}
+              </p>
+            ) : null}
+          </div>
         </div>
 
         {/* 计费免责声明：真实请求会产生用量与费用 */}
