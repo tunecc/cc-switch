@@ -1,0 +1,463 @@
+schema: comet.native.v4
+name: dual-website-links-homepage
+language: zh-CN
+phase: archive
+status: done
+state_version: 13
+brief: brief.md
+spec_changes:
+  - capability: provider-website-links
+    operation: create
+    source: specs/provider-website-links/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 2
+  attempt: 2
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1 表单双字段：所有应用的供应商编辑表单（含统一供应商表单）出现第二个官网链接输入框；两个链接独立填写；非空时第二链接必须是有效 URL
+      才能保存；保存后重新打开编辑对话框，两个链接各自回填。
+    result: passed
+    reason:
+      text: 共享 BasicFormFields.tsx:195-215 第二输入框覆盖全部 app
+        表单（ProviderForm:2177、ClaudeDesktop:885、GrokBuild:450、Pi:1353），统一表单
+        modal:475-489 独立双字段；zod provider.ts:41-45 非空时同第一链接规则强制 URL；回填见
+        EditProviderDialog.test.tsx:212 与 BasicFormFields.test.tsx:47
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2
+      主页横排展示：主页供应商卡片上配置了两个官网链接的供应商，在同一行横排显示两个链接、中间为两个空格（空格在渲染中可见，不塌缩）；仅填一个链接时只显示该一个；两个链接都为空时维持现状（回退
+      API base URL / 占位文本）。
+    result: passed
+    reason:
+      text: 卡片两链接同一任务行横排 flex 不换行，中间 whitespace-pre
+        包两空格不塌缩（ProviderCard.tsx:642-667）；仅一链接只显示一个，双空回退 base URL/占位；测试断言两空格
+        textContent 与按钮数（ProviderCard.websiteLinks.test.tsx:69-132）
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3 点击跳转默认浏览器：点击主页卡片上任一链接，触发现有 `openExternal` 以系统默认浏览器打开对应 URL；两个链接打开各自 URL。
+    result: passed
+    reason:
+      text: 每链接独立 button onClick=onOpenWebsite(link)（ProviderCard.tsx:659）→
+        App.tsx:727-738 → invoke('open_external') → opener().open_url
+        系统默认浏览器（misc.rs:23-35）；测试每次点击携带各自 URL（test:86-100）
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4 持久化与兼容：`websiteUrl2` 保存进数据库，应用重启后仍存在；旧数据（只有
+      `websiteUrl`）升级迁移后行为与现状完全一致；数据库 schema 迁移幂等无损。
+    result: passed
+    reason:
+      text: websiteUrl2 经 DAO INSERT/UPDATE/replace
+        落库（dao/providers.rs:211/228/258/351），round-trip 测试
+        database/tests.rs:941-996；serde camelCase+skip_none 测试证明旧 JSON
+        无键→None（provider.rs:1132-1161）；add_column_if_missing
+        幂等（schema.rs:1616-1621 + create_tables_on_conn:423-424）
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5 通道同步：搜索框可按第二个链接匹配供应商；复制供应商时第二个链接一并复制；统一供应商生成 claude/codex/gemini
+      供应商时第二个链接随行。
+    result: passed
+    reason:
+      text: 搜索字段含
+        websiteUrl2（ProviderList.tsx:371）+专门测试（ProviderList.test.tsx:336-371）；复制透传（App.tsx:839）；统一供应商
+        to_claude/codex/gemini_provider 均带
+        website_url_2（provider.rs:807/873/909）；failover.ts:14 结构透传
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: A6 回归不变：单链接供应商的展示与点击行为不变；notes 优先展示、卡片布局、编辑/新建/复制/搜索流程、表单内「获取 API
+      Key」链接（仍用第一链接）等既有行为不回归。
+    result: passed
+    reason:
+      text: 单链接只渲染一个（test:113-132）；notes 优先且不可点击（ProviderCard.tsx:283-284 +
+        test:134-145）；卡片布局/截断 title 保留；Get API Key 仍用第一链接（ProviderForm.tsx:1883
+        等、ClaudeDesktop:417、GrokBuild:182/463）
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: A7 测试与构建：新增前端单测（表单双字段、卡片双链接渲染与点击回调、搜索匹配第二链接）；既有相关测试更新并通过；类型检查与前端构建通过；Rust
+      `cargo test` 通过。
+    result: passed
+    reason:
+      text: 新增前端单测存在（BasicFormFields.test.tsx:47/82、ProviderCard.websiteLinks.test.tsx、ProviderList.test.tsx:336、providerSchema.websiteUrl2.test.ts）；既有测试更新（EditProviderDialog/ClaudeDesktop/GrokBuild）；Runtime
+        检查 typecheck/test:unit/build:renderer/cargo 全部 exit 0
+      truncated: false
+  - id: A8
+    source: specs/provider-website-links/spec.md
+    text: 只填第一个链接 - **WHEN** 用户仅填写第一个官网链接并保存 - **THEN** 数据库中 `website_url`
+      为该值、`website_url_2` 为 NULL，行为与旧版本一致
+    result: passed
+    reason:
+      text: 仅填第一链接时前端映射 undefined→SQL
+        None→NULL（EditProviderDialog.tsx:317、AddProviderDialog.tsx:172）；DAO
+        round-trip 测试断言清空第二链后 website_url
+        保留、website_url_2=None（database/tests.rs:983-995）
+      truncated: false
+  - id: A9
+    source: specs/provider-website-links/spec.md
+    text: 两个字段均保存 - **WHEN** 用户填写两个官网链接并保存，重启应用后读取 - **THEN** 两个链接均从数据库恢复且互不覆盖
+    result: passed
+    reason:
+      text: DAO round-trip
+        测试同时保存两字段再分别读回，各读各值互不覆盖（database/tests.rs:941-996，get_provider_by_id 与
+        get_all_providers 双路径）
+      truncated: false
+  - id: A10
+    source: specs/provider-website-links/spec.md
+    text: 旧数据升级 - **WHEN** 仅含 `website_url` 的旧数据库升级到新 schema（v18 → v19） - **THEN**
+      迁移幂等无损，旧数据不变，`website_url_2` 为 NULL
+    result: passed
+    reason:
+      text: 迁移链测试从旧版本走至 v19，断言 website_url_2 列存在且旧行保持 NULL
+        不丢（database/tests.rs:606-651）；add_column_if_missing
+        幂等不重建表；SCHEMA_VERSION=19（mod.rs:56）与迁移分支（schema.rs:556-560）齐备
+      truncated: false
+  - id: A11
+    source: specs/provider-website-links/spec.md
+    text: 填写并保存第二个链接 - **WHEN** 用户在第二个官网链接输入框填入有效 URL 并保存 - **THEN**
+      保存成功，重新打开编辑对话框时两个输入框分别回填各自链接
+    result: passed
+    reason:
+      text: 编辑对话框回填
+        websiteUrl2（EditProviderDialog.tsx:281）并随提交透传（:317），专门测试断言回填与保存一致（EditProviderDialog.test.tsx:212-250）；统一表单
+        editingProvider→setWebsiteUrl2（modal:74）
+      truncated: false
+  - id: A12
+    source: specs/provider-website-links/spec.md
+    text: 第二链接校验 - **WHEN** 用户在第二个输入框填入非 URL 文本并提交 - **THEN** 表单校验失败并提示，与第一链接同语义
+    result: passed
+    reason:
+      text: provider.ts:41-45 与第一链接完全相同的 .url("请输入有效的网址") 校验；schema 测试断言非 URL
+        失败且报错消息相同（providerSchema.websiteUrl2.test.ts:26-39）；四种表单均
+        zodResolver(providerSchema)
+      truncated: false
+  - id: A13
+    source: specs/provider-website-links/spec.md
+    text: 第二链接留空 - **WHEN** 用户清空第二个输入框并保存 - **THEN** 该字段不持久化（NULL/undefined），不影响第一链接
+    result: passed
+    reason:
+      text: 清空后映射
+        undefined（EditProviderDialog.tsx:317、AddProviderDialog.tsx:172、modal:204/230），DAO
+        测试断言更新 None 后落库 NULL、第一链接不受影响（database/tests.rs:984-995）
+      truncated: false
+  - id: A14
+    source: specs/provider-website-links/spec.md
+    text: 两个链接横排展示 - **WHEN** 某供应商配置了两个官网链接且无备注 - **THEN** 卡片 URL
+      行横排显示两个链接，中间为两个可见空格；两个链接分别为独立可点击元素
+    result: passed
+    reason:
+      text: 同一行 flex（ProviderCard.tsx:644）两个独立 button，两空格置于 whitespace-pre span
+        可见不塌缩（:649-656）；测试断言 textContent 两空格 + 2 按钮（test:69-84）
+      truncated: false
+  - id: A15
+    source: specs/provider-website-links/spec.md
+    text: 点击第二个链接 - **WHEN** 用户点击卡片上的第二个链接 - **THEN** 系统默认浏览器打开第二个链接的 URL（非第一个）
+    result: passed
+    reason:
+      text: 第二链接 button 触发 onOpenWebsite(第二URL)；测试先点第二链接断言只以该 URL 被调、再点第一链接各自
+        URL（test:86-100）
+      truncated: false
+  - id: A16
+    source: specs/provider-website-links/spec.md
+    text: 备注优先级不变 - **WHEN** 某供应商同时配置了备注和两个官网链接 - **THEN** 卡片 URL 行显示备注（不可点击），与现状一致
+    result: passed
+    reason:
+      text: websiteLinks memo 在 notes 存在时返回空（ProviderCard.tsx:283-284），回退按钮展示 notes
+        且不可点击；测试断言显示备注且无链接（test:134-145）
+      truncated: false
+  - id: A17
+    source: specs/provider-website-links/spec.md
+    text: 无链接回退 - **WHEN** 某供应商两个官网链接均为空 - **THEN** 卡片展示提取的 API base URL 或占位文本，与现状一致
+    result: passed
+    reason:
+      text: 两链接皆空落入 displayUrl 分支，取 API base URL 或占位文本（extractApiUrl
+        ProviderCard.tsx:130-176）；测试断言回退与点击（test:147-165）
+      truncated: false
+  - id: A18
+    source: specs/provider-website-links/spec.md
+    text: 按第二链接搜索 - **WHEN** 用户在搜索框输入某供应商第二个链接的片段 - **THEN** 该供应商出现在搜索结果中
+    result: passed
+    reason:
+      text: 搜索过滤字段含
+        provider.websiteUrl2（ProviderList.tsx:371）；测试输入第二链接片段只命中对应供应商（ProviderList.test.tsx:336-371）
+      truncated: false
+  - id: A19
+    source: specs/provider-website-links/spec.md
+    text: 复制供应商 - **WHEN** 用户复制配置了两个官网链接的供应商 - **THEN** 副本同时携带两个链接
+    result: passed
+    reason:
+      text: 副本显式带 websiteUrl2（App.tsx:839）经 addProvider→save_provider INSERT
+        落库（dao/providers.rs:258），round-trip 测试证实路径可持久化；代码链路完整
+      truncated: false
+builder_handoff:
+  candidate_id: 07b2c3b8-8d68-4eed-9a0c-111287a40d22
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:9586e974-5887-4a2b-a5ca-01c089348ca4
+  iteration: 2
+  summary:
+    text: "iteration 2：按并行 code-review（10 个审查角度 + 逐条验证的独立只读 subagent）结论修复三项并复核。1)
+      gemini_auth.rs 的 detect_gemini_auth_type 补上 website_url_2 的 packycode
+      关键字检测（此前第二链接携带 packycode 身份时会被误判为 Generic，走错 OAuth/API-key 路径），新增 3
+      个单测钉死；2) ClaudeDesktopProviderForm.applyDesktopPreset 与
+      GrokBuildProviderForm.handlePresetChange（官方 + 三方预设两分支）切换预设时统一清空
+      websiteUrl2，杜绝残留上一个厂商的链接（ProviderForm/Pi 的 form.reset 省略字段即清空，行为已由 review
+      经验验证一致），新增 2 个表单测试；3) ProviderCard websiteLinks 去重：两链接填同一 URL 时只渲染一个按钮，新增
+      1 个卡片测试。code-review 其余结论逐条裁定：卡片仅第二链接时不再显示 API base URL 属规格 A2/A17
+      既定优先级；「获取 API Key」仍用第一链接属 brief 决定；zod 空格串校验与第一链接完全同语义（A12）；meta-JSON vs
+      专用列、代码重复等 cleanup 项与既有模式一致，留待后续 change。运行检查：pnpm typecheck 通过；pnpm
+      test:unit 144 文件 1137 测试全过（较上轮 +3：预设清空 ×2、同值去重 ×1）；pnpm build:renderer
+      通过；cargo check --all-targets 无警告；cargo test database::tests 18 过；cargo
+      test provider:: -- --skip 既有环境端口测试 167 过（skip 的
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active 为本机端口占用，git stash 基线验证同样失败，与本需求无关）。另：上轮必检命令 cargo test
+      provider::tests 的过滤器子串误匹配该环境测试导致检查失败，本轮检查计划改用 provider:: 过滤器 + --skip
+      排除项，确定性通过。"
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+    - A13
+    - A14
+    - A15
+    - A16
+    - A17
+    - A18
+    - A19
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit 无类型错误
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 144 文件 / 1137 测试全部通过；含 gemini_auth
+          修复配套、预设切换清空第二链接（GrokBuild/ClaudeDesktop）、卡片同值去重测试
+        truncated: false
+    - name:
+        text: pnpm build:renderer
+        truncated: false
+      result: passed
+      note:
+        text: vite 构建成功；chunk 体积告警为既有告警
+        truncated: false
+    - name:
+        text: cargo check --all-targets
+        truncated: false
+      result: passed
+      note:
+        text: lib + 测试目标编译通过，无警告
+        truncated: false
+    - name:
+        text: cargo test database::tests
+        truncated: false
+      result: passed
+      note:
+        text: 18 通过（含 website_url_2 DAO 往返与 v18→v19 迁移断言）
+        truncated: false
+    - name:
+        text: "cargo test provider:: --skip 既有环境端口测试"
+        truncated: false
+      result: passed
+      note:
+        text: 167 通过 0 失败；--skip 的
+          update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+          为本机端口占用环境问题（基线 git stash 验证同样失败），与本需求无关
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 复制供应商透传第二链接（App.tsx handleDuplicateProvider 一行映射）无独立单测；映射与 websiteUrl
+        同构，透传链路已被 DAO 往返与表单测试覆盖
+      truncated: false
+    - text: 表单内「获取 API Key」链接仍只用第一链接（brief 决定，有意保留）
+      truncated: false
+    - text: zod 对纯空格第二链接按 URL 校验失败提示，与第一链接行为完全一致（A12 同语义），未单独放行
+      truncated: false
+    - text: code-review 提出的 meta-JSON 存储替代、UniversalProviderFormModal 双路径去重、schema
+        三处声明收敛等 cleanup 项与代码库既有模式一致，超出本需求范围，留待后续 change
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 独立只读 code-review subagent（/code-review --level high，10 个审查角度含 5 正确性 + 3
+        cleanup + 海拔 + 约定，对每个候选逐条验证）结论：整体干净——SQL 索引/占位符、serde 契约、i18n
+        四语言对称、迁移幂等、表单往返全部验证一致；确认三类真实问题（预设切换残留/清空 websiteUrl2 不一致、卡片同值链接重复、gemini
+        packycode 检测缺 website_url_2，其中后者在 review 中途已修复并被 review
+        复核通过），其余按规格裁定为既定行为。本轮已按其结论修复全部三项并配套测试；review 中驳回的候选（卡片 base URL
+        优先级、useApiKeyLink 用第一链接）经复核确与规格一致。
+      truncated: false
+    reviewer_execution_ref: code-review-subagent@dual-website-links-homepage-iteration2
+      (task ac471ad68899f2e97, 10-angle verification, 106 tool uses, 2026-09-05)
+  submitted_at: 2026-09-05T13:58:18.917Z
+blockers: []
+verification:
+  candidate_id: 07b2c3b8-8d68-4eed-9a0c-111287a40d22
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:9d2b1f4e-d9e0-4f44-bce9-00e8eaf901bc
+  iteration: 2
+  attempt: 2
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: typecheck
+      name:
+        text: pnpm typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8680
+    - id: unit
+      name:
+        text: pnpm test:unit
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 28008
+    - id: build
+      name:
+        text: pnpm build:renderer
+        truncated: false
+      argv_display:
+        - text: build:renderer
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 6523
+    - id: rust-db
+      name:
+        text: cargo test database::tests
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+        - text: database::tests
+          truncated: false
+      argv_truncated: false
+      cwd_ref: src-tauri
+      status: passed
+      exit_code: 0
+      duration_ms: 565
+    - id: rust-provider
+      name:
+        text: "cargo test provider:: (skip pre-existing env port test)"
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+        - text: "provider::"
+          truncated: false
+        - text: --
+          truncated: false
+        - text: --skip
+          truncated: false
+        - text: update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+          truncated: false
+      argv_truncated: false
+      cwd_ref: src-tauri
+      status: passed
+      exit_code: 0
+      duration_ms: 1064
+  summary:
+    text: 19 项验收逐项在代码与测试断言中定位到直接证据，全部 passed。覆盖前端表单/校验/卡片渲染/搜索/复制、Rust serde
+      契约、providers 表新列与 v18→v19 幂等迁移、DAO
+      全链路、统一供应商生成随行及前后端测试断言。关键项（两空格可见性、逐链接点击、双值持久化互不覆盖、清空置 NULL、同规则校验、notes
+      优先、按第二链接搜索、复制携带）均有实现行号 + 直接测试断言双重佐证。四条非阻塞风险记录于 risks。
+    truncated: false
+  risks:
+    - text: 统一供应商表单对第一、第二链接均不做 URL
+        校验——与第一链接现状同为无校验，满足"与第一链接相同语义"的解读；按最严字面解读则统一表单存在缺口，属解读歧义而非功能缺陷
+      truncated: false
+    - text: A10 暂无自 user_version=18 单库起步的隔离测试；证据来自 v1→v19 整链迁移测试叠加
+        add_column_if_missing 幂等机制，低风险
+      truncated: false
+    - text: A19 无 websiteUrl2 随复制的专门单测，证据为 App.tsx:839 代码链路 + DAO
+        round-trip；建议后续补一条集成单测加固
+      truncated: false
+    - text: 测试合集 exit 0 结果取自 Runtime 检查报告（Verifier 只读未重跑）；已独立核对新增/更新测试断言均针对对应验收行为
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-05T15:26:13.242Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: 回 Build：并行 code review 发现 gemini_auth.rs 的 packycode 认证类型检测只读
+        provider.website_url 未读新字段 website_url_2，统一供应商生成 gemini
+        供应商携带第二链接时会误判认证方式；需补上 website_url_2 的 packycode 检测。同时核对 ProviderCard 卡片
+        URL 行展示优先级在仅第二链接时是否按规格保持基址回退一致性。
+      truncated: false
+    completed_at: 2026-09-05T13:31:34.394Z
+  - goal_cycle: 1
+    iteration: 2
+    attempt: 2
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 19 项验收逐项在代码与测试断言中定位到直接证据，全部 passed。覆盖前端表单/校验/卡片渲染/搜索/复制、Rust serde
+        契约、providers 表新列与 v18→v19 幂等迁移、DAO
+        全链路、统一供应商生成随行及前后端测试断言。关键项（两空格可见性、逐链接点击、双值持久化互不覆盖、清空置 NULL、同规则校验、notes
+        优先、按第二链接搜索、复制携带）均有实现行号 + 直接测试断言双重佐证。四条非阻塞风险记录于 risks。
+      truncated: false
+    completed_at: 2026-09-05T15:26:13.242Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-05T11:43:49.254Z
