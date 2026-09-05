@@ -52,7 +52,10 @@ import {
   mergeConnectivityTestSettings,
   type ConnectivityTestSettings,
 } from "@/lib/connectivityTestSettings";
-import { listProviderModelIds } from "@/lib/providerModelIds";
+import {
+  currentProviderModelId,
+  listProviderModelIds,
+} from "@/lib/providerModelIds";
 import { isPlainObject } from "@/lib/requestOverrides";
 import type { Provider } from "@/types";
 
@@ -157,7 +160,8 @@ function StatusCell({ entry }: { entry: ModelTestEntry | undefined }) {
 /**
  * 供应商逐模型连通性测试弹窗。
  *
- * 模型多选（全选 + 默认测试模型预勾选）→ 一次 invoke 整批测试 → 结果表格
+ * 模型多选（全选 + 自动勾选：已保存默认测试模型 / 供应商当前模型 / 清单
+ * 首个）→ 一次 invoke 整批测试 → 结果表格
  * （模型/状态/首字节/总耗时/错误 + 请求详情子弹窗）。参数表单打开时经
  * getConnectivityTestSettings 恢复，「保存参数」仅写回 settings_config
  * 的 connectivityTest 块（mergeConnectivityTestSettings 保留其余字段）。
@@ -190,15 +194,23 @@ export function ConnectivityTestDialog({
 
   const { results, runTest, reset } = useConnectivityTest(provider, appId);
 
-  // 打开时从 settings_config 恢复参数并预勾选默认测试模型
+  // 打开时从 settings_config 恢复参数并自动勾选模型，避免每次手动选：
+  // 已保存默认测试模型 → 供应商当前模型（在清单中时）→ 清单首个
   useEffect(() => {
     if (!open) return;
     const settings = getConnectivityTestSettings(provider.settingsConfig);
     setForm(settingsToForm(settings));
     const preset = settings.defaultTestModelId?.trim();
-    setSelected(
-      preset && modelIds.includes(preset) ? [preset] : ([] as string[]),
-    );
+    let initial: string[] = [];
+    if (preset && modelIds.includes(preset)) {
+      initial = [preset];
+    } else {
+      const current = currentProviderModelId(provider.settingsConfig, appId);
+      const fallback =
+        current && modelIds.includes(current) ? current : modelIds[0];
+      if (fallback) initial = [fallback];
+    }
+    setSelected(initial);
     setTestedIds([]);
     setAdvancedOpen(
       settings.temperature !== undefined ||
@@ -211,7 +223,7 @@ export function ConnectivityTestDialog({
     setDetailResult(null);
     setDetailOpen(false);
     reset();
-  }, [open, provider, modelIds, reset]);
+  }, [open, provider, modelIds, appId, reset]);
 
   const updateForm = (patch: Partial<FormState>) =>
     setForm((prev) => ({ ...prev, ...patch }));
@@ -332,7 +344,7 @@ export function ConnectivityTestDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl gap-0">
+      <DialogContent className="max-w-2xl gap-0" zIndex="alert">
         <DialogHeader>
           <DialogTitle>
             {t("connectivityTest.title", { defaultValue: "连通性测试" })}
