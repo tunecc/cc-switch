@@ -46,7 +46,9 @@ import type { ConnectivityTestResult } from "@/lib/api/connectivity-test";
 import {
   fetchModelsForConfig,
   showFetchModelsError,
+  type FetchedModel,
 } from "@/lib/api/model-fetch";
+import { SearchableModelMultiPicker } from "@/components/providers/forms/shared/SearchableModelMultiPicker";
 import { providersApi } from "@/lib/api/providers";
 import type { AppId } from "@/lib/api";
 import {
@@ -196,11 +198,13 @@ function SummaryGrid({ stats }: { stats: SummaryStat[] }) {
 /**
  * 供应商逐模型连通性测试弹窗（单一模型表格形态，模仿 ai-toolbox）。
  *
- * 打开即展示该供应商全部模型行（静态清单 + 会话内拉取的远端模型追加
- * 合并去重），勾选行 → 「开始测试」仅对勾选集合逐模型并行发起真实请求
- * 并行内流式更新；测完自动勾选失败项便于一键重测。参数表单打开时经
- * getConnectivityTestSettings 恢复，「保存参数」仅写回 settings_config
- * 的 connectivityTest 块（mergeConnectivityTestSettings 保留其余字段）。
+ * 打开即展示该供应商全部模型行（静态清单 + 会话内经「获取模型列表 →
+ * 搜索添加」挑选加入的远端模型），勾选行 → 「开始测试」仅对勾选集合
+ * 逐模型并行发起真实请求并流式更新；测完自动勾选失败项便于一键重测。
+ * 远端模型拉取后仅会话内缓存于选择器，由用户搜索挑选后添加进表格并
+ * 自动勾选，不写回配置。参数表单打开时经 getConnectivityTestSettings
+ * 恢复，「保存参数」仅写回 settings_config 的 connectivityTest 块
+ * （mergeConnectivityTestSettings 保留其余字段）。
  */
 export function ConnectivityTestDialog({
   provider,
@@ -222,6 +226,9 @@ export function ConnectivityTestDialog({
   const [selected, setSelected] = useState<string[]>([]);
   /** 远端拉取追加的模型（仅本次弹窗会话有效，不写回配置） */
   const [fetchedIds, setFetchedIds] = useState<string[]>([]);
+  /** 上游拉取到的完整模型列表（会话内缓存，供「搜索添加」选择器挑选） */
+  const [fetchedModels, setFetchedModels] = useState<FetchedModel[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -262,6 +269,8 @@ export function ConnectivityTestDialog({
     }
     setSelected(initial);
     setFetchedIds([]);
+    setFetchedModels([]);
+    setPickerOpen(false);
     setIsFetching(false);
     setAdvancedOpen(
       settings.temperature !== undefined ||
@@ -305,7 +314,11 @@ export function ConnectivityTestDialog({
     setSelected(checked ? [...allIds] : []);
   };
 
-  /** 获取上游模型列表：与模型快捷切换同链路同错误语义，追加合并去重 */
+  /**
+   * 获取上游模型列表：与模型快捷切换同链路同错误语义。拉取结果只做
+   * 会话内缓存并自动弹出一次「搜索添加」选择器——由用户搜索挑选后
+   * 经 handleAddModels 添加进表格，不再全量追加。
+   */
   const handleFetchModels = () => {
     if (!credentials.baseUrl || !credentials.apiKey) {
       showFetchModelsError(null, t, {
@@ -317,12 +330,12 @@ export function ConnectivityTestDialog({
     setIsFetching(true);
     fetchModelsForConfig(credentials.baseUrl, credentials.apiKey, false)
       .then((fetched) => {
-        const ids = fetched.map((model) => model.id.trim()).filter(Boolean);
-        setFetchedIds((prev) => {
-          const seen = new Set([...modelIds, ...prev]);
-          return [...prev, ...ids.filter((id) => !seen.has(id))];
-        });
-        if (ids.length === 0) {
+        const usable = fetched
+          .map((model) => ({ ...model, id: model.id.trim() }))
+          .filter((model) => model.id.length > 0);
+        // 重新拉取只刷新缓存，已添加进表格的行保留
+        setFetchedModels(usable);
+        if (usable.length === 0) {
           toast.info(
             t("providerForm.fetchModelsEmpty", {
               defaultValue: "未找到可用模型",
@@ -331,10 +344,11 @@ export function ConnectivityTestDialog({
         } else {
           toast.success(
             t("providerForm.fetchModelsSuccess", {
-              count: ids.length,
+              count: usable.length,
               defaultValue: "获取到 {{count}} 个模型",
             }),
           );
+          setPickerOpen(true);
         }
       })
       .catch((err) => {
@@ -345,6 +359,16 @@ export function ConnectivityTestDialog({
         showFetchModelsError(err, t);
       })
       .finally(() => setIsFetching(false));
+  };
+
+  /** 选择器「添加到测试」：仅勾选模型追加进表格并自动勾选（挑选即意图测试） */
+  const handleAddModels = (ids: string[]) => {
+    setFetchedIds((prev) => {
+      const seen = new Set([...modelIds, ...prev]);
+      return [...prev, ...ids.filter((id) => !seen.has(id))];
+    });
+    setSelected((prev) => [...prev, ...ids.filter((id) => !prev.includes(id))]);
+    setPickerOpen(false);
   };
 
   const invalidJsonMessage = (field: string) =>
@@ -666,26 +690,37 @@ export function ConnectivityTestDialog({
               <div className="text-sm font-medium">
                 {t("connectivityTest.results", { defaultValue: "测试结果" })}
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={isFetching}
-                onClick={handleFetchModels}
-              >
-                {isFetching ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-                {isFetching
-                  ? t("providerForm.fetchingModels", {
-                      defaultValue: "正在获取...",
-                    })
-                  : t("providerForm.fetchModels", {
-                      defaultValue: "获取模型列表",
-                    })}
-              </Button>
+              <div className="flex items-center gap-2">
+                {/* 搜索添加：挑选远端模型加入测试（拉取过后可用，随时重开） */}
+                <SearchableModelMultiPicker
+                  models={fetchedModels}
+                  existingIds={allIds}
+                  open={pickerOpen}
+                  onOpenChange={setPickerOpen}
+                  onAdd={handleAddModels}
+                  disabled={anyRunning}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isFetching}
+                  onClick={handleFetchModels}
+                >
+                  {isFetching ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  {isFetching
+                    ? t("providerForm.fetchingModels", {
+                        defaultValue: "正在获取...",
+                      })
+                    : t("providerForm.fetchModels", {
+                        defaultValue: "获取模型列表",
+                      })}
+                </Button>
+              </div>
             </div>
             <SummaryGrid stats={stats} />
             <div className="rounded-md border border-border-default">
