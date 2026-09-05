@@ -22,26 +22,28 @@ type OmoProviderRow = (
     String,
 );
 
-const PROVIDER_SELECT: &str = "SELECT id, name, settings_config, website_url, category, created_at, sort_index, notes, icon, icon_color, meta, in_failover_queue FROM providers";
+// fork：在 website_url 之后补第二官网链接列 website_url_2（fork 专属列，见 schema v24）。
+const PROVIDER_SELECT: &str = "SELECT id, name, settings_config, website_url, website_url_2, category, created_at, sort_index, notes, icon, icon_color, meta, in_failover_queue FROM providers";
 
-/// 按 [`PROVIDER_SELECT`] 的列序（`id, name, settings_config, website_url, category, created_at, sort_index, notes, icon,
-/// icon_color, meta, in_failover_queue`）读一行供应商。
+/// 按 [`PROVIDER_SELECT`] 的列序（`id, name, settings_config, website_url, website_url_2, category, created_at,
+/// sort_index, notes, icon, icon_color, meta, in_failover_queue`）读一行供应商。
 fn row_to_provider(row: &rusqlite::Row<'_>) -> rusqlite::Result<Provider> {
     let id: String = row.get(0)?;
     let entry = format!("供应商 {id}");
     Ok(Provider {
         settings_config: super::json_column(row, 2, &entry)?,
-        meta: Some(super::json_column::<ProviderMeta>(row, 10, &entry)?),
+        meta: Some(super::json_column::<ProviderMeta>(row, 11, &entry)?),
         id,
         name: row.get(1)?,
         website_url: row.get(3)?,
-        category: row.get(4)?,
-        created_at: row.get(5)?,
-        sort_index: row.get(6)?,
-        notes: row.get(7)?,
-        icon: row.get(8)?,
-        icon_color: row.get(9)?,
-        in_failover_queue: row.get(11)?,
+        website_url_2: row.get(4)?,
+        category: row.get(5)?,
+        created_at: row.get(6)?,
+        sort_index: row.get(7)?,
+        notes: row.get(8)?,
+        icon: row.get(9)?,
+        icon_color: row.get(10)?,
+        in_failover_queue: row.get(12)?,
     })
 }
 
