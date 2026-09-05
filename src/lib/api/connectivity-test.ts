@@ -58,18 +58,21 @@ function toBackendParams(
 }
 
 /**
- * 单供应商连通性测试（弹窗用）。后端对该供应商全部模型并行发起真实请求，
- * 一次 invoke 返回全部结果；`params` 缺省时后端使用默认参数。
+ * 单供应商连通性测试（弹窗用）。`modelIds` 非空时后端仅对传入集合发起
+ * 真实请求（勾选即测试范围，可含弹窗内拉取的会话级模型）；缺省时后端
+ * 回退到供应商静态模型清单。`params` 缺省时后端使用默认参数。
  */
 export async function connectivityTestProviderModels(
   appId: AppId,
   providerId: string,
   params?: ConnectivityTestSettings,
+  modelIds?: string[],
 ): Promise<ConnectivityTestResponse> {
   return invoke("connectivity_test_provider_models", {
     appType: appId,
     providerId,
     params: params === undefined ? undefined : toBackendParams(params),
+    modelIds,
   });
 }
 
