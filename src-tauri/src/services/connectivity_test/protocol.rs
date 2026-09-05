@@ -11,6 +11,10 @@ use crate::error::AppError;
 use crate::provider::Provider;
 use crate::proxy::providers::{ClaudeAdapter, CodexAdapter, ProviderAdapter};
 
+/// 测试提示词缺省值（claude / codex 共用），与前端
+/// `DEFAULT_CONNECTIVITY_TEST_SETTINGS.prompt` 保持一致。
+pub const DEFAULT_TEST_PROMPT: &str = "你好，你可以帮我做什么事情";
+
 /// 已构造好的 HTTP 目标（请求体为 JSON）。
 #[derive(Debug, Clone)]
 pub struct HttpTarget {
@@ -103,7 +107,10 @@ pub fn build_claude(
     }
     headers.push(("Content-Type".to_string(), "application/json".to_string()));
 
-    let prompt = params.prompt.clone().unwrap_or_else(|| "ping".to_string());
+    let prompt = params
+        .prompt
+        .clone()
+        .unwrap_or_else(|| DEFAULT_TEST_PROMPT.to_string());
     let stream = params.stream.unwrap_or(true);
     let max_tokens = params.max_tokens.unwrap_or(1024);
 
@@ -177,7 +184,10 @@ pub fn build_codex(
         ("Content-Type".to_string(), "application/json".to_string()),
     ];
 
-    let prompt = params.prompt.clone().unwrap_or_else(|| "ping".to_string());
+    let prompt = params
+        .prompt
+        .clone()
+        .unwrap_or_else(|| DEFAULT_TEST_PROMPT.to_string());
     let stream = params.stream.unwrap_or(true);
 
     let mut body = json!({
@@ -555,6 +565,30 @@ mod tests {
         assert_eq!(target.body["messages"][0]["role"], "user");
         assert_eq!(target.body["messages"][0]["content"][0]["type"], "text");
         assert_eq!(target.body["messages"][0]["content"][0]["text"], "hello");
+    }
+
+    #[test]
+    fn default_prompt_fallback_matches_frontend_default() {
+        // params.prompt 缺省时前后端使用同一默认提示词
+        let p = provider(json!({
+            "env": {
+                "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
+                "ANTHROPIC_AUTH_TOKEN": "sk-ant-token"
+            }
+        }));
+        let params = ConnectivityTestParams::default();
+        let claude = build_claude(&p, "claude-sonnet-5", &params).unwrap();
+        assert_eq!(
+            claude.body["messages"][0]["content"][0]["text"],
+            json!(DEFAULT_TEST_PROMPT)
+        );
+
+        let c = provider(codex_provider_base());
+        let codex = build_codex(&c, "gpt-5.5", &params).unwrap();
+        assert_eq!(
+            codex.body["input"][0]["content"][0]["text"],
+            json!(DEFAULT_TEST_PROMPT)
+        );
     }
 
     #[test]
