@@ -24,11 +24,7 @@ import {
   getCurrentModel,
   isModelCapableApp,
 } from "@/utils/providerModelUtils";
-import {
-  extractCodexBaseUrl,
-  extractCodexExperimentalBearerToken,
-} from "@/utils/providerConfigUtils";
-import { parseGrokBuildConfig } from "@/utils/grokBuildConfig";
+import { extractCredentials } from "@/utils/providerCredentials";
 import { extractErrorMessage } from "@/utils/errorUtils";
 import { SearchableModelPicker } from "@/components/providers/forms/shared/SearchableModelPicker";
 import { Button } from "@/components/ui/button";
@@ -48,73 +44,6 @@ export interface ModelQuickSwitchDialogProps {
   appId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-/** 凭据预检结果：base_url + api_key，缺任一则拉取按钮禁用 */
-interface ProviderCredentials {
-  baseUrl: string;
-  apiKey: string;
-}
-
-const asRecord = (value: unknown): Record<string, any> | undefined =>
-  value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, any>)
-    : undefined;
-
-const asTrimmedString = (value: unknown): string =>
-  typeof value === "string" ? value.trim() : "";
-
-// 按当前模型读取语义对齐：codex 走 pickCodexApiKey 同款回退
-// （auth.OPENAI_API_KEY 缺失时读 config.toml 的 experimental_bearer_token）。
-// grokbuild 的 config 是 Grok CLI 自己的 TOML（[model.<profile>] 表），
-// 凭据在 auth.OPENAI_API_KEY 或模型表 env_key 指向的变量里——env_key 只是
-// 变量名，拿不到值，视为缺 key（官方 OAuth / env 引用场景本就不走该弹窗拉取）。
-function extractCredentials(
-  appId: string,
-  settingsConfig: Record<string, any> | undefined,
-): ProviderCredentials {
-  const config = asRecord(settingsConfig) ?? {};
-  const env = asRecord(config.env) ?? {};
-  const auth = asRecord(config.auth) ?? {};
-  const configText =
-    typeof config.config === "string" ? config.config : undefined;
-
-  switch (appId) {
-    case "claude":
-      return {
-        baseUrl: asTrimmedString(env.ANTHROPIC_BASE_URL),
-        apiKey: asTrimmedString(
-          env.ANTHROPIC_AUTH_TOKEN || env.ANTHROPIC_API_KEY,
-        ),
-      };
-    case "codex":
-      return {
-        baseUrl: extractCodexBaseUrl(configText)?.trim() ?? "",
-        apiKey:
-          asTrimmedString(auth.OPENAI_API_KEY) ||
-          extractCodexExperimentalBearerToken(configText)?.trim() ||
-          "",
-      };
-    case "grokbuild": {
-      // grokbuild 供应商的 settingsConfig 是 { config: <TOML> }（无 auth 字段），
-      // api_key 在 [model.<default>].api_key / env_key 里；env_key 只是变量名拿不到值。
-      const parsed = configText ? parseGrokBuildConfig(configText) : null;
-      return {
-        baseUrl: parsed?.baseUrl?.trim() ?? "",
-        apiKey:
-          asTrimmedString(parsed?.apiKey) ||
-          asTrimmedString(auth.OPENAI_API_KEY) ||
-          "",
-      };
-    }
-    case "gemini":
-      return {
-        baseUrl: asTrimmedString(env.GOOGLE_GEMINI_BASE_URL),
-        apiKey: asTrimmedString(env.GEMINI_API_KEY),
-      };
-    default:
-      return { baseUrl: "", apiKey: "" };
-  }
 }
 
 export function ModelQuickSwitchDialog({
