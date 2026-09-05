@@ -115,6 +115,7 @@
   "provider": {
     "connectivityCheck": "连通性测试",
     "batchConnectivityTest": "批量检测",
+    "batchConnectivityStop": "停止批量检测",
     "tabProvider": "供应商",
     "tabUniversal": "统一供应商",
     "noProviders": "还没有添加任何供应商",

@@ -8,6 +8,8 @@ import {
   Plus,
   Settings,
   ArrowLeft,
+  Activity,
+  Square,
   Minus,
   Maximize2,
   Minimize2,
@@ -46,6 +48,7 @@ import { openclawKeys, useOpenClawHealth } from "@/hooks/useOpenClaw";
 import { hermesKeys, useOpenHermesWebUI } from "@/hooks/useHermes";
 import { hermesApi } from "@/lib/api/hermes";
 import { useProxyStatus } from "@/hooks/useProxyStatus";
+import { useConnectivityProbe } from "@/hooks/useConnectivityProbe";
 import { useUsageCacheBridge } from "@/hooks/useUsageCacheBridge";
 import { useTauriEvent } from "@/hooks/useTauriEvent";
 import { useLastValidValue } from "@/hooks/useLastValidValue";
@@ -66,6 +69,7 @@ import {
 import { AppSwitcher } from "@/components/AppSwitcher";
 import { ProfileSwitcher } from "@/components/profiles/ProfileSwitcher";
 import { ProviderList } from "@/components/providers/ProviderList";
+import { shouldShowTestEntry } from "@/components/providers/connectivityEntry";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
 import { EditProviderDialog } from "@/components/providers/EditProviderDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -319,6 +323,13 @@ function App() {
   const { data: piCurrentState } = usePiCurrentState(activeApp === "pi");
   const providers = useMemo(() => data?.providers ?? {}, [data]);
   const currentProviderId = data?.currentProviderId ?? "";
+  // 批量连通性探针：状态提升到 App（header 按钮与供应商卡片徽标的最近
+  // 公共祖先）；App 不随 app 切换重挂，appId 自清空由 hook 内部完成
+  const { results: probeResults, probeAll, stopProbe } =
+    useConnectivityProbe(activeApp);
+  const isProbeRunning = Object.values(probeResults).some(
+    (entry) => entry.status === "waiting" || entry.status === "running",
+  );
   const isOpenClawView =
     activeApp === "openclaw" &&
     (currentView === "providers" ||
@@ -1126,6 +1137,7 @@ function App() {
                       providers={providers}
                       currentProviderId={currentProviderId}
                       appId={activeApp}
+                      probeResults={probeResults}
                       isLoading={isLoading}
                       isProxyRunning={currentAppUsesProxy && isProxyRunning}
                       isProxyTakeover={
@@ -1698,6 +1710,35 @@ function App() {
                             </>
                           ) : (
                             <>
+                              {shouldShowTestEntry(activeApp) && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (isProbeRunning) {
+                                      stopProbe();
+                                      return;
+                                    }
+                                    void probeAll(Object.values(providers));
+                                  }}
+                                  className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
+                                  title={
+                                    isProbeRunning
+                                      ? t("provider.batchConnectivityStop", {
+                                          defaultValue: "停止批量检测",
+                                        })
+                                      : t("provider.batchConnectivityTest", {
+                                          defaultValue: "批量检测",
+                                        })
+                                  }
+                                >
+                                  {isProbeRunning ? (
+                                    <Square className="flex-shrink-0 w-4 h-4" />
+                                  ) : (
+                                    <Activity className="flex-shrink-0 w-4 h-4" />
+                                  )}
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"

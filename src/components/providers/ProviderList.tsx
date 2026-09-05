@@ -14,7 +14,7 @@ import {
   type CSSProperties,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Activity, AlertTriangle, Loader2, Search, X } from "lucide-react";
+import { AlertTriangle, Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -31,9 +31,9 @@ import {
   useHermesLiveProviderIds,
   useHermesModelConfig,
 } from "@/hooks/useHermes";
-import {
-  useConnectivityProbe,
-  type ConnectivityProbeEntry,
+import type {
+  ConnectivityProbeEntry,
+  ConnectivityProbeResults,
 } from "@/hooks/useConnectivityProbe";
 import { ProviderCard } from "@/components/providers/ProviderCard";
 import { ProviderEmptyState } from "@/components/providers/ProviderEmptyState";
@@ -76,6 +76,8 @@ interface ProviderListProps {
   isProxyTakeover?: boolean; // 代理接管模式（Live配置已被接管）
   activeProviderId?: string; // 代理当前实际使用的供应商 ID（用于故障转移模式下标注绿色边框）
   onSetAsDefault?: (provider: Provider, modelId?: string) => void; // OpenClaw: set as default model
+  /** 批量连通性探针结果（入口按钮在 header，由 App 持有 hook 并传入） */
+  probeResults?: ConnectivityProbeResults;
 }
 
 export function ProviderList({
@@ -98,6 +100,7 @@ export function ProviderList({
   isProxyTakeover = false,
   activeProviderId,
   onSetAsDefault,
+  probeResults = {},
 }: ProviderListProps) {
   const { t } = useTranslation();
   // 连通性测试弹窗态：卡片「检测」按钮只负责打开弹窗，弹窗内部自行管理
@@ -107,12 +110,8 @@ export function ProviderList({
     provider: Provider;
     open: boolean;
   } | null>(null);
-  // 批量探针：列表头「批量检测」触发，逐供应商调用单模型探测命令，按完成
-  // 顺序增量更新卡片徽标（waiting → running → success/error）。
-  const { results: probeResults, probeAll } = useConnectivityProbe(appId);
-  const isProbeRunning = Object.values(probeResults).some(
-    (entry) => entry.status === "waiting" || entry.status === "running",
-  );
+  // 批量探针结果经 props 注入：入口按钮已移至 header（App 持有
+  // useConnectivityProbe），此处只按 providerId 读取徽标数据。
   const handleTest = useCallback((provider: Provider) => {
     setTestProvider({ provider, open: true });
   }, []);
@@ -780,28 +779,6 @@ export function ProviderList({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* App 级批量检测门禁：仅判 appId。逐供应商过滤（official/动态端点/无模型
-          跳过）由 useConnectivityProbe 内部完成，此处不需传 providerType。 */}
-      {shouldShowTestEntry(appId) && (
-        <div className="flex items-center justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isProbeRunning}
-            onClick={() => void probeAll(Object.values(providers))}
-          >
-            {isProbeRunning ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Activity className="w-4 h-4 mr-2" />
-            )}
-            {t("provider.batchConnectivityTest", {
-              defaultValue: "批量检测",
-            })}
-          </Button>
-        </div>
-      )}
 
       {testProvider && (
         <ConnectivityTestDialog

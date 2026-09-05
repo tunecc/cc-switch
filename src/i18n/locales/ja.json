@@ -103,6 +103,7 @@
   "provider": {
     "connectivityCheck": "接続テスト",
     "batchConnectivityTest": "一括テスト",
+    "batchConnectivityStop": "一括テストを停止",
     "tabProvider": "プロバイダー",
     "tabUniversal": "統一プロバイダー",
     "noProviders": "まだプロバイダーがありません",
