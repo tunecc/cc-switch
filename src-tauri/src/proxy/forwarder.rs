@@ -4513,6 +4513,7 @@ mod tests {
             name: "Provider 1".to_string(),
             settings_config: json!({}),
             website_url: None,
+            website_url_2: None,
             category: None,
             created_at: None,
             sort_index: None,
