@@ -78,7 +78,7 @@ export function ConnectivityDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl" zIndex="nested">
+      <DialogContent className="max-w-2xl" zIndex="alert">
         <DialogHeader>
           <DialogTitle>
             {t("connectivityTest.requestDetails", {
