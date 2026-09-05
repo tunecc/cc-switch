@@ -8,7 +8,7 @@ import {
 describe("connectivityTestSettings", () => {
   it("returns defaults when field absent", () => {
     const s = getConnectivityTestSettings({ env: {} });
-    expect(s.prompt).toBe("ping");
+    expect(s.prompt).toBe("你好，你可以帮我做什么事情");
     expect(s.stream).toBe(true);
     expect(s.timeoutSecs).toBe(30);
     expect(s.defaultTestModelId).toBeUndefined();
@@ -69,5 +69,25 @@ describe("connectivityTestSettings", () => {
   it("falls back to defaults when the stored field is malformed", () => {
     const s = getConnectivityTestSettings({ connectivityTest: "nope" });
     expect(s).toEqual(DEFAULT_CONNECTIVITY_TEST_SETTINGS);
+  });
+
+  it("treats the former default prompt as a custom value now", () => {
+    // 默认值从 "ping" 改为中文问候语后：旧默认值从未被持久化（merge 只存差异），
+    // 但用户显式保存 "ping" 时它属于自定义值，应照常持久化并恢复。
+    const next = mergeConnectivityTestSettings({}, {
+      prompt: "ping",
+      stream: true,
+      timeoutSecs: 30,
+    });
+    expect(next).toHaveProperty("connectivityTest.prompt", "ping");
+    expect(getConnectivityTestSettings(next).prompt).toBe("ping");
+
+    // 新默认值本身仍不持久化
+    const nextDefault = mergeConnectivityTestSettings({}, {
+      prompt: "你好，你可以帮我做什么事情",
+      stream: true,
+      timeoutSecs: 30,
+    });
+    expect(nextDefault).not.toHaveProperty("connectivityTest");
   });
 });
