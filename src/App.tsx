@@ -16,6 +16,8 @@ import {
   MoreHorizontal,
   Plus,
   Search,
+  Activity,
+  Loader2,
 } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { IS_FORK_BUILD } from "@/config/forkBuild";
@@ -42,6 +44,7 @@ import { hermesKeys, useOpenHermesWebUI } from "@/hooks/useHermes";
 import { hermesApi } from "@/lib/api/hermes";
 import type { ProviderEditorSave } from "@/lib/api/providers";
 import { useProxyStatus } from "@/hooks/useProxyStatus";
+import { useConnectivityProbe } from "@/hooks/useConnectivityProbe";
 import { useUsageCacheBridge } from "@/hooks/useUsageCacheBridge";
 import {
   useTrayAppPageSeen,
@@ -78,6 +81,7 @@ import { WindowControls } from "@/components/shell/WindowControls";
 import { APP_DISPLAY_NAME, AppGlyph } from "@/components/shell/AppGlyph";
 import { ProfileSwitcher } from "@/components/profiles/ProfileSwitcher";
 import { ProviderList } from "@/components/providers/ProviderList";
+import { shouldShowTestEntry } from "@/components/providers/connectivityEntry";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
 import {
   hasOpencodeDefinition,
@@ -341,7 +345,25 @@ function App() {
   const { data: piCurrentState } = usePiCurrentState(activeApp === "pi");
   const providers = useMemo(() => data?.providers ?? {}, [data]);
   const currentProviderId = data?.currentProviderId ?? "";
+  // 批量连通性探针：状态提升到 App（header 按钮与供应商卡片徽标的最近
+  // 公共祖先）；App 不随 app 切换重挂，appId 自清空由 hook 内部完成
+  const { results: probeResults, probeAll, stopProbe } =
+    useConnectivityProbe(activeApp);
+  const isProbeRunning = Object.values(probeResults).some(
+    (entry) => entry.status === "waiting" || entry.status === "running",
+  );
   const isOpenClawView = activeApp === "openclaw" && isAppPage(currentView);
+
+  // 批量检测入口：仅探针可用应用显示（侧边面板开关在后续提交接入）
+  const showBatchTestEntry = shouldShowTestEntry(activeApp);
+
+  // 顶栏入口被隐藏时，进行中的批量探测不再有停止按钮，直接停掉
+  useEffect(() => {
+    if (!showBatchTestEntry && isProbeRunning) {
+      stopProbe();
+    }
+  }, [showBatchTestEntry, isProbeRunning, stopProbe]);
+
   const { data: openclawHealthWarnings = [] } =
     useOpenClawHealth(isOpenClawView);
   const {
@@ -1231,6 +1253,35 @@ function App() {
                 </Button>
               </HoverTip>
             )}
+          {currentView === "providers" && showBatchTestEntry && (
+            <Button
+              variant="quiet"
+              size="regular"
+              disabled={isProbeRunning}
+              onClick={() =>
+                isProbeRunning
+                  ? stopProbe()
+                  : void probeAll(Object.values(providers))
+              }
+              title={
+                  ? t("connectivityCheck.stopBatchHint", {
+                      defaultValue: "停止批量检测",
+                    })
+                  : t("connectivityCheck.batchHint", {
+                      defaultValue: "对当前应用全部供应商执行单模型探测",
+            >
+              {isProbeRunning ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Activity className="h-4 w-4" />
+              )}
+              {isProbeRunning
+                ? t("connectivityCheck.stopping", { defaultValue: "停止中" })
+                : t("connectivityCheck.batchTest", {
+                    defaultValue: "批量检测",
+                  })}
+            </Button>
+          )}
           {currentView === "providers" && (
             <Button
               variant="solid"
@@ -1353,6 +1404,7 @@ function App() {
             currentProviderId={currentProviderId}
             appId={activeApp}
             isLoading={isLoading}
+            probeResults={probeResults}
             onSwitch={(provider) =>
               void (activeApp === "pi"
                 ? handleEnablePiProvider(provider)

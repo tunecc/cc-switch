@@ -121,6 +121,7 @@
   "provider": {
     "connectivityCheck": "Connectivity test",
     "batchConnectivityTest": "Batch test",
+    "batchConnectivityStop": "Stop batch test",
     "tabProvider": "Provider",
     "tabUniversal": "Universal",
     "noProviders": "No providers yet",
