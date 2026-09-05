@@ -61,6 +61,7 @@ vi.mock("@/components/providers/forms/ProviderForm", () => ({
     initialData: {
       name?: string;
       websiteUrl?: string;
+      websiteUrl2?: string;
       notes?: string;
       settingsConfig?: Record<string, unknown>;
       meta?: Record<string, unknown>;
@@ -70,6 +71,7 @@ vi.mock("@/components/providers/forms/ProviderForm", () => ({
     onSubmit: (values: {
       name: string;
       websiteUrl: string;
+      websiteUrl2?: string;
       notes?: string;
       settingsConfig: string;
       meta?: Record<string, unknown>;
@@ -95,6 +97,7 @@ vi.mock("@/components/providers/forms/ProviderForm", () => ({
           onSubmit({
             name: initialData.name ?? "",
             websiteUrl: initialData.websiteUrl ?? "",
+            websiteUrl2: initialData.websiteUrl2 ?? "",
             notes: initialData.notes,
             settingsConfig: JSON.stringify(initialData.settingsConfig ?? {}),
             meta: mockCodexManagedAccountSelected
@@ -572,5 +575,45 @@ describe("EditProviderDialog", () => {
 
     act(() => staleCallback?.(true));
     expect(reopenedButton).toBeDisabled();
+  });
+
+  it("把第二个官网链接回填进表单并随保存透传", async () => {
+    const provider: Provider = {
+      id: "dual-links",
+      name: "Dual Links",
+      category: "custom",
+      websiteUrl: "https://first.example.com",
+      websiteUrl2: "https://second.example.com",
+      settingsConfig: {
+        auth: { OPENAI_API_KEY: "sk-test" },
+        config:
+          'model_provider = "custom"\n[model_providers.custom]\nbase_url = "https://proxy.example/v1"\n',
+      },
+    };
+    const handleSubmit = vi.fn().mockResolvedValue(undefined);
+
+    apiMocks.getCurrent.mockResolvedValue(provider.id);
+    apiMocks.getLiveProviderSettings.mockResolvedValue(
+      provider.settingsConfig,
+    );
+
+    render(
+      <EditProviderDialog
+        open
+        provider={provider}
+        onOpenChange={vi.fn()}
+        onSubmit={handleSubmit}
+        appId="codex"
+      />,
+    );
+
+    // initialData 回填 → mock 表单提交 values.websiteUrl2 → 编辑对话框
+    // 组装 updatedProvider 一并透传
+    fireEvent.click(screen.getByRole("button", { name: "common.save" }));
+
+    await waitFor(() => expect(handleSubmit).toHaveBeenCalledTimes(1));
+    const submitted = handleSubmit.mock.calls[0][0].provider;
+    expect(submitted.websiteUrl).toBe("https://first.example.com");
+    expect(submitted.websiteUrl2).toBe("https://second.example.com");
   });
 });
