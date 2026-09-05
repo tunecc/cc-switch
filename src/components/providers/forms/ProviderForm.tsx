@@ -263,6 +263,7 @@ export interface ProviderFormProps {
   initialData?: {
     name?: string;
     websiteUrl?: string;
+    websiteUrl2?: string;
     notes?: string;
     settingsConfig?: Record<string, unknown>;
     category?: ProviderCategory;
@@ -441,6 +442,7 @@ function ProviderFormFull({
     () => ({
       name: initialData?.name ?? "",
       websiteUrl: initialData?.websiteUrl ?? "",
+      websiteUrl2: initialData?.websiteUrl2 ?? "",
       notes: initialData?.notes ?? "",
       settingsConfig: initialData?.settingsConfig
         ? JSON.stringify(initialData.settingsConfig, null, 2)
@@ -1607,6 +1609,7 @@ function ProviderFormFull({
       ...values,
       name: values.name.trim(),
       websiteUrl: values.websiteUrl?.trim() ?? "",
+      websiteUrl2: values.websiteUrl2?.trim() ?? "",
       settingsConfig,
     };
 

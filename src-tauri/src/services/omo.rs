@@ -1084,6 +1084,7 @@ impl OmoService {
             name,
             settings_config,
             website_url: None,
+            website_url_2: None,
             category: Some(v.category.to_string()),
             created_at: Some(chrono::Utc::now().timestamp_millis()),
             sort_index: None,

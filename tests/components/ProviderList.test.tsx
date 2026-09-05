@@ -127,6 +127,7 @@ function createProvider(overrides: Partial<Provider> = {}): Provider {
     sortIndex: overrides.sortIndex,
     meta: overrides.meta,
     websiteUrl: overrides.websiteUrl,
+    websiteUrl2: overrides.websiteUrl2,
   };
 }
 
@@ -330,6 +331,43 @@ describe("ProviderList Component", () => {
     expect(
       screen.getByText("No providers match your search."),
     ).toBeInTheDocument();
+  });
+
+  it("matches providers by the second website URL in search", () => {
+    const providerAlpha = createProvider({ id: "alpha", name: "Alpha Labs" });
+    const providerBeta = createProvider({
+      id: "beta",
+      name: "Beta Works",
+      websiteUrl2: "https://console.gamma.dev",
+    });
+
+    useDragSortMock.mockReturnValue({
+      sortedProviders: [providerAlpha, providerBeta],
+      sensors: [],
+      handleDragEnd: vi.fn(),
+    });
+
+    renderWithQueryClient(
+      <ProviderList
+        providers={{ alpha: providerAlpha, beta: providerBeta }}
+        currentProviderId=""
+        appId="claude"
+        onSwitch={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        onOpenWebsite={vi.fn()}
+      />,
+    );
+
+    fireEvent.keyDown(window, { key: "f", metaKey: true });
+    const searchInput = screen.getByPlaceholderText(
+      "Search name, notes, or URL...",
+    );
+
+    fireEvent.change(searchInput, { target: { value: "console.gamma" } });
+    expect(screen.queryByTestId("provider-card-alpha")).not.toBeInTheDocument();
+    expect(screen.getByTestId("provider-card-beta")).toBeInTheDocument();
   });
 
   it("does not manufacture a Pi selection summary card", async () => {

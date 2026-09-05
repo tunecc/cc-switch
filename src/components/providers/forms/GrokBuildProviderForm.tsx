@@ -165,6 +165,7 @@ export function GrokBuildProviderForm({
     defaultValues: {
       name: initialData?.name ?? initialConfig.name,
       websiteUrl: initialData?.websiteUrl ?? "",
+      websiteUrl2: initialData?.websiteUrl2 ?? "",
       notes: initialData?.notes ?? "",
       settingsConfig: JSON.stringify({ config: rawConfig }),
       icon:
@@ -240,6 +241,8 @@ export function GrokBuildProviderForm({
       // 官方登录：无 API Key / 地址 / 模型表可填，提交走 ensure seed 流程
       form.setValue("name", grokBuildOfficialPreset.name);
       form.setValue("websiteUrl", grokBuildOfficialPreset.websiteUrl);
+      // 预设决定厂商身份：切换预设时第二链接一并清空，避免残留上一个厂商的链接
+      form.setValue("websiteUrl2", "");
       form.setValue("icon", grokBuildOfficialPreset.icon ?? "");
       form.setValue("iconColor", grokBuildOfficialPreset.iconColor ?? "");
       setCategory("official");
@@ -268,6 +271,8 @@ export function GrokBuildProviderForm({
         : "";
     form.setValue("name", presetName);
     form.setValue("websiteUrl", preset.websiteUrl ?? "");
+    // 预设决定厂商身份：切换预设时第二链接一并清空，避免残留上一个厂商的链接
+    form.setValue("websiteUrl2", "");
     form.setValue("icon", preset.icon ?? "");
     form.setValue("iconColor", preset.iconColor ?? "");
     setCategory(preset.category ?? "custom");
@@ -313,6 +318,7 @@ export function GrokBuildProviderForm({
         ...values,
         name,
         websiteUrl: values.websiteUrl?.trim() ?? "",
+        websiteUrl2: values.websiteUrl2?.trim() ?? "",
         notes: values.notes?.trim() ?? "",
         settingsConfig: JSON.stringify({ config: rawConfig }),
         presetId: selectedPresetId ?? undefined,
@@ -410,6 +416,7 @@ export function GrokBuildProviderForm({
       ...values,
       name,
       websiteUrl: values.websiteUrl?.trim() ?? "",
+      websiteUrl2: values.websiteUrl2?.trim() ?? "",
       notes: values.notes?.trim() ?? "",
       settingsConfig: JSON.stringify({ config: finalConfig }),
       presetId: selectedPresetId ?? undefined,

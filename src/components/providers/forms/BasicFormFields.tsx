@@ -173,27 +173,52 @@ export function BasicFormFields({
         />
       </div>
 
-      <FormField
-        control={form.control}
-        name="websiteUrl"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t("provider.websiteUrl")}</FormLabel>
-            <FormControl>
-              <ImeSafeInput
-                ref={field.ref}
-                name={field.name}
-                value={field.value ?? ""}
-                onValueChange={field.onChange}
-                onBlur={field.onBlur}
-                disabled={field.disabled}
-                placeholder={t("providerForm.websiteUrlPlaceholder")}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* 官网链接 - 双字段横排 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="websiteUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("provider.websiteUrl")}</FormLabel>
+              <FormControl>
+                <ImeSafeInput
+                  ref={field.ref}
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
+                  disabled={field.disabled}
+                  placeholder={t("providerForm.websiteUrlPlaceholder")}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="websiteUrl2"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("provider.websiteUrl2")}</FormLabel>
+              <FormControl>
+                <ImeSafeInput
+                  ref={field.ref}
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
+                  disabled={field.disabled}
+                  placeholder={t("providerForm.websiteUrl2Placeholder")}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </>
   );
 }

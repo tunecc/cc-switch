@@ -170,6 +170,7 @@ export function AddProviderDialog({
         name: values.name.trim(),
         notes: values.notes?.trim() || undefined,
         websiteUrl: values.websiteUrl?.trim() || undefined,
+        websiteUrl2: values.websiteUrl2?.trim() || undefined,
         settingsConfig: parsedConfig,
         icon: values.icon?.trim() || undefined,
         iconColor: values.iconColor?.trim() || undefined,
