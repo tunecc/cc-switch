@@ -38,6 +38,11 @@ function parseJsonError(error: unknown): string {
 export const providerSchema = z.object({
   name: z.string(), // 必填校验移至 handleSubmit 中用 toast 提示
   websiteUrl: z.string().url("请输入有效的网址").optional().or(z.literal("")),
+  websiteUrl2: z
+    .string()
+    .url("请输入有效的网址")
+    .optional()
+    .or(z.literal("")),
   notes: z.string().optional(),
   settingsConfig: z
     .string()
