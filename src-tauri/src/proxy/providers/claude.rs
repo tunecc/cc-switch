@@ -1014,4 +1014,6 @@ impl ProviderAdapter for ClaudeAdapter {
 }
 
 #[cfg(test)]
+<<<<<<< HEAD
 mod tests;
+=======

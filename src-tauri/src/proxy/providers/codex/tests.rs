@@ -8,6 +8,7 @@ fn create_provider(config: serde_json::Value) -> Provider {
         name: "Test Codex".to_string(),
         settings_config: config,
         website_url: None,
+        website_url_2: None,
         category: Some("codex".to_string()),
         created_at: None,
         sort_index: None,
