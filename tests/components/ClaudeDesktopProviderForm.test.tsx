@@ -128,6 +128,20 @@ describe("ClaudeDesktopProviderForm", () => {
     expect(screen.queryByText("模型角色")).not.toBeInTheDocument();
   });
 
+  it("切换预设时清空第二个官网链接，避免残留上一个厂商的链接", async () => {
+    const user = userEvent.setup();
+    renderForm(undefined);
+
+    const secondUrlInput = screen.getByLabelText("provider.websiteUrl2");
+    await user.type(secondUrlInput, "https://console.vendor-a.example");
+    expect(secondUrlInput).toHaveValue("https://console.vendor-a.example");
+
+    await user.click(screen.getByRole("button", { name: /PackyCode/ }));
+
+    // 预设决定厂商身份：切到新预设后第二链接不再指向旧厂商
+    expect(secondUrlInput).toHaveValue("");
+  });
+
   it("直连预设保留预设模型列表", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
