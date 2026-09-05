@@ -82,15 +82,16 @@ impl Database {
 
                 tx.execute(
                     "INSERT OR REPLACE INTO providers (
-                        id, app_type, name, settings_config, website_url, category,
+                        id, app_type, name, settings_config, website_url, website_url_2, category,
                         created_at, sort_index, notes, icon, icon_color, meta, is_current
-                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
                     params![
                         id,
                         app_type,
                         provider.name,
                         to_json_string(&provider.settings_config)?,
                         provider.website_url,
+                        provider.website_url_2,
                         provider.category,
                         provider.created_at,
                         provider.sort_index,
