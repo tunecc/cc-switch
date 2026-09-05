@@ -62,9 +62,36 @@ fn lookup_provider(
         .ok_or_else(|| AppError::Message(format!("供应商 {provider_id} 不存在")))
 }
 
+/// 按请求解析实际测试的模型集合。
+///
+/// `requested` 显式传入（trim 后非空）时直接采用——勾选即测试范围，集合
+/// 可包含静态清单之外的模型（弹窗内从上游 /v1/models 拉取的会话级模型）；
+/// 缺省或全部为空白时回退到供应商静态模型清单（与旧版行为兼容）。
+fn resolve_test_model_ids(
+    requested: Option<Vec<String>>,
+    app_type: &AppType,
+    settings: &serde_json::Value,
+) -> Vec<String> {
+    match requested {
+        Some(ids) => {
+            let trimmed: Vec<String> = ids
+                .into_iter()
+                .map(|id| id.trim().to_string())
+                .filter(|id| !id.is_empty())
+                .collect();
+            if trimmed.is_empty() {
+                model_ids_from_settings(app_type, settings)
+            } else {
+                trimmed
+            }
+        }
+        None => model_ids_from_settings(app_type, settings),
+    }
+}
+
 /// 多模型连通性测试（测试弹窗用）。
 ///
-/// 逐模型真实请求探测供应商连通性，返回全部模型的结果列表；
+/// 逐模型真实请求探测供应商连通性，返回全部被测模型的结果列表；
 /// 不记录请求日志，不影响网关/熔断状态。
 #[tauri::command]
 pub async fn connectivity_test_provider_models(
@@ -72,6 +99,7 @@ pub async fn connectivity_test_provider_models(
     app_type: AppType,
     provider_id: String,
     params: Option<ConnectivityTestParams>,
+    model_ids: Option<Vec<String>>,
 ) -> Result<ConnectivityTestResponse, AppError> {
     let provider = lookup_provider(&state, &app_type, &provider_id)?;
     if !is_probe_capable(&provider, &app_type) {
@@ -81,7 +109,11 @@ pub async fn connectivity_test_provider_models(
         )));
     }
 
-    let model_ids = model_ids_from_settings(&app_type, &provider.settings_config);
+    let model_ids = resolve_test_model_ids(
+        model_ids,
+        &app_type,
+        &provider.settings_config,
+    );
     if model_ids.is_empty() {
         return Err(AppError::Message("供应商没有可测试的模型".to_string()));
     }
@@ -168,6 +200,51 @@ mod tests {
         // 无 meta 无 category → 可测
         let plain = provider_with(settings(json!({})));
         assert!(is_probe_capable(&plain, &AppType::Claude));
+    }
+
+    #[test]
+    fn resolve_test_model_ids_uses_requested_set_verbatim() {
+        // 显式传入（含静态清单之外的会话级模型）→ 原样采用（勾选即测试范围）
+        let settings = json!({
+            "modelCatalog": { "models": [ { "model": "a" } ] }
+        });
+        let resolved = resolve_test_model_ids(
+            Some(vec!["a".into(), "remote-only".into()]),
+            &AppType::Claude,
+            &settings,
+        );
+        assert_eq!(resolved, vec!["a".to_string(), "remote-only".to_string()]);
+    }
+
+    #[test]
+    fn resolve_test_model_ids_trims_and_drops_blank_entries() {
+        let resolved = resolve_test_model_ids(
+            Some(vec!["  a  ".into(), "   ".into(), "".into(), "b".into()]),
+            &AppType::Claude,
+            &json!({}),
+        );
+        assert_eq!(resolved, vec!["a".to_string(), "b".to_string()]);
+    }
+
+    #[test]
+    fn resolve_test_model_ids_falls_back_to_settings_when_absent_or_blank() {
+        let settings = json!({
+            "modelCatalog": { "models": [ { "model": "a" }, { "model": "b" } ] }
+        });
+        // None → 静态清单
+        assert_eq!(
+            resolve_test_model_ids(None, &AppType::Claude, &settings),
+            vec!["a".to_string(), "b".to_string()]
+        );
+        // Some(空) / Some(全空白) → 同样回退静态清单（兼容旧调用方）
+        assert_eq!(
+            resolve_test_model_ids(Some(vec![]), &AppType::Claude, &settings),
+            vec!["a".to_string(), "b".to_string()]
+        );
+        assert_eq!(
+            resolve_test_model_ids(Some(vec!["  ".into()]), &AppType::Claude, &settings),
+            vec!["a".to_string(), "b".to_string()]
+        );
     }
 
     #[test]
