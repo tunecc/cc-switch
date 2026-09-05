@@ -171,6 +171,7 @@ pub(crate) fn build_provider_from_request(
         name: request.name.clone().unwrap_or_default(),
         settings_config,
         website_url: request.homepage.clone(),
+        website_url_2: None,
         category: None,
         created_at: None,
         sort_index: None,

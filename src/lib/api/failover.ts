@@ -11,6 +11,7 @@ export interface Provider {
   name: string;
   settingsConfig: unknown;
   websiteUrl?: string;
+  websiteUrl2?: string;
   category?: string;
   createdAt?: number;
   sortIndex?: number;

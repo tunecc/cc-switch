@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { Fragment, useMemo, useState, useEffect } from "react";
 import {
   AlertTriangle,
   GripVertical,
@@ -275,6 +275,19 @@ export function ProviderCard({
     }
     return true;
   }, [provider.notes, displayUrl, fallbackUrlText]);
+
+  // 官网链接（最多两个）：主页卡片横排展示、两个空格分隔，点击各自用默认浏览器打开。
+  // 展示优先级仍是 notes > 官网链接 > 提取的 API base URL。
+  // 两个链接填了同一 URL 时只渲染一个，避免出现两个一模一样的可点击按钮。
+  const websiteLinks = useMemo(() => {
+    if (provider.notes?.trim()) {
+      return [];
+    }
+    return [provider.websiteUrl, provider.websiteUrl2]
+      .map((url) => url?.trim())
+      .filter((url): url is string => Boolean(url))
+      .filter((url, index, list) => list.indexOf(url) === index);
+  }, [provider.notes, provider.websiteUrl, provider.websiteUrl2]);
 
   const isBoundCodexOfficial = codexOfficialIdentity === "managed_account";
   const usageEnabled =
@@ -625,6 +638,32 @@ export function ProviderCard({
                     })}
                   </span>
                 )}
+              </div>
+            ) : websiteLinks.length > 0 ? (
+              <div
+                className="flex min-w-0 max-w-full items-center overflow-hidden text-left text-sm"
+                data-testid="website-links"
+              >
+                {websiteLinks.map((link, index) => (
+                  <Fragment key={`${link}-${index}`}>
+                    {index > 0 && (
+                      <span
+                        className="shrink-0 whitespace-pre text-muted-foreground"
+                        aria-hidden="true"
+                      >
+                        {"  "}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => onOpenWebsite(link)}
+                      className="inline-flex min-w-0 items-center overflow-hidden text-left text-sm text-blue-500 transition-colors hover:underline dark:text-blue-400 cursor-pointer"
+                      title={link}
+                    >
+                      <span className="min-w-0 truncate">{link}</span>
+                    </button>
+                  </Fragment>
+                ))}
               </div>
             ) : displayUrl ? (
               <button

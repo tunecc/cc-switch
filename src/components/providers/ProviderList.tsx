@@ -364,7 +364,12 @@ export function ProviderList({
     const keyword = searchTerm.trim().toLowerCase();
     if (!keyword) return sortedProviders;
     return sortedProviders.filter((provider) => {
-      const fields = [provider.name, provider.notes, provider.websiteUrl];
+      const fields = [
+        provider.name,
+        provider.notes,
+        provider.websiteUrl,
+        provider.websiteUrl2,
+      ];
       return fields.some((field) =>
         field?.toString().toLowerCase().includes(keyword),
       );

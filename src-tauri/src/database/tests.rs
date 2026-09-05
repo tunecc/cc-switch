@@ -625,6 +625,21 @@ fn migration_from_v3_8_schema_v1_to_current_schema_v3() {
         );
     }
 
+    // v18 -> v19：第二个官网链接列必须补齐，且旧数据保持 NULL
+    assert!(
+        Database::has_column(&conn, "providers", "website_url_2").expect("check website_url_2"),
+        "providers.website_url_2 should exist after migration"
+    );
+    let (old_website_url, old_website_url_2): (Option<String>, Option<String>) = conn
+        .query_row(
+            "SELECT website_url, website_url_2 FROM providers WHERE id = 'p1'",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .expect("read legacy provider after migration");
+    assert_eq!(old_website_url, None);
+    assert_eq!(old_website_url_2, None);
+
     // 旧 provider 不应丢失，且新增字段应有默认值
     let provider_count: i64 = conn
         .query_row(
@@ -735,6 +750,7 @@ fn dry_run_validates_schema_compatibility() {
                 "anthropicApiKey": "sk-test-123",
             }),
             website_url: None,
+            website_url_2: None,
             category: None,
             created_at: Some(1234567890),
             sort_index: None,
@@ -1187,5 +1203,63 @@ fn ensure_incremental_auto_vacuum_rebuilds_existing_file_db() {
         Database::get_auto_vacuum_mode(&reopened).expect("auto_vacuum after rebuild"),
         2,
         "file db should persist INCREMENTAL auto_vacuum after VACUUM rebuild"
+    );
+}
+
+#[test]
+fn provider_website_url_2_round_trips_through_dao() {
+    let db = Database::memory().expect("create memory db");
+
+    let provider = Provider {
+        id: "dual-links".to_string(),
+        name: "Dual Links".to_string(),
+        settings_config: json!({ "env": {} }),
+        website_url: Some("https://first.example.com".to_string()),
+        website_url_2: Some("https://second.example.com".to_string()),
+        category: None,
+        created_at: Some(1),
+        sort_index: None,
+        notes: None,
+        meta: None,
+        icon: None,
+        icon_color: None,
+        in_failover_queue: false,
+    };
+    db.save_provider("claude", &provider).expect("save provider");
+
+    // 新建路径：两个字段各自读回（A9）
+    let loaded = db
+        .get_provider_by_id("dual-links", "claude")
+        .expect("load provider")
+        .expect("provider exists");
+    assert_eq!(
+        loaded.website_url.as_deref(),
+        Some("https://first.example.com")
+    );
+    assert_eq!(
+        loaded.website_url_2.as_deref(),
+        Some("https://second.example.com")
+    );
+
+    // 列表路径同样带出
+    let all = db.get_all_providers("claude").expect("list providers");
+    let listed = all.get("dual-links").expect("provider in list");
+    assert_eq!(
+        listed.website_url_2.as_deref(),
+        Some("https://second.example.com")
+    );
+
+    // 更新路径：清空第二链接后更新，字段应变为 NULL（A13/A8）
+    let mut updated = loaded.clone();
+    updated.website_url_2 = None;
+    db.save_provider("claude", &updated).expect("update provider");
+    let reloaded = db
+        .get_provider_by_id("dual-links", "claude")
+        .expect("reload provider")
+        .expect("provider exists");
+    assert_eq!(reloaded.website_url_2, None);
+    assert_eq!(
+        reloaded.website_url.as_deref(),
+        Some("https://first.example.com")
     );
 }

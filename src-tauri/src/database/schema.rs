@@ -30,6 +30,7 @@ impl Database {
                 name TEXT NOT NULL,
                 settings_config TEXT NOT NULL,
                 website_url TEXT,
+                website_url_2 TEXT,
                 category TEXT,
                 created_at INTEGER,
                 sort_index INTEGER,
@@ -419,6 +420,9 @@ impl Database {
             "BOOLEAN NOT NULL DEFAULT 0",
         )?;
 
+        // 确保 website_url_2 列存在（v19：供应商第二个官网链接）
+        Self::add_column_if_missing(conn, "providers", "website_url_2", "TEXT")?;
+
         // 删除旧的 failover_queue 表（如果存在）
         let _ = conn.execute("DROP INDEX IF EXISTS idx_failover_queue_order", []);
         let _ = conn.execute("DROP TABLE IF EXISTS failover_queue", []);
@@ -548,6 +552,11 @@ impl Database {
                         log::info!("迁移数据库从 v17 到 v18（会话日志字节游标列）");
                         Self::migrate_v17_to_v18(conn)?;
                         Self::set_user_version(conn, 18)?;
+                    }
+                    18 => {
+                        log::info!("迁移数据库从 v18 到 v19（供应商第二个官网链接列）");
+                        Self::migrate_v18_to_v19(conn)?;
+                        Self::set_user_version(conn, 19)?;
                     }
                     _ => {
                         return Err(AppError::Database(format!(
@@ -1595,6 +1604,18 @@ impl Database {
                 "last_tail_fingerprint",
                 "INTEGER",
             )?;
+        }
+        Ok(())
+    }
+
+    /// v18 -> v19: providers 表新增 website_url_2 列（第二个官网链接）。
+    ///
+    /// 存量行保持 NULL（旧数据只有第一个链接，语义不变）；列通过
+    /// add_column_if_missing 幂等追加，不重建表。旧版本应用读取新库时
+    /// 忽略该列，序列化 JSON 中字段缺失按 None 反序列化。
+    fn migrate_v18_to_v19(conn: &Connection) -> Result<(), AppError> {
+        if Self::table_exists(conn, "providers")? {
+            Self::add_column_if_missing(conn, "providers", "website_url_2", "TEXT")?;
         }
         Ok(())
     }

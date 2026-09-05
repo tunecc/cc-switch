@@ -520,6 +520,7 @@ export function PiProviderForm({
     () => ({
       name: initialData?.name ?? optionalText(initialConfig.name),
       websiteUrl: initialData?.websiteUrl ?? "",
+      websiteUrl2: initialData?.websiteUrl2 ?? "",
       notes: initialData?.notes ?? "",
       settingsConfig: initialSettingsConfigText,
       icon: initialData?.icon ?? "",
@@ -1242,6 +1243,7 @@ export function PiProviderForm({
       const values: ProviderFormValues = {
         name: trimmedName,
         websiteUrl: identity.websiteUrl?.trim() ?? "",
+        websiteUrl2: identity.websiteUrl2?.trim() ?? "",
         notes: identity.notes?.trim() ?? "",
         settingsConfig: JSON.stringify(settingsConfig),
         icon: identity.icon || selectedPreset?.icon || "pi",

@@ -836,6 +836,7 @@ function App() {
       name: `${provider.name} copy`,
       settingsConfig: deepClone(provider.settingsConfig),
       websiteUrl: provider.websiteUrl,
+      websiteUrl2: provider.websiteUrl2,
       category: provider.category,
       sortIndex: newSortIndex, // 复制原 sortIndex + 1
       meta: provider.meta ? deepClone(provider.meta) : undefined,

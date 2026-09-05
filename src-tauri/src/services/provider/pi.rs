@@ -314,6 +314,7 @@ mod tests {
                 "models": [{ "id": model_id }]
             }),
             website_url: None,
+            website_url_2: None,
             category: Some("custom".to_string()),
             created_at: Some(1),
             sort_index: None,

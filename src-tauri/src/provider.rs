@@ -16,6 +16,10 @@ pub struct Provider {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "websiteUrl")]
     pub website_url: Option<String>,
+    /// 第二个官网链接（主页卡片与第一个横排展示）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "websiteUrl2")]
+    pub website_url_2: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -56,6 +60,7 @@ impl Provider {
             name,
             settings_config,
             website_url,
+            website_url_2: None,
             category: None,
             created_at: None,
             sort_index: None,
@@ -718,6 +723,10 @@ pub struct UniversalProvider {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "websiteUrl")]
     pub website_url: Option<String>,
+    /// 第二个官网链接
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "websiteUrl2")]
+    pub website_url_2: Option<String>,
     /// 备注信息
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<String>,
@@ -759,6 +768,7 @@ impl UniversalProvider {
             api_key,
             models: UniversalProviderModels::default(),
             website_url: None,
+            website_url_2: None,
             notes: None,
             icon: None,
             icon_color: None,
@@ -804,6 +814,7 @@ impl UniversalProvider {
             name: self.name.clone(),
             settings_config,
             website_url: self.website_url.clone(),
+            website_url_2: self.website_url_2.clone(),
             category: Some("aggregator".to_string()),
             created_at: self.created_at,
             sort_index: self.sort_index,
@@ -869,6 +880,7 @@ requires_openai_auth = true"#
             name: self.name.clone(),
             settings_config,
             website_url: self.website_url.clone(),
+            website_url_2: self.website_url_2.clone(),
             category: Some("aggregator".to_string()),
             created_at: self.created_at,
             sort_index: self.sort_index,
@@ -904,6 +916,7 @@ requires_openai_auth = true"#
             name: self.name.clone(),
             settings_config,
             website_url: self.website_url.clone(),
+            website_url_2: self.website_url_2.clone(),
             category: Some("aggregator".to_string()),
             created_at: self.created_at,
             sort_index: self.sort_index,
@@ -1139,6 +1152,7 @@ mod tests {
         assert_eq!(provider.name, "Provider");
         assert_eq!(provider.settings_config, settings_config);
         assert_eq!(provider.website_url.as_deref(), Some("https://example.com"));
+        assert!(provider.website_url_2.is_none());
         assert!(provider.category.is_none());
         assert!(provider.created_at.is_none());
         assert!(provider.sort_index.is_none());
@@ -1147,6 +1161,37 @@ mod tests {
         assert!(provider.icon.is_none());
         assert!(provider.icon_color.is_none());
         assert!(!provider.in_failover_queue);
+    }
+
+    #[test]
+    fn provider_website_url_2_serializes_camel_case_and_skips_none() {
+        // 前端契约：JSON 键为 websiteUrl2；None 时不输出该键（旧版本读取安全）
+        let mut provider = Provider::with_id(
+            "dual".to_string(),
+            "Dual".to_string(),
+            json!({}),
+            Some("https://first.example.com".to_string()),
+        );
+        provider.website_url_2 = Some("https://second.example.com".to_string());
+
+        let value = serde_json::to_value(&provider).expect("serialize Provider");
+        assert_eq!(value["websiteUrl"], "https://first.example.com");
+        assert_eq!(value["websiteUrl2"], "https://second.example.com");
+
+        let decoded: Provider =
+            serde_json::from_value(value).expect("deserialize Provider");
+        assert_eq!(
+            decoded.website_url_2.as_deref(),
+            Some("https://second.example.com")
+        );
+
+        // 旧 JSON（无 websiteUrl2 键）反序列化为 None
+        provider.website_url_2 = None;
+        let legacy = serde_json::to_value(&provider).expect("serialize legacy");
+        assert!(legacy.get("websiteUrl2").is_none());
+        let decoded_legacy: Provider =
+            serde_json::from_value(legacy).expect("deserialize legacy Provider");
+        assert_eq!(decoded_legacy.website_url_2, None);
     }
 
     #[test]

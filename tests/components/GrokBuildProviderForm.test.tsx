@@ -45,6 +45,26 @@ describe("GrokBuildProviderForm", () => {
     expect(nameInput?.value).toBe("PatewayAI");
   });
 
+  it("切换预设时清空第二个官网链接，避免残留上一个厂商的链接", async () => {
+    const user = userEvent.setup();
+    render(
+      <GrokBuildProviderForm
+        submitLabel="Save"
+        onSubmit={() => {}}
+        onCancel={() => {}}
+      />,
+    );
+
+    const secondUrlInput = screen.getByLabelText("provider.websiteUrl2");
+    await user.type(secondUrlInput, "https://console.vendor-a.example");
+    expect(secondUrlInput).toHaveValue("https://console.vendor-a.example");
+
+    await user.click(screen.getByRole("button", { name: /PatewayAI/ }));
+
+    // 预设决定厂商身份：切到新预设后第二链接不再指向旧厂商
+    expect(secondUrlInput).toHaveValue("");
+  });
+
   it("submits a complete config.toml payload with Grok defaults", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();

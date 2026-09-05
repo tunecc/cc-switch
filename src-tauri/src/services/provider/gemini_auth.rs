@@ -66,6 +66,12 @@ pub(crate) fn detect_gemini_auth_type(provider: &Provider) -> GeminiAuthType {
         }
     }
 
+    if let Some(site) = provider.website_url_2.as_deref() {
+        if contains_packycode_keyword(site) {
+            return GeminiAuthType::Packycode;
+        }
+    }
+
     if let Some(base_url) = provider
         .settings_config
         .pointer("/env/GOOGLE_GEMINI_BASE_URL")
@@ -139,4 +145,40 @@ pub(crate) fn ensure_google_oauth_security_flag(provider: &Provider) -> Result<(
     write_google_oauth_settings()?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn provider(name: &str, website_url: Option<&str>) -> Provider {
+        Provider::with_id(
+            "test-gemini".into(),
+            name.into(),
+            json!({ "env": { "GOOGLE_API_KEY": "sk-test" } }),
+            website_url.map(str::to_string),
+        )
+    }
+
+    #[test]
+    fn detects_packycode_from_second_website_url() {
+        let mut p = provider("Partner Reseller", Some("https://docs.example.com"));
+        p.website_url_2 = Some("https://packycode.example.com".into());
+        assert_eq!(detect_gemini_auth_type(&p), GeminiAuthType::Packycode);
+    }
+
+    #[test]
+    fn second_website_url_with_packyapi_keyword_also_matches() {
+        let mut p = provider("Partner Reseller", None);
+        p.website_url_2 = Some("https://packyapi.example.com".into());
+        assert_eq!(detect_gemini_auth_type(&p), GeminiAuthType::Packycode);
+    }
+
+    #[test]
+    fn unrelated_second_website_url_stays_generic() {
+        let mut p = provider("Custom Relay", Some("https://api.example.com"));
+        p.website_url_2 = Some("https://console.example.com".into());
+        assert_eq!(detect_gemini_auth_type(&p), GeminiAuthType::Generic);
+    }
 }

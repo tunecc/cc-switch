@@ -13,6 +13,7 @@ export interface Provider {
   name: string;
   settingsConfig: Record<string, any>; // 应用配置对象：Claude 为 settings.json；Codex 为 { auth, config }
   websiteUrl?: string;
+  websiteUrl2?: string; // 第二个官网链接（主页卡片与第一个横排展示）
   // 新增：供应商分类（用于差异化提示/能力开关）
   category?: ProviderCategory;
   createdAt?: number; // 添加时间戳（毫秒）
@@ -605,6 +606,7 @@ export interface UniversalProvider {
   apiKey: string;
   models: UniversalProviderModels;
   websiteUrl?: string;
+  websiteUrl2?: string;
   notes?: string;
   icon?: string;
   iconColor?: string;
