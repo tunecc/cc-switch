@@ -13,7 +13,7 @@ export interface ConnectivityTestSettings {
 }
 
 export const DEFAULT_CONNECTIVITY_TEST_SETTINGS: ConnectivityTestSettings = {
-  prompt: "ping",
+  prompt: "你好，你可以帮我做什么事情",
   stream: true,
   timeoutSecs: 30,
 };
