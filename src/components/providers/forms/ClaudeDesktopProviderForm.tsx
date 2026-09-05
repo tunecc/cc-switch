@@ -93,6 +93,7 @@ export interface ClaudeDesktopProviderFormProps {
   initialData?: {
     name?: string;
     websiteUrl?: string;
+    websiteUrl2?: string;
     notes?: string;
     settingsConfig?: Record<string, unknown>;
     category?: ProviderCategory;
@@ -335,6 +336,7 @@ export function ClaudeDesktopProviderForm({
     () => ({
       name: initialData?.name ?? "",
       websiteUrl: initialData?.websiteUrl ?? "",
+      websiteUrl2: initialData?.websiteUrl2 ?? "",
       notes: initialData?.notes ?? "",
       settingsConfig: JSON.stringify(
         initialData?.settingsConfig ?? { env: {} },
@@ -429,6 +431,8 @@ export function ClaudeDesktopProviderForm({
   const applyDesktopPreset = (preset: ClaudeDesktopProviderPreset) => {
     form.setValue("name", preset.nameKey ? t(preset.nameKey) : preset.name);
     form.setValue("websiteUrl", preset.websiteUrl);
+    // 预设决定厂商身份：切换预设时第二链接一并清空，避免残留上一个厂商的链接
+    form.setValue("websiteUrl2", "");
     form.setValue("notes", "");
     form.setValue("icon", preset.icon ?? "");
     form.setValue("iconColor", preset.iconColor ?? "");
@@ -697,6 +701,7 @@ export function ClaudeDesktopProviderForm({
         ...values,
         name: values.name.trim(),
         websiteUrl: values.websiteUrl?.trim() ?? "",
+        websiteUrl2: values.websiteUrl2?.trim() ?? "",
         notes: values.notes?.trim() ?? "",
         settingsConfig: JSON.stringify(settingsConfig, null, 2),
         meta,
@@ -921,6 +926,7 @@ export function ClaudeDesktopProviderForm({
       ...values,
       name: values.name.trim(),
       websiteUrl: values.websiteUrl?.trim() ?? "",
+      websiteUrl2: values.websiteUrl2?.trim() ?? "",
       notes: values.notes?.trim() ?? "",
       settingsConfig: JSON.stringify(settingsConfig, null, 2),
       meta,
