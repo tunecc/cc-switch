@@ -31,7 +31,7 @@ const provider = {
 };
 
 describe("ConnectivityTestDialog", () => {
-  it("renders model checkboxes and blocks start when none selected", () => {
+  it("auto-selects the first catalog model when no current model is resolvable", () => {
     render(
       <ConnectivityTestDialog
         provider={provider}
@@ -41,6 +41,21 @@ describe("ConnectivityTestDialog", () => {
       />,
     );
     expect(screen.getByRole("checkbox", { name: "a" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "a" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "b" })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: /start/i })).toBeEnabled();
+  });
+
+  it("blocks start after the user deselects the auto-selected model", () => {
+    render(
+      <ConnectivityTestDialog
+        provider={provider}
+        appId="claude"
+        open
+        onOpenChange={() => {}}
+      />,
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: "a" }));
     expect(screen.getByRole("button", { name: /start/i })).toBeDisabled();
   });
 });
@@ -125,7 +140,7 @@ describe("ConnectivityTestDialog behaviors", () => {
 
     openDialog();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: "a" }));
+    // "a" 已随打开自动勾选，直接开始
     fireEvent.click(screen.getByRole("button", { name: /start/i }));
 
     const detailButton = await screen.findByRole("button", {
@@ -151,6 +166,49 @@ describe("ConnectivityTestDialog behaviors", () => {
 
     expect(screen.getByRole("checkbox", { name: "b" })).toBeChecked();
     expect(screen.getByRole("checkbox", { name: "a" })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: /start/i })).toBeEnabled();
+  });
+
+  it("pre-checks the provider's current model (env.ANTHROPIC_MODEL) when no default is saved", () => {
+    const withCurrent = {
+      ...provider,
+      settingsConfig: {
+        ...provider.settingsConfig,
+        env: {
+          ...provider.settingsConfig.env,
+          ANTHROPIC_MODEL: "b",
+        },
+      },
+    };
+
+    openDialog(withCurrent);
+
+    expect(screen.getByRole("checkbox", { name: "b" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "a" })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: /start/i })).toBeEnabled();
+  });
+
+  it("pre-checks the codex config.toml model for codex providers", () => {
+    const codexProvider = {
+      ...provider,
+      id: "cx",
+      settingsConfig: {
+        config: 'model = "gpt-5-codex"',
+        modelCatalog: { models: [{ model: "gpt-5-codex" }, { model: "o4-mini" }] },
+      },
+    };
+
+    render(
+      <ConnectivityTestDialog
+        provider={codexProvider}
+        appId="codex"
+        open
+        onOpenChange={() => {}}
+      />,
+    );
+
+    expect(screen.getByRole("checkbox", { name: "gpt-5-codex" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "o4-mini" })).not.toBeChecked();
     expect(screen.getByRole("button", { name: /start/i })).toBeEnabled();
   });
 
