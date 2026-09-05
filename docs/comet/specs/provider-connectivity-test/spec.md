@@ -1,7 +1,7 @@
 # provider-connectivity-test Specification
 
 ## Purpose
-提供按模型发起真实（最小化）请求的供应商连通性测试能力，使用户能够验证供应商配置（端点、鉴权、模型、协议）是否真正可用，取代仅探测 base_url 可达性的旧连通检测。弹窗以单一模型表格呈现「勾选 → 测试 → 结果 → 再勾选」闭环，并支持从上游实时拉取模型列表补全测试范围。
+提供按模型发起真实（最小化）请求的供应商连通性测试能力，使用户能够验证供应商配置（端点、鉴权、模型、协议）是否真正可用，取代仅探测 base_url 可达性的旧连通检测。弹窗以单一模型表格呈现「勾选 → 测试 → 结果 → 再勾选」闭环，并支持从上游实时拉取模型列表补全测试范围。探测目标（URL、请求体、鉴权头）与供应商配置的 API 格式对齐，与真实转发链路发送给上游的请求同源。
 
 ## Requirements
 
@@ -19,12 +19,64 @@
 - **THEN** 该模型结果为 `error`，错误信息包含 HTTP 状态，且请求详情中包含实际发送的 URL 与请求体
 
 #### Scenario: 流式响应中的错误事件被识别
-- **WHEN** 上游以 200 响应但在 SSE 流中返回错误事件（如 `event: error` 或 `response.failed`）
+- **WHEN** 上游以 200 响应但在 SSE 流中返回错误事件（如 `event: error` 或 `response.failed`）或错误 JSON 载荷
 - **THEN** 该模型结果为 `error`，错误信息说明响应包含错误事件
 
 #### Scenario: 超时判定
 - **WHEN** 单个模型的测试在总超时时间内未获得完整响应
 - **THEN** 该模型结果为 `error`，错误信息说明超时
+
+### Requirement: 探测目标与供应商 API 格式对齐
+系统 SHALL 按供应商声明的 API 格式构造连通性测试请求的 URL、请求体与鉴权头，使测试请求与真实转发链路发送给上游的请求同源（复用同一 apiFormat 判定、同一请求体转换函数、同一鉴权构造与同一端点改写规则），探测请求直连上游、不经本地代理。
+
+- Claude 供应商 apiFormat 判定口径：`meta.apiFormat` > `settings_config.api_format` > `openrouter_compat_mode` > 默认 `anthropic`。
+- Codex 供应商 wire 判定口径：`meta.apiFormat` > `settings_config.api_format`/`apiFormat` > TOML `wire_api` > base_url 形状。
+- 目标端点：
+  - Claude `anthropic`（默认）→ `POST {base}/v1/messages`，Anthropic Messages body，含 `anthropic-version: 2023-06-01`；
+  - Claude `openai_chat` → `POST {base}/v1/chat/completions`，Chat Completions body（流式时注入 `stream_options.include_usage`）；
+  - Claude `openai_responses` → `POST {base}/v1/responses`，Responses body；
+  - Claude `gemini_native` → 非流式 `POST {base}/v1beta/models/{model}:generateContent`，流式 `POST {base}/v1beta/models/{model}:streamGenerateContent?alt=sse`，Gemini generateContent body；
+  - Codex wire=responses（默认）→ `POST {base}/responses`，Responses body；
+  - Codex wire=chat → `POST {base}/chat/completions`，Chat Completions body；
+  - Codex wire=anthropic → `POST {base}/v1/messages`，Anthropic Messages body。
+- 鉴权头 SHALL 由代理转发链路使用的同一 adapter 鉴权构造产生：`ANTHROPIC_AUTH_TOKEN` → `Authorization: Bearer`；`ANTHROPIC_API_KEY` → `x-api-key`；gemini 普通 key → `x-goog-api-key`；OpenRouter → `Authorization: Bearer`；Codex Anthropic 网关按 apiKeyField 决定 `x-api-key`（ANTHROPIC_API_KEY）或 `Authorization: Bearer`（缺省）。
+- `meta.isFullUrl=true` 时 URL SHALL 直接使用 base_url（不拼接端点路径）。
+- 请求体 SHALL 由代理转发层的同一转换函数产生（Claude 侧 `transform_claude_request_for_api_format`，Codex 侧 responses↔chat / responses→anthropic 转换）；会话态优化（缓存断点注入、会话历史补全、prompt cache key）MUST NOT 参与测试请求。
+- 自定义 headers / 自定义 body 的浅合并语义保持：合并发生在默认（或转换后）请求之上。
+- 目标构造失败（无 base_url、无可用鉴权、转换报错等）SHALL 返回该模型的 `error` 结果并给出原因，MUST NOT panic。
+- 动态端点供应商（codex_oauth / xai_oauth / github_copilot）与官方供应商 MUST 仍被排除在连通性测试之外。
+
+#### Scenario: Claude 供应商配置为 OpenAI Chat Completions
+- **WHEN** 某 Claude 供应商 `meta.apiFormat=openai_chat` 且用户对其模型发起连通性测试
+- **THEN** 请求详情中的 URL 为 `{base}/v1/chat/completions`，请求体为 Chat Completions 形状（messages 含测试提示词；流式时含 `stream:true` 与 `stream_options.include_usage`），鉴权头与该供应商真实转发请求一致
+
+#### Scenario: Claude 供应商配置为 OpenAI Responses
+- **WHEN** 某 Claude 供应商 `meta.apiFormat=openai_responses`
+- **THEN** 测试请求 URL 为 `{base}/v1/responses`，请求体为 Responses 形状
+
+#### Scenario: Claude 供应商配置为 Gemini Native
+- **WHEN** 某 Claude 供应商 `meta.apiFormat=gemini_native`，流式开关开启
+- **THEN** 测试请求 URL 为 `{base}/v1beta/models/{model}:streamGenerateContent?alt=sse`，请求体为 Gemini generateContent 形状，鉴权为 x-goog-api-key（普通 key）或 Bearer access_token（OAuth 凭据含可用 access_token 时）
+
+#### Scenario: Claude 供应商保持 Anthropic 原生
+- **WHEN** 某 Claude 供应商未配置 apiFormat 或配置为 anthropic
+- **THEN** 测试请求 URL 为 `{base}/v1/messages`，请求体为 Anthropic Messages 形状，请求头含 `anthropic-version: 2023-06-01`
+
+#### Scenario: Codex 供应商 wire_api 为 chat
+- **WHEN** 某 Codex 供应商 TOML `wire_api="chat"`（或 apiFormat 等价声明）
+- **THEN** 测试请求 URL 为 `{base}/chat/completions`，请求体为 Chat Completions 形状
+
+#### Scenario: Codex 供应商 wire_api 为 anthropic
+- **WHEN** 某 Codex 供应商 TOML `wire_api="anthropic"`（或 apiFormat 等价声明）
+- **THEN** 测试请求 URL 为 `{base}/v1/messages`，请求体为 Anthropic Messages 形状，鉴权头按 apiKeyField 决定
+
+#### Scenario: base_url 为完整端点 URL
+- **WHEN** 供应商 `meta.isFullUrl=true` 且 base_url 已是完整端点地址
+- **THEN** 测试请求 URL 直接使用该 base_url，不追加端点路径
+
+#### Scenario: 目标构造失败返回错误结果
+- **WHEN** 供应商缺少 base_url 或可用鉴权，或请求体转换报错
+- **THEN** 对应模型返回 `error` 结果，错误信息说明原因，不产生 panic 或半构造请求
 
 ### Requirement: 连通性测试弹窗与单一模型表格
 系统 SHALL 提供连通性测试弹窗，主体为测试参数区与单一模型表格：
@@ -56,7 +108,7 @@
 
 #### Scenario: 查看请求详情
 - **WHEN** 测试完成后用户点击某模型的"请求详情"入口
-- **THEN** 弹窗展示该模型的请求 URL、请求 headers、请求体、响应 headers 与响应体
+- **THEN** 弹窗展示该模型的请求 URL、请求 headers（鉴权头脱敏）、请求体、响应 headers 与响应体，内容与实际发送/接收一致
 
 ### Requirement: 弹窗内获取上游模型列表
 系统 SHALL 在模型表格区提供「获取模型列表」操作：
@@ -91,7 +143,7 @@
 - **THEN** 弹窗提示词为 `你好，你可以帮我做什么事情`，无默认测试模型（按预选逻辑勾选），流式开启，发起测试时后端实际发送该默认 prompt
 
 ### Requirement: 供应商列表批量探针徽标
-系统 SHALL 支持在供应商列表上以受限并发（并发度 5）对所有可测试供应商逐个发起探针，使用各供应商的默认测试模型；探针结果以状态徽标（成功/失败/错误）加总耗时显示在对应供应商卡片上。没有可用模型的供应商（含官方供应商与无用户配置探测目标的类型）以及端点依赖运行时动态解析的供应商类型（如 GitHub Copilot）SHALL 被跳过，不发起请求、不显示探针徽标。
+系统 SHALL 支持在供应商列表上以受限并发（并发度 5）对所有可测试供应商逐个发起探针，使用各供应商的默认测试模型；探针结果以状态徽标（成功/失败/错误）加总耗时显示在对应供应商卡片上。没有可用模型的供应商（含官方供应商与无用户配置探测目标的类型）以及端点依赖运行时动态解析的供应商类型（如 GitHub Copilot）SHALL 被跳过，不发起请求、不显示探针徽标。探针请求的目标构造 SHALL 与按模型连通性测试同一套 API 格式对齐逻辑。
 
 #### Scenario: 批量探针逐供应商更新徽标
 - **WHEN** 用户触发批量连通探针
@@ -100,6 +152,10 @@
 #### Scenario: 无模型的供应商被跳过
 - **WHEN** 某供应商未配置任何模型或属于官方供应商
 - **THEN** 批量探针不对其发起请求，卡片不显示探针结果徽标
+
+#### Scenario: 探针目标同样按 API 格式对齐
+- **WHEN** 批量探针命中某 apiFormat=openai_chat 的 Claude 供应商
+- **THEN** 该探针发出的请求 URL 与请求体按 Chat Completions 形状构造，与该供应商弹窗内测试同源
 
 ### Requirement: 替换旧可达性探测
 系统 SHALL 移除旧的 base_url 可达性探测功能：单个与批量可达性检查命令、超时/重试/降级阈值配置面板，以及卡片上的旧检测行为。供应商卡片与列表中原"检测连通性"入口 MUST 改为打开按模型连通性测试弹窗或批量探针。旧功能的用户可见配置项（超时、重试次数、降级阈值）不再保留。
