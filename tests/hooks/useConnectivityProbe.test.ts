@@ -224,4 +224,144 @@ describe("useConnectivityProbe", () => {
       totalMs: 123,
     });
   });
+
+  it("stopProbe clears waiting/running badges and discards late in-flight results", async () => {
+    const gates = Array.from({ length: 5 }, () => deferred<unknown>());
+    let call = 0;
+    invokeMock.mockImplementation(() => gates[call++].promise);
+
+    const providers = Array.from({ length: 5 }, (_, i) =>
+      makeProvider({ id: `p${i}` }),
+    );
+    const { result } = renderHook(() => useConnectivityProbe("claude"));
+
+    let pending: Promise<void> | undefined;
+    act(() => {
+      pending = result.current.probeAll(providers);
+    });
+
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledTimes(5);
+    });
+    expect(result.current.results["p2"]?.status).toBe("running");
+
+    act(() => {
+      result.current.stopProbe();
+    });
+
+    // waiting/running 徽标立即清除
+    expect(result.current.results).toEqual({});
+
+    await act(async () => {
+      gates[0].resolve(probeResult("m0"));
+      gates[1].reject(new Error("late boom"));
+      // 其余在途请求也返回（迟到结果一律按代次丢弃）
+      gates[2].resolve(probeResult("m2"));
+      gates[3].resolve(probeResult("m3"));
+      gates[4].resolve(probeResult("m4"));
+      await pending;
+    });
+
+    // 在途请求返回后按代次丢弃，不写回结果
+    expect(result.current.results).toEqual({});
+  });
+
+  it("stopProbe keeps finished badges and stops queued items from starting", async () => {
+    const gates = Array.from({ length: 7 }, () => deferred<unknown>());
+    let call = 0;
+    invokeMock.mockImplementation(() => gates[call++].promise);
+
+    const providers = Array.from({ length: 7 }, (_, i) =>
+      makeProvider({ id: `p${i}` }),
+    );
+    const { result } = renderHook(() => useConnectivityProbe("claude"));
+
+    let pending: Promise<void> | undefined;
+    act(() => {
+      pending = result.current.probeAll(providers);
+    });
+
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledTimes(5);
+    });
+
+    // 先完成 p0；空出的 worker 会拉起排队项 p5
+    await act(async () => {
+      gates[0].resolve(probeResult("m0"));
+    });
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledTimes(6);
+    });
+    expect(result.current.results["p0"]).toEqual({
+      status: "success",
+      totalMs: 123,
+    });
+
+    act(() => {
+      result.current.stopProbe();
+    });
+
+    // 已完成结果保留；running / waiting 清除
+    expect(result.current.results).toEqual({
+      p0: { status: "success", totalMs: 123 },
+    });
+
+    await act(async () => {
+      gates[1].resolve(probeResult("m1"));
+      gates[2].resolve(probeResult("m2"));
+      gates[3].resolve(probeResult("m3"));
+      gates[4].resolve(probeResult("m4"));
+      gates[5].resolve(probeResult("m5"));
+      await pending;
+    });
+
+    // p6 永不被拉起，迟到结果全部按代次丢弃
+    expect(invokeMock).toHaveBeenCalledTimes(6);
+    expect(result.current.results).toEqual({
+      p0: { status: "success", totalMs: 123 },
+    });
+  });
+
+  it("a new probeAll supersedes the previous run's late results", async () => {
+    const first = deferred<unknown>();
+    const second = deferred<unknown>();
+    let call = 0;
+    invokeMock.mockImplementation(() =>
+      call++ === 0 ? first.promise : second.promise,
+    );
+
+    const p0 = makeProvider({ id: "first-run" });
+    const p1 = makeProvider({ id: "second-run" });
+    const { result } = renderHook(() => useConnectivityProbe("claude"));
+
+    let firstPending: Promise<void> | undefined;
+    act(() => {
+      firstPending = result.current.probeAll([p0]);
+    });
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledTimes(1);
+    });
+
+    // 第二轮启动：第一轮成为过期代次
+    let secondPending: Promise<void> | undefined;
+    act(() => {
+      secondPending = result.current.probeAll([p1]);
+    });
+    await waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledTimes(2);
+    });
+
+    await act(async () => {
+      first.resolve(probeResult("late"));
+      second.resolve(probeResult("fresh"));
+      await Promise.all([firstPending, secondPending]);
+    });
+
+    // 旧代次的迟到结果被丢弃，新代次正常写入
+    expect(result.current.results["first-run"]).toBeUndefined();
+    expect(result.current.results["second-run"]).toEqual({
+      status: "success",
+      totalMs: 123,
+    });
+  });
 });
