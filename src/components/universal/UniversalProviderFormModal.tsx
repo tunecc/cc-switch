@@ -47,6 +47,7 @@ export function UniversalProviderFormModal({
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [websiteUrl2, setWebsiteUrl2] = useState("");
   const [notes, setNotes] = useState("");
 
   // 应用启用状态
@@ -70,6 +71,7 @@ export function UniversalProviderFormModal({
       setBaseUrl(editingProvider.baseUrl);
       setApiKey(editingProvider.apiKey);
       setWebsiteUrl(editingProvider.websiteUrl || "");
+      setWebsiteUrl2(editingProvider.websiteUrl2 || "");
       setNotes(editingProvider.notes || "");
       setClaudeEnabled(editingProvider.apps.claude);
       setCodexEnabled(editingProvider.apps.codex);
@@ -89,6 +91,7 @@ export function UniversalProviderFormModal({
       setBaseUrl("");
       setApiKey("");
       setWebsiteUrl(defaultPreset.websiteUrl || "");
+      setWebsiteUrl2("");
       setNotes("");
       setClaudeEnabled(defaultPreset.defaultApps.claude);
       setCodexEnabled(defaultPreset.defaultApps.codex);
@@ -197,6 +200,7 @@ requires_openai_auth = true`;
           baseUrl: baseUrl.trim(),
           apiKey: apiKey.trim(),
           websiteUrl: websiteUrl.trim() || undefined,
+          websiteUrl2: websiteUrl2.trim() || undefined,
           notes: notes.trim() || undefined,
           apps: {
             claude: claudeEnabled,
@@ -222,6 +226,7 @@ requires_openai_auth = true`;
       };
       provider.models = models;
       provider.websiteUrl = websiteUrl.trim() || undefined;
+      provider.websiteUrl2 = websiteUrl2.trim() || undefined;
       provider.notes = notes.trim() || undefined;
     }
 
@@ -233,6 +238,7 @@ requires_openai_auth = true`;
     baseUrl,
     apiKey,
     websiteUrl,
+    websiteUrl2,
     notes,
     claudeEnabled,
     codexEnabled,
@@ -256,6 +262,7 @@ requires_openai_auth = true`;
           baseUrl: baseUrl.trim(),
           apiKey: apiKey.trim(),
           websiteUrl: websiteUrl.trim() || undefined,
+          websiteUrl2: websiteUrl2.trim() || undefined,
           notes: notes.trim() || undefined,
           apps: {
             claude: claudeEnabled,
@@ -281,6 +288,7 @@ requires_openai_auth = true`;
       };
       provider.models = models;
       provider.websiteUrl = websiteUrl.trim() || undefined;
+      provider.websiteUrl2 = websiteUrl2.trim() || undefined;
       provider.notes = notes.trim() || undefined;
     }
 
@@ -291,6 +299,7 @@ requires_openai_auth = true`;
     baseUrl,
     apiKey,
     websiteUrl,
+    websiteUrl2,
     notes,
     claudeEnabled,
     codexEnabled,
@@ -457,6 +466,22 @@ requires_openai_auth = true`;
               onChange={(e) => setWebsiteUrl(e.target.value)}
               placeholder={t("universalProvider.websiteUrlPlaceholder", {
                 defaultValue: "https://example.com（可选，用于在列表中显示）",
+              })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="websiteUrl2">
+              {t("universalProvider.websiteUrl2", {
+                defaultValue: "官网地址 2",
+              })}
+            </Label>
+            <Input
+              id="websiteUrl2"
+              value={websiteUrl2}
+              onChange={(e) => setWebsiteUrl2(e.target.value)}
+              placeholder={t("universalProvider.websiteUrl2Placeholder", {
+                defaultValue: "https://example.com（可选，与官网地址横排展示）",
               })}
             />
           </div>

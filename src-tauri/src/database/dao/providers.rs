@@ -122,11 +122,11 @@ impl Database {
     ) -> Result<IndexMap<String, Provider>, AppError> {
         let conn = lock_conn!(self.conn);
         let query = if failover_only {
-            "SELECT id, name, settings_config, website_url, category, created_at, sort_index, notes, icon, icon_color, meta, in_failover_queue
+            "SELECT id, name, settings_config, website_url, website_url_2, category, created_at, sort_index, notes, icon, icon_color, meta, in_failover_queue
              FROM providers WHERE app_type = ?1 AND in_failover_queue = 1
              ORDER BY COALESCE(sort_index, 999999), id ASC"
         } else {
-            "SELECT id, name, settings_config, website_url, category, created_at, sort_index, notes, icon, icon_color, meta, in_failover_queue
+            "SELECT id, name, settings_config, website_url, website_url_2, category, created_at, sort_index, notes, icon, icon_color, meta, in_failover_queue
              FROM providers WHERE app_type = ?1
              ORDER BY COALESCE(sort_index, 999999), created_at ASC, id ASC"
         };
@@ -140,14 +140,15 @@ impl Database {
                 let name: String = row.get(1)?;
                 let settings_config_str: String = row.get(2)?;
                 let website_url: Option<String> = row.get(3)?;
-                let category: Option<String> = row.get(4)?;
-                let created_at: Option<i64> = row.get(5)?;
-                let sort_index: Option<usize> = row.get(6)?;
-                let notes: Option<String> = row.get(7)?;
-                let icon: Option<String> = row.get(8)?;
-                let icon_color: Option<String> = row.get(9)?;
-                let meta_str: String = row.get(10)?;
-                let in_failover_queue: bool = row.get(11)?;
+                let website_url_2: Option<String> = row.get(4)?;
+                let category: Option<String> = row.get(5)?;
+                let created_at: Option<i64> = row.get(6)?;
+                let sort_index: Option<usize> = row.get(7)?;
+                let notes: Option<String> = row.get(8)?;
+                let icon: Option<String> = row.get(9)?;
+                let icon_color: Option<String> = row.get(10)?;
+                let meta_str: String = row.get(11)?;
+                let in_failover_queue: bool = row.get(12)?;
 
                 let settings_config =
                     serde_json::from_str(&settings_config_str).unwrap_or(serde_json::Value::Null);
@@ -160,6 +161,7 @@ impl Database {
                         name,
                         settings_config,
                         website_url,
+                        website_url_2,
                         category,
                         created_at,
                         sort_index,
@@ -254,21 +256,22 @@ impl Database {
     ) -> Result<Option<Provider>, AppError> {
         let conn = lock_conn!(self.conn);
         let result = conn.query_row(
-            "SELECT name, settings_config, website_url, category, created_at, sort_index, notes, icon, icon_color, meta, in_failover_queue
+            "SELECT name, settings_config, website_url, website_url_2, category, created_at, sort_index, notes, icon, icon_color, meta, in_failover_queue
              FROM providers WHERE id = ?1 AND app_type = ?2",
             params![id, app_type],
             |row| {
                 let name: String = row.get(0)?;
                 let settings_config_str: String = row.get(1)?;
                 let website_url: Option<String> = row.get(2)?;
-                let category: Option<String> = row.get(3)?;
-                let created_at: Option<i64> = row.get(4)?;
-                let sort_index: Option<usize> = row.get(5)?;
-                let notes: Option<String> = row.get(6)?;
-                let icon: Option<String> = row.get(7)?;
-                let icon_color: Option<String> = row.get(8)?;
-                let meta_str: String = row.get(9)?;
-                let in_failover_queue: bool = row.get(10)?;
+                let website_url_2: Option<String> = row.get(3)?;
+                let category: Option<String> = row.get(4)?;
+                let created_at: Option<i64> = row.get(5)?;
+                let sort_index: Option<usize> = row.get(6)?;
+                let notes: Option<String> = row.get(7)?;
+                let icon: Option<String> = row.get(8)?;
+                let icon_color: Option<String> = row.get(9)?;
+                let meta_str: String = row.get(10)?;
+                let in_failover_queue: bool = row.get(11)?;
 
                 let settings_config = serde_json::from_str(&settings_config_str).unwrap_or(serde_json::Value::Null);
                 let meta: ProviderMeta = serde_json::from_str(&meta_str).unwrap_or_default();
@@ -278,6 +281,7 @@ impl Database {
                     name,
                     settings_config,
                     website_url,
+                    website_url_2,
                     category,
                     created_at,
                     sort_index,
@@ -368,28 +372,31 @@ impl Database {
                     name = ?1,
                     settings_config = ?2,
                     website_url = ?3,
-                    category = ?4,
-                    created_at = ?5,
-                    sort_index = ?6,
-                    notes = ?7,
-                    icon = ?8,
-                    icon_color = ?9,
-                    meta = ?10,
-                    is_current = ?11,
-                    in_failover_queue = ?12
-                WHERE id = ?13 AND app_type = ?14
+                    website_url_2 = ?4,
+                    category = ?5,
+                    created_at = ?6,
+                    sort_index = ?7,
+                    notes = ?8,
+                    icon = ?9,
+                    icon_color = ?10,
+                    meta = ?11,
+                    is_current = ?12,
+                    in_failover_queue = ?13
+                WHERE id = ?14 AND app_type = ?15
                   AND (name IS NOT ?1 OR settings_config IS NOT ?2
-                       OR website_url IS NOT ?3 OR category IS NOT ?4
-                       OR created_at IS NOT ?5 OR sort_index IS NOT ?6
-                       OR notes IS NOT ?7 OR icon IS NOT ?8 OR icon_color IS NOT ?9
-                       OR meta IS NOT ?10 OR is_current IS NOT ?11
-                       OR in_failover_queue IS NOT ?12)",
+                       OR website_url IS NOT ?3 OR website_url_2 IS NOT ?4
+                       OR category IS NOT ?5 OR created_at IS NOT ?6
+                       OR sort_index IS NOT ?7 OR notes IS NOT ?8
+                       OR icon IS NOT ?9 OR icon_color IS NOT ?10
+                       OR meta IS NOT ?11 OR is_current IS NOT ?12
+                       OR in_failover_queue IS NOT ?13)",
                 params![
                     provider.name,
                     serde_json::to_string(&provider.settings_config).map_err(|e| {
                         AppError::Database(format!("Failed to serialize settings_config: {e}"))
                     })?,
                     provider.website_url,
+                    provider.website_url_2,
                     provider.category,
                     provider.created_at,
                     provider.sort_index,
@@ -407,9 +414,9 @@ impl Database {
         } else {
             tx.execute(
                 "INSERT INTO providers (
-                    id, app_type, name, settings_config, website_url, category,
+                    id, app_type, name, settings_config, website_url, website_url_2, category,
                     created_at, sort_index, notes, icon, icon_color, meta, is_current, in_failover_queue
-                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
                 params![
                     provider.id,
                     app_type,
@@ -417,6 +424,7 @@ impl Database {
                     serde_json::to_string(&provider.settings_config)
                         .map_err(|e| AppError::Database(format!("Failed to serialize settings_config: {e}")))?,
                     provider.website_url,
+                    provider.website_url_2,
                     provider.category,
                     provider.created_at,
                     provider.sort_index,
@@ -496,10 +504,10 @@ impl Database {
         meta.custom_endpoints.clear();
         tx.execute(
             "INSERT INTO providers (
-                id, app_type, name, settings_config, website_url, category,
+                id, app_type, name, settings_config, website_url, website_url_2, category,
                 created_at, sort_index, notes, icon, icon_color, meta,
                 is_current, in_failover_queue
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
             params![
                 provider.id,
                 app_type,
@@ -508,6 +516,7 @@ impl Database {
                     AppError::Database(format!("Failed to serialize settings_config: {e}"))
                 })?,
                 provider.website_url,
+                provider.website_url_2,
                 provider.category,
                 provider.created_at,
                 provider.sort_index,
@@ -757,6 +766,7 @@ impl Database {
             name,
             settings_config,
             website_url: None,
+            website_url_2: None,
             category: Some(category.to_string()),
             created_at,
             sort_index,
