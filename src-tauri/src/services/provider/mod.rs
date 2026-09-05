@@ -704,6 +704,7 @@ mod tests {
                 "models": [],
             }),
             website_url: None,
+            website_url_2: None,
             category: Some("custom".to_string()),
             created_at: Some(1),
             sort_index: Some(0),
@@ -730,6 +731,7 @@ mod tests {
                 }
             }),
             website_url: None,
+            website_url_2: None,
             category: Some("custom".to_string()),
             created_at: Some(1),
             sort_index: Some(0),
@@ -759,6 +761,7 @@ mod tests {
                 }
             }),
             website_url: None,
+            website_url_2: None,
             category: Some("custom".to_string()),
             created_at: Some(1),
             sort_index: Some(0),
@@ -800,6 +803,7 @@ mod tests {
             name: format!("Provider {id}"),
             settings_config: Value::Object(settings),
             website_url: None,
+            website_url_2: None,
             category: Some(category.to_string()),
             created_at: Some(1),
             sort_index: Some(0),
