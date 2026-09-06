@@ -342,6 +342,16 @@ fn panel_window(app: &AppHandle) -> Option<WebviewWindow> {
     app.get_webview_window(PANEL_LABEL)
 }
 
+/// 面板窗口当前是否可见（不负责创建）。
+///
+/// fork 叠加：托盘左键要同时服务「收起已弹出的面板」与「切换主窗口」两个语义，
+/// 需要在不创建窗口的前提下知道面板开没开。
+pub fn panel_visible(app: &AppHandle) -> bool {
+    panel_window(app)
+        .and_then(|w| w.is_visible().ok())
+        .unwrap_or(false)
+}
+
 fn ensure_window(app: &AppHandle) -> Option<WebviewWindow> {
     if let Some(window) = panel_window(app) {
         return Some(window);
