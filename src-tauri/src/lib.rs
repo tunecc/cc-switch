@@ -80,7 +80,9 @@ use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fmt, sync::Arc};
-use tauri::tray::{TrayIconBuilder, TrayIconEvent};
+use tauri::tray::{
+    MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent,
+};
 use tauri::RunEvent;
 use tauri::{Emitter, Manager};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1131,30 +1133,41 @@ pub fn run() {
                 Err(e) => log::warn!("读取启动时的深链接失败: {e}"),
             }
 
-            // 构建托盘：Windows 左键打开主界面，右键默认弹出面板；macOS 左右键默认都弹出面板。
+            // 构建托盘：fork 语义——左键单击切换主窗口显示/隐藏；右键按所选样式弹出面板或原生菜单。
             // 设置里打开「原生托盘菜单」就挂原生菜单（`tray::apply_tray_style` 运行时切换）。
             // Linux（AppIndicator）不派发点击事件，只能出原生菜单，菜单里有一项打开面板。
             let native_menu = tray_panel::uses_native_menu();
             let mut tray_builder = TrayIconBuilder::with_id(tray::TRAY_ID)
                 .tooltip("CC Switch") // 鼠标悬停提示
                 .on_tray_icon_event(|tray, event| {
+                    // fork：左键单击（抬起）切换主窗口显示/隐藏（macOS/Windows 均生效）。
+                    // 只在 Up 时触发：每次点击会先后发 Down/Up 两次 Click，
+                    // 不过滤会一次点击双切。
+                    // 与上游托盘面板叠加：面板开着时左键先关面板（沿用上游 toggle 语义），
+                    // 面板关着时才走 fork 的主窗口切换。用原生菜单时左键同样走主窗口切换，
+                    // 右键仍由系统弹出托盘菜单。
+                    // Linux（AppIndicator）不派发点击事件，只能出菜单。
                     if let TrayIconEvent::Click {
-                        button:
-                            button @ (tauri::tray::MouseButton::Left
-                            | tauri::tray::MouseButton::Right),
-                        button_state: tauri::tray::MouseButtonState::Up,
+                        button: button @ (MouseButton::Left | MouseButton::Right),
+                        button_state: MouseButtonState::Up,
                         rect,
                         ..
                     } = &event
                     {
-                        if cfg!(target_os = "windows")
-                            && *button == tauri::tray::MouseButton::Left
-                        {
-                            tray_panel::hide_panel(tray.app_handle());
-                            tray::show_main_window(tray.app_handle());
-                        } else if !tray_panel::uses_native_menu() {
-                            tray_panel::toggle(tray.app_handle(), rect);
+                        if !tray_panel::uses_native_menu() {
+                            // 面板已显示：左键收起面板（上游语义）；左键且面板关着：切换主窗口。
+                            let panel_visible = tray_panel::panel_visible(tray.app_handle());
+                            if *button == MouseButton::Left && !panel_visible {
+                                tray::toggle_main_window(tray.app_handle());
+                            } else {
+                                tray_panel::toggle(tray.app_handle(), rect);
+                            }
                             return;
+                        }
+                        // 原生菜单：Windows 的习惯是左键打开应用、右键出菜单；macOS 左右键都出菜单。
+                        // fork 叠加：左键改为切换主窗口（显示/隐藏），不再只显示。
+                        if *button == MouseButton::Left {
+                            tray::toggle_main_window(tray.app_handle());
                         } else {
                             // 弹出的菜单里已经有反馈行了：算显示过，下次悬停重建时拿掉。
                             tray::mark_feedback_seen();
@@ -1180,7 +1193,8 @@ pub fn run() {
                 .on_menu_event(|app, event| {
                     tray::handle_tray_menu_event(app, &event.id.0);
                 })
-                .show_menu_on_left_click(tray::native_menu_on_left_click(native_menu));
+                // fork：左键不弹菜单（改为切换主窗口 / 面板），菜单仅右键弹出。
+                .show_menu_on_left_click(false);
             if native_menu {
                 let menu = tray::create_tray_menu(app.handle(), &app_state)?;
                 tray_builder = tray_builder.menu(&menu);
@@ -1910,20 +1924,9 @@ pub fn run() {
             // RunEvent::Opened（ccswitch:// 链接）不在这里处理：deep-link 插件的 on_event 已把它
             // 转成 on_open_url 回调，这里再处理一遍会让同一条链接触发两次导入。
             if let RunEvent::Reopen { .. } = event {
-                if let Some(window) = app_handle.get_webview_window("main") {
-                    #[cfg(target_os = "windows")]
-                    {
-                        let _ = window.set_skip_taskbar(false);
-                    }
-                    let _ = window.unminimize();
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                    tray::apply_tray_policy(app_handle, true);
-                } else if crate::lightweight::is_lightweight_mode() {
-                    if let Err(e) = crate::lightweight::exit_lightweight_mode(app_handle) {
-                        log::error!("退出轻量模式重建窗口失败: {e}");
-                    }
-                }
+                // fork：与 show_main 菜单事件复用 tray::show_main_window（含窗口恢复、apply_tray_policy
+                // 与轻量模式退出）。
+                tray::show_main_window(app_handle);
             }
         }
 
