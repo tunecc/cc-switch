@@ -1393,6 +1393,7 @@
     "currentModel": "Current Model",
     "applyOneM": "Apply 1M Marker",
     "applied": "Switched to {{model}}",
+    "appliedOneMOnly": "1M marker updated, model unchanged",
     "applyFailed": "Failed to apply model",
     "noCredentials": "Please configure the API Key and endpoint in the edit form first",
     "oneMBadge": "1M",

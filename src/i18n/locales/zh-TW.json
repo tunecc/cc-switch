@@ -1382,6 +1382,7 @@
     "currentModel": "目前模型",
     "applyOneM": "套用 1M 標記",
     "applied": "已切換為 {{model}}",
+    "appliedOneMOnly": "已更新 1M 標記，模型保持不變",
     "applyFailed": "套用模型失敗",
     "noCredentials": "請先在編輯表單配置 API Key 與請求位址",
     "oneMBadge": "1M",

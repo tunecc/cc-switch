@@ -4,6 +4,7 @@ import {
   getCurrentModel,
   isModelCapableApp,
   MODEL_CAPABLE_APPS,
+  setClaudeOneMInSettings,
 } from "./providerModelUtils";
 import { extractCodexModelName } from "./providerConfigUtils";
 
@@ -154,6 +155,49 @@ describe("applyModelToSettings (claude)", () => {
     expect(next.env.ANTHROPIC_DEFAULT_FABLE_MODEL_NAME).toBe(MODEL);
   });
 
+  it("withOneM=false syncs the HAIKU display name with the new base", () => {
+    const settings = claudeSettings({
+      ANTHROPIC_DEFAULT_SONNET_MODEL: "old-sonnet",
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: "old-haiku",
+      // 等于旧 base：随切换写新 base
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME: "old-haiku",
+    });
+    const next = applyModelToSettings("claude", settings, MODEL, {
+      withOneM: false,
+    });
+
+    expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe(MODEL);
+    expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME).toBe(MODEL);
+  });
+
+  it("syncs a HAIKU display name stored as old base[1M]", () => {
+    const settings = claudeSettings({
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: "old-haiku",
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME: "old-haiku[1M]",
+    });
+    const next = applyModelToSettings("claude", settings, MODEL, {
+      withOneM: true,
+    });
+
+    expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe(MODEL);
+    expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME).toBe(MODEL);
+    // 主字段带标记，HAIKU 模型字段与显示名都不带
+    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe(`${MODEL}[1M]`);
+  });
+
+  it("keeps a user-customized HAIKU display name", () => {
+    const settings = claudeSettings({
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: "old-haiku",
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME: "我的haiku",
+    });
+    const next = applyModelToSettings("claude", settings, MODEL, {
+      withOneM: false,
+    });
+
+    expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe(MODEL);
+    expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME).toBe("我的haiku");
+  });
+
   it("keeps user-customized display names", () => {
     const settings = claudeSettings({
       ANTHROPIC_DEFAULT_SONNET_MODEL: "old-sonnet",
@@ -236,6 +280,7 @@ describe("applyModelToSettings (claude)", () => {
           ANTHROPIC_DEFAULT_SONNET_MODEL_NAME: MODEL,
           ANTHROPIC_DEFAULT_OPUS_MODEL_NAME: MODEL,
           ANTHROPIC_DEFAULT_FABLE_MODEL_NAME: MODEL,
+          ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME: MODEL,
         },
       });
     }
@@ -252,6 +297,115 @@ describe("applyModelToSettings (claude)", () => {
     expect(next.env.ANTHROPIC_BASE_URL).toBe("https://x");
     expect(next.env.ANTHROPIC_AUTH_TOKEN).toBe("t");
     expect(next.permissions).toEqual({ allow: ["Bash"] });
+  });
+});
+
+describe("setClaudeOneMInSettings (claude 1M 原地翻转)", () => {
+  it("enable appends [1M] to the five 1M-capable fields in place", () => {
+    const settings = claudeSettings({
+      ANTHROPIC_DEFAULT_SONNET_MODEL: "model-a",
+      ANTHROPIC_DEFAULT_OPUS_MODEL: "model-b",
+      ANTHROPIC_DEFAULT_FABLE_MODEL: "model-c",
+      ANTHROPIC_MODEL: "model-a",
+      CLAUDE_CODE_SUBAGENT_MODEL: "model-d",
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: "model-a",
+      ANTHROPIC_DEFAULT_SONNET_MODEL_NAME: "model-a",
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME: "model-a",
+    });
+    const next = setClaudeOneMInSettings(settings, true);
+
+    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a[1M]");
+    expect(next.env.ANTHROPIC_DEFAULT_OPUS_MODEL).toBe("model-b[1M]");
+    expect(next.env.ANTHROPIC_DEFAULT_FABLE_MODEL).toBe("model-c[1M]");
+    expect(next.env.ANTHROPIC_MODEL).toBe("model-a[1M]");
+    expect(next.env.CLAUDE_CODE_SUBAGENT_MODEL).toBe("model-d[1M]");
+    // HAIKU 模型字段与显示名字段不动，角色差异保留
+    expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe("model-a");
+    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL_NAME).toBe("model-a");
+    expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME).toBe("model-a");
+  });
+
+  it("disable strips existing [1M] markers in place", () => {
+    const settings = claudeSettings({
+      ANTHROPIC_DEFAULT_SONNET_MODEL: "model-a[1M]",
+      ANTHROPIC_DEFAULT_OPUS_MODEL: "model-b [1m]",
+      ANTHROPIC_MODEL: "model-a[1M]",
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: "model-a",
+      ANTHROPIC_DEFAULT_SONNET_MODEL_NAME: "model-a",
+    });
+    const next = setClaudeOneMInSettings(settings, false);
+
+    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a");
+    // 大小写不敏感剥离（与 setClaudeOneMMarker 同一实现）
+    expect(next.env.ANTHROPIC_DEFAULT_OPUS_MODEL).toBe("model-b");
+    expect(next.env.ANTHROPIC_MODEL).toBe("model-a");
+    expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe("model-a");
+    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL_NAME).toBe("model-a");
+  });
+
+  it("is idempotent when the marker state already matches", () => {
+    const settings = claudeSettings({
+      ANTHROPIC_DEFAULT_SONNET_MODEL: "model-a[1M]",
+      ANTHROPIC_MODEL: "model-a[1M]",
+    });
+    const once = setClaudeOneMInSettings(settings, true);
+    expect(once.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a[1M]");
+    const twice = setClaudeOneMInSettings(once, true);
+    expect(twice.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a[1M]");
+  });
+
+  it("skips empty and non-string fields instead of marking them", () => {
+    const settings = claudeSettings({
+      ANTHROPIC_DEFAULT_SONNET_MODEL: "",
+      ANTHROPIC_MODEL: "   ",
+      ANTHROPIC_DEFAULT_OPUS_MODEL: 42,
+      ANTHROPIC_DEFAULT_FABLE_MODEL: "model-c",
+    });
+    const next = setClaudeOneMInSettings(settings, true);
+
+    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("");
+    expect(next.env.ANTHROPIC_MODEL).toBe("   ");
+    expect(next.env.ANTHROPIC_DEFAULT_OPUS_MODEL).toBe(42);
+    expect(next.env.ANTHROPIC_DEFAULT_FABLE_MODEL).toBe("model-c[1M]");
+  });
+
+  it("keeps unrelated env keys and other top-level config untouched", () => {
+    const settings = {
+      env: {
+        ANTHROPIC_BASE_URL: "https://x",
+        ANTHROPIC_AUTH_TOKEN: "t",
+        ANTHROPIC_MODEL: "model-a",
+      },
+      permissions: { allow: ["Bash"] },
+    };
+    const next = setClaudeOneMInSettings(settings, true);
+    expect(next.env.ANTHROPIC_BASE_URL).toBe("https://x");
+    expect(next.env.ANTHROPIC_AUTH_TOKEN).toBe("t");
+    expect(next.permissions).toEqual({ allow: ["Bash"] });
+  });
+
+  it("never mutates the input settingsConfig", () => {
+    const settings = claudeSettings({
+      ANTHROPIC_DEFAULT_SONNET_MODEL: "model-a",
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: "model-h",
+    });
+    const snapshot = JSON.parse(JSON.stringify(settings));
+    const next = setClaudeOneMInSettings(settings, true);
+
+    expect(next).not.toBe(settings);
+    expect(next.env).not.toBe(settings.env);
+    expect(settings).toEqual(snapshot);
+  });
+
+  it("never throws on hostile settingsConfig shapes", () => {
+    for (const hostile of [null, undefined, 42, "text", []]) {
+      expect(() => setClaudeOneMInSettings(hostile, true)).not.toThrow();
+    }
+    expect(setClaudeOneMInSettings(null, true)).toEqual({});
+    // 无 env 的 object：原样深拷贝返回
+    expect(setClaudeOneMInSettings({ permissions: {} }, true)).toEqual({
+      permissions: {},
+    });
   });
 });
 

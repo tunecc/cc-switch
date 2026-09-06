@@ -1,7 +1,8 @@
 // 供应商模型快捷切换弹窗。
 //
 // 与编辑表单同一套读写语义：读走 providerModelUtils.getCurrentModel，
-// 写走 applyModelToSettings（claude 的 [1M] 标记语义已在工具内封装）。
+// 写走 applyModelToSettings（claude 的 [1M] 标记语义已在工具内封装）；
+// claude 未选模型时支持仅翻转 1M 标记（setClaudeOneMInSettings，模型不动）。
 // 拉取模型列表复用 model-fetch 与 SearchableModelPicker，凭据按 app
 // 从 settingsConfig 宽松提取（结构随 app 不同，见 extractCredentials）。
 
@@ -21,8 +22,10 @@ import {
 } from "@/lib/api/model-fetch";
 import {
   applyModelToSettings,
+  extractModelBadgeForProvider,
   getCurrentModel,
   isModelCapableApp,
+  setClaudeOneMInSettings,
 } from "@/utils/providerModelUtils";
 import { extractCredentials } from "@/utils/providerCredentials";
 import { extractErrorMessage } from "@/utils/errorUtils";
@@ -61,15 +64,29 @@ export function ModelQuickSwitchDialog({
   const [isFetching, setIsFetching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // open 变化时重置瞬态状态，避免上一次打开的模型列表/选择残留
+  // 供应商当前 1M 状态（与卡片徽章同一判定：SONNET 优先，回退 ANTHROPIC_MODEL）
+  const currentOneM = useMemo(
+    () =>
+      appId === "claude"
+        ? (extractModelBadgeForProvider(appId, provider.settingsConfig)?.oneM ??
+          false)
+        : false,
+    [appId, provider.settingsConfig],
+  );
+
+  // open 变化时同步瞬态状态：打开时 1M 开关按供应商当前状态初始化，
+  // 避免已开 1M 的供应商被"默认关"的开关静默剥掉标记；关闭时清空残留
   useEffect(() => {
-    if (open) return;
+    if (open) {
+      setOneMEnabled(currentOneM);
+      return;
+    }
     setModels([]);
     setSelectedModel("");
     setOneMEnabled(false);
     setIsFetching(false);
     setIsSaving(false);
-  }, [open]);
+  }, [open, currentOneM]);
 
   const currentModel = useMemo(
     () =>
@@ -78,6 +95,14 @@ export function ModelQuickSwitchDialog({
         : "",
     [appId, provider.settingsConfig],
   );
+
+  // 未选模型时的"仅 1M"应用：claude 专属，要求当前模型非空且开关状态有变化
+  const oneMOnlyApply =
+    appId === "claude" &&
+    !selectedModel.trim() &&
+    Boolean(currentModel) &&
+    oneMEnabled !== currentOneM;
+  const canApply = Boolean(selectedModel.trim()) || oneMOnlyApply;
 
   const credentials = useMemo(
     () => extractCredentials(appId, provider.settingsConfig),
@@ -113,20 +138,39 @@ export function ModelQuickSwitchDialog({
   }, [credentials.baseUrl, credentials.apiKey, t]);
 
   const handleApply = useCallback(async () => {
+    if (isSaving) return;
     const model = selectedModel.trim();
-    if (!model || isSaving) return;
+    // 与 canApply 同一口径：未选模型时仅接受"当前模型非空且 1M 状态有变化"
+    const oneMOnly =
+      appId === "claude" &&
+      !model &&
+      Boolean(currentModel) &&
+      oneMEnabled !== currentOneM;
+    if (!model && !oneMOnly) return;
     setIsSaving(true);
     try {
-      // applyModelToSettings 深拷贝后写回，provider 原对象不被修改
-      const next = applyModelToSettings(appId, provider.settingsConfig, model, {
-        withOneM: oneMEnabled,
-      });
+      // 两条写回路径：选了模型 = 全角色写为所选模型；未选模型 = 仅原地
+      // 翻转 [1M] 标记（各角色模型 base 与显示名不动）。
+      // 两者都深拷贝后写回，provider 原对象不被修改。
+      const next = model
+        ? applyModelToSettings(appId, provider.settingsConfig, model, {
+            withOneM: oneMEnabled,
+          })
+        : setClaudeOneMInSettings(provider.settingsConfig, oneMEnabled);
       await providersApi.update(
         { ...provider, settingsConfig: next },
         appId as AppId,
       );
       await queryClient.invalidateQueries({ queryKey: ["providers", appId] });
-      toast.success(t("providerModel.applied", { model }));
+      if (model) {
+        toast.success(t("providerModel.applied", { model }));
+      } else {
+        toast.success(
+          t("providerModel.appliedOneMOnly", {
+            defaultValue: "已更新 1M 标记，模型保持不变",
+          }),
+        );
+      }
       onOpenChange(false);
     } catch (error) {
       console.warn("[ModelQuickSwitch] Failed to apply model:", error);
@@ -141,6 +185,8 @@ export function ModelQuickSwitchDialog({
     }
   }, [
     appId,
+    currentModel,
+    currentOneM,
     isSaving,
     oneMEnabled,
     onOpenChange,
@@ -253,7 +299,7 @@ export function ModelQuickSwitchDialog({
           </Button>
           <Button
             type="button"
-            disabled={!selectedModel.trim() || isSaving}
+            disabled={!canApply || isSaving}
             onClick={handleApply}
           >
             {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
