@@ -22,15 +22,26 @@ interface SearchableModelPickerProps {
   models: FetchedModel[];
   value?: string;
   onSelect: (id: string) => void;
+  /** 受控展开：传入后展开状态由父级接管（如拉取模型后自动展开），不传保持内部自管 */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function SearchableModelPicker({
   models,
   value,
   onSelect,
+  open: controlledOpen,
+  onOpenChange,
 }: SearchableModelPickerProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
 
   const groupedModels = useMemo(() => {
     const grouped: Record<string, FetchedModel[]> = {};
