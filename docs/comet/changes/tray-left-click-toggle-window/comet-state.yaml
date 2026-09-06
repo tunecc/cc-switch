@@ -1,0 +1,145 @@
+schema: comet.native.v4
+name: tray-left-click-toggle-window
+language: zh-CN
+phase: build
+status: active
+state_version: 2
+brief: brief.md
+spec_changes:
+  - capability: tray-left-click-toggle
+    operation: create
+    source: specs/tray-left-click-toggle/spec.md
+workspace:
+  isolation: worktree
+  change_branch: comet/tray-left-click-toggle-window
+  target_branch: main
+  finish: null
+loop:
+  stage: building
+  goal_cycle: 1
+  iteration: 1
+  attempt: 0
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: submit-builder-candidate
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: 主窗口隐藏时左键单击托盘图标：主窗口显示、置前并聚焦；主窗口已最小化时左键单击：还原、置前并聚焦（而非被隐藏）。"
+    result: pending
+    reason: null
+  - id: A2
+    source: brief.md
+    text: "A2: 应用处于轻量模式（主窗口已销毁）时左键单击托盘图标：退出轻量模式并重建、显示主窗口。"
+    result: pending
+    reason: null
+  - id: A3
+    source: brief.md
+    text: 'A3: 主窗口可见（未最小化）时左键单击托盘图标：主窗口隐藏；macOS 上 Dock 图标同步隐藏，Windows
+      上任务栏不再显示该窗口（平台处理与"关闭到托盘"一致）。'
+    result: pending
+    reason: null
+  - id: A4
+    source: brief.md
+    text: 'A4: 连续左键单击按"显示 → 隐藏 → 显示"稳定往返；一次左键单击恰好触发一次切换（macOS/Windows 每次点击产生的按下/抬起两次
+      `Click` 事件不造成双重切换）。'
+    result: pending
+    reason: null
+  - id: A5
+    source: brief.md
+    text: "A5: macOS 与 Windows 上左键单击托盘图标不再弹出托盘菜单。"
+    result: pending
+    reason: null
+  - id: A6
+    source: brief.md
+    text: 'A6: 右键单击仍弹出托盘菜单，菜单结构与各菜单项行为与改造前一致；主窗口隐藏时通过菜单"打开主界面"仍可显示窗口。'
+    result: pending
+    reason: null
+  - id: A7
+    source: brief.md
+    text: "A7: 既有行为不回归：托盘悬停/点击的用量刷新（10 秒防抖）照常；macOS Dock Reopen 重新激活显示主窗口的行为不变。"
+    result: pending
+    reason: null
+  - id: A8
+    source: brief.md
+    text: "A8: `cargo fmt --check`、`cargo clippy -- -D warnings`、`cargo
+      test`（src-tauri）与 `pnpm test:unit`、`pnpm typecheck` 全部通过。"
+    result: pending
+    reason: null
+  - id: A9
+    source: specs/tray-left-click-toggle/spec.md
+    text: 窗口隐藏时左键显示主窗口 - **WHEN** 主窗口处于隐藏状态（如已通过关闭按钮最小化到托盘、或静默启动后未显示），用户左键单击托盘图标 -
+      **THEN** 主窗口显示、置前并获得焦点
+    result: pending
+    reason: null
+  - id: A10
+    source: specs/tray-left-click-toggle/spec.md
+    text: 窗口最小化时左键还原主窗口 - **WHEN** 主窗口已最小化，用户左键单击托盘图标 - **THEN** 主窗口还原、置前并获得焦点（而非被隐藏）
+    result: pending
+    reason: null
+  - id: A11
+    source: specs/tray-left-click-toggle/spec.md
+    text: 窗口可见时左键隐藏主窗口 - **WHEN** 主窗口处于可见且未最小化状态，用户左键单击托盘图标 - **THEN** 主窗口隐藏；macOS 上
+      Dock 图标同步隐藏；Windows 上不再出现在任务栏（平台处理与"关闭到托盘"一致）
+    result: pending
+    reason: null
+  - id: A12
+    source: specs/tray-left-click-toggle/spec.md
+    text: 轻量模式下左键恢复主窗口 - **WHEN** 应用处于轻量模式（主窗口已销毁），用户左键单击托盘图标 - **THEN**
+      应用退出轻量模式并重建、显示主窗口
+    result: pending
+    reason: null
+  - id: A13
+    source: specs/tray-left-click-toggle/spec.md
+    text: 连续左键单击稳定往返 - **WHEN** 用户连续多次左键单击托盘图标 - **THEN** 主窗口按"显示 → 隐藏 → 显示"稳定往返切换
+    result: pending
+    reason: null
+  - id: A14
+    source: specs/tray-left-click-toggle/spec.md
+    text: 左键单击无菜单 - **WHEN** 用户在 macOS 或 Windows 上左键单击托盘图标 - **THEN**
+      托盘菜单不弹出，主窗口可见性按上述规则切换
+    result: pending
+    reason: null
+  - id: A15
+    source: specs/tray-left-click-toggle/spec.md
+    text: 右键弹出菜单 - **WHEN** 用户右键单击托盘图标 - **THEN** 托盘菜单弹出，各菜单项行为不变
+    result: pending
+    reason: null
+  - id: A16
+    source: specs/tray-left-click-toggle/spec.md
+    text: 菜单"打开主界面"仍可用 - **WHEN** 主窗口隐藏，用户右键单击托盘图标并选择"打开主界面" - **THEN**
+      主窗口显示（既有显示路径不回归）
+    result: pending
+    reason: null
+  - id: A17
+    source: specs/tray-left-click-toggle/spec.md
+    text: 悬停与点击刷新用量 - **WHEN** 用户悬停或点击托盘图标 - **THEN** 后台用量刷新照常触发（防抖语义不变）
+    result: pending
+    reason: null
+  - id: A18
+    source: specs/tray-left-click-toggle/spec.md
+    text: macOS Dock 重新激活 - **WHEN** 发生 Dock 图标点击重新激活（Reopen）事件 - **THEN**
+      主窗口显示，行为与引入本能力前一致
+    result: pending
+    reason: null
+builder_handoff: null
+blockers: []
+verification: null
+history: []
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pending
+verification_report: null
+archived: false
+created_at: 2026-09-06T06:56:41.627Z
