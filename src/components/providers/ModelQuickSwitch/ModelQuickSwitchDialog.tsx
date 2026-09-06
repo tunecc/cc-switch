@@ -63,6 +63,8 @@ export function ModelQuickSwitchDialog({
   const [oneMEnabled, setOneMEnabled] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  // 选择器受控展开：拉取模型成功后直接展开，省一次手动点击
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // 供应商当前 1M 状态（与卡片徽章同一判定：SONNET 优先，回退 ANTHROPIC_MODEL）
   const currentOneM = useMemo(
@@ -86,6 +88,7 @@ export function ModelQuickSwitchDialog({
     setOneMEnabled(false);
     setIsFetching(false);
     setIsSaving(false);
+    setPickerOpen(false);
   }, [open, currentOneM]);
 
   const currentModel = useMemo(
@@ -128,6 +131,8 @@ export function ModelQuickSwitchDialog({
           toast.success(
             t("providerForm.fetchModelsSuccess", { count: fetched.length }),
           );
+          // 拉取成功直接展开选择器
+          setPickerOpen(true);
         }
       })
       .catch((err) => {
@@ -263,6 +268,8 @@ export function ModelQuickSwitchDialog({
                 models={models}
                 value={selectedModel}
                 onSelect={setSelectedModel}
+                open={pickerOpen}
+                onOpenChange={setPickerOpen}
               />
             </div>
           )}
