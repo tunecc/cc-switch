@@ -2642,6 +2642,38 @@ pub fn apply_tray_policy(app: &tauri::AppHandle, dock_visible: bool) {
     }
 }
 
+/// 隐藏主窗口到托盘：平台处理与"关闭到托盘"（CloseRequested 且
+/// minimize_to_tray_on_close）分支一致——Windows 隐藏任务栏项，macOS 隐藏 Dock 图标。
+pub fn hide_main_window(app: &tauri::AppHandle) {
+    let Some(window) = app.get_webview_window("main") else {
+        return;
+    };
+    let _ = window.hide();
+    #[cfg(target_os = "windows")]
+    {
+        let _ = window.set_skip_taskbar(true);
+    }
+    #[cfg(target_os = "macos")]
+    apply_tray_policy(app, false);
+}
+
+/// 托盘图标左键单击：主窗口可见且未最小化时隐藏到托盘，否则还原显示并聚焦。
+///
+/// 调用方需保证只在左键 `Click`（`button_state` 为 `Up`）时触发一次：
+/// macOS/Windows 每次点击会先后产生 Down/Up 两次 `Click` 事件，不过滤会双切。
+pub fn toggle_main_window(app: &tauri::AppHandle) {
+    let Some(window) = app.get_webview_window("main") else {
+        show_main_window(app);
+        return;
+    };
+    let is_minimized = window.is_minimized().unwrap_or(false);
+    if window.is_visible().unwrap_or(false) && !is_minimized {
+        hide_main_window(app);
+    } else {
+        show_main_window(app);
+    }
+}
+
 /// 处理托盘菜单事件
 pub fn handle_tray_menu_event(app: &tauri::AppHandle, event_id: &str) {
     log::info!("处理托盘菜单事件: {event_id}");
