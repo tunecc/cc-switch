@@ -50,7 +50,17 @@ const CLAUDE_MODEL_TO_DISPLAY_NAME_FIELD: Record<string, string> = {
   ANTHROPIC_DEFAULT_SONNET_MODEL: "ANTHROPIC_DEFAULT_SONNET_MODEL_NAME",
   ANTHROPIC_DEFAULT_OPUS_MODEL: "ANTHROPIC_DEFAULT_OPUS_MODEL_NAME",
   ANTHROPIC_DEFAULT_FABLE_MODEL: "ANTHROPIC_DEFAULT_FABLE_MODEL_NAME",
+  ANTHROPIC_DEFAULT_HAIKU_MODEL: "ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME",
 };
+
+// 仅翻转 1M 标记时参与的字段（= 支持 1M 的模型字段；HAIKU 不参与）。
+const CLAUDE_ONE_M_TOGGLE_FIELDS: string[] = [
+  "ANTHROPIC_DEFAULT_SONNET_MODEL",
+  "ANTHROPIC_DEFAULT_OPUS_MODEL",
+  "ANTHROPIC_DEFAULT_FABLE_MODEL",
+  "ANTHROPIC_MODEL",
+  "CLAUDE_CODE_SUBAGENT_MODEL",
+];
 
 const isPlainObject = (value: unknown): value is Record<string, any> =>
   Object.prototype.toString.call(value) === "[object Object]";
@@ -261,4 +271,29 @@ export function applyModelToSettings(
     default:
       return next;
   }
+}
+
+/**
+ * 仅翻转 claude 各模型字段上的 [1M] 标记（深拷贝，原对象不变）。
+ *
+ * 与编辑表单的逐行 handleRoleOneMChange 同语义：开=原地追加、关=原地剥离、
+ * 幂等；各角色模型 base、HAIKU 字段与显示名字段一律不动，保留角色差异。
+ * 非字符串或空白值跳过；非 object 入参按深拷贝语义处理（无法克隆时返回空对象）。
+ */
+export function setClaudeOneMInSettings(
+  settingsConfig: unknown,
+  enabled: boolean,
+): ProviderSettingsConfig {
+  const next: ProviderSettingsConfig = isPlainObject(settingsConfig)
+    ? deepClone(settingsConfig)
+    : {};
+  if (!isPlainObject(next.env)) return next;
+  const env = next.env;
+
+  for (const field of CLAUDE_ONE_M_TOGGLE_FIELDS) {
+    const value = envString(env, field);
+    if (!value.trim()) continue;
+    env[field] = setClaudeOneMMarker(value, enabled);
+  }
+  return next;
 }
