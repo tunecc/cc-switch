@@ -1,0 +1,215 @@
+schema: comet.native.v4
+name: fix-quick-switch-1m
+language: zh-CN
+phase: build
+status: active
+state_version: 2
+brief: brief.md
+spec_changes:
+  - capability: provider-model-quick-view-switch
+    operation: create
+    source: specs/provider-model-quick-view-switch/spec.md
+workspace:
+  isolation: worktree
+  change_branch: comet/fix-quick-switch-1m
+  target_branch: main
+  finish: null
+loop:
+  stage: building
+  goal_cycle: 1
+  iteration: 1
+  attempt: 0
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: submit-builder-candidate
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: claude 供应商 env 含四个 `*_MODEL_NAME`（值=旧模型 base），快捷切换到新模型（1M 关）后，四个 NAME
+      字段均为新模型 base；用户自定义显示名（非空且不等于旧 base / 旧 base[1M]）保留不变。"
+    result: pending
+    reason: null
+  - id: A2
+    source: brief.md
+    text: "A2: 供应商当前主对话模型带 `[1M]` 时打开弹窗，1M 开关为开；不带时为关。"
+    result: pending
+    reason: null
+  - id: A3
+    source: brief.md
+    text: "A3: 当前模型非空、未选择新模型、把 1M
+      开关从关切到开后保存：SONNET/OPUS/FABLE/ANTHROPIC_MODEL/SUBAGENT 原地追加 `[1M]`；HAIKU
+      字段与四个 NAME 字段值不变；各角色原有模型 base 不变（如 opus 与 sonnet 不同，切换后仍不同）。"
+    result: pending
+    reason: null
+  - id: A4
+    source: brief.md
+    text: "A4: 未选择新模型、把 1M 开关从开切到关后保存：上述五个支持 1M 的字段原地剥离 `[1M]`，其余字段不变。"
+    result: pending
+    reason: null
+  - id: A5
+    source: brief.md
+    text: "A5: 未选择新模型且 1M 开关状态与当前一致时，保存按钮不可用（无可应用的变化）。"
+    result: pending
+    reason: null
+  - id: A6
+    source: brief.md
+    text: 'A6: 选择模型后应用的现有行为不变：全角色写为所选模型（1M 开则主字段加标记），四个显示名字段按"空/旧 base/旧 base[1M]
+      覆盖、自定义保留"同步。'
+    result: pending
+    reason: null
+  - id: A7
+    source: brief.md
+    text: "A7: 仅 1M 生效的保存给出成功 toast；保存后弹窗关闭、卡片徽章与列表刷新（现有 invalidateQueries 行为保持）。"
+    result: pending
+    reason: null
+  - id: A8
+    source: brief.md
+    text: "A8: providerModelUtils 新增/调整的单测与现有前端测试全绿。"
+    result: pending
+    reason: null
+  - id: A9
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 卡片显示模型 - **WHEN** Claude app 的供应商设置了 ANTHROPIC_DEFAULT_SONNET_MODEL
+      - **THEN** 卡片名称右侧显示该模型名（不含 [1M] 后缀）
+    result: pending
+    reason: null
+  - id: A10
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 卡片显示 1M 开启标记 - **WHEN** Claude app 的供应商
+      ANTHROPIC_DEFAULT_SONNET_MODEL 原始值为 "model-x[1M]" - **THEN** 卡片名称右侧先显示模型名
+      "model-x"，其后追加显示「1M」小标记
+    result: pending
+    reason: null
+  - id: A11
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 未开启 1M 不显示标记 - **WHEN** Claude app 的供应商
+      ANTHROPIC_DEFAULT_SONNET_MODEL 原始值为 "model-x"（无 [1M]） - **THEN**
+      卡片名称右侧只显示模型名 "model-x"，不显示 1M 标记
+    result: pending
+    reason: null
+  - id: A12
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 非 claude app 不显示 1M 标记 - **WHEN** 查看 codex/grokbuild/gemini app 的供应商卡片模型徽章
+      - **THEN** 徽章只显示模型名，不显示 1M 标记
+    result: pending
+    reason: null
+  - id: A13
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 空模型不显示 - **WHEN** 供应商所有模型字段均空（如官方直连） - **THEN** 卡片不显示模型徽章
+    result: pending
+    reason: null
+  - id: A14
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 范围外 app 不显示 - **WHEN** 查看 pi/openclaw 等 app 的供应商卡片 - **THEN** 不显示模型徽章
+    result: pending
+    reason: null
+  - id: A15
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 拉取模型 - **WHEN** 用户在弹窗点击拉取模型（供应商已配置 baseURL+apiKey） - **THEN** 调用
+      fetchModelsForConfig 获取列表，成功后显示搜索选择器；失败显示对应错误 toast
+    result: pending
+    reason: null
+  - id: A16
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 弹窗盖住顶部 header - **WHEN** 用户打开模型快捷切换弹窗 - **THEN** 顶部 header（含 CC Switch
+      品牌行）被弹窗遮罩与弹窗内容盖住，不再透显在弹窗之上
+    result: pending
+    reason: null
+  - id: A17
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 当前模型与拉取按钮同行 - **WHEN** 弹窗打开 - **THEN**
+      「当前模型」标签与当前模型值在左侧，「获取模型列表」按钮紧随其右侧，二者位于同一行
+    result: pending
+    reason: null
+  - id: A18
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 1M 开关反映当前状态 - **WHEN** 供应商当前主对话模型原始值为 "model-x[1M]"，打开弹窗 - **THEN** 「应用 1M
+      标记」开关显示为开；供应商未开 1M 时打开弹窗，开关显示为关
+    result: pending
+    reason: null
+  - id: A19
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 选择模型后应用 - **WHEN** 用户选中某模型点击保存 - **THEN** 所选模型写入该供应商全部模型角色字段并保存（见写回
+      Requirement），弹窗关闭，卡片模型徽章与列表数据刷新
+    result: pending
+    reason: null
+  - id: A20
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 仅翻转 1M 不换模型 - **WHEN** claude 供应商当前模型非空、用户未选择新模型，把 1M 开关从关切到开后点击保存 -
+      **THEN** 支持 1M 的模型字段原地追加 `[1M]`（见写回 Requirement），各角色模型 base
+      与显示名字段值保持不变，弹窗关闭并刷新；从开切到关时原地剥离 `[1M]`
+    result: pending
+    reason: null
+  - id: A21
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 无可应用变化时保存禁用 - **WHEN** claude 用户未选择模型且 1M 开关状态与供应商当前状态一致 - **THEN** 保存按钮禁用
+    result: pending
+    reason: null
+  - id: A22
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 一键应用含 1M - **WHEN** Claude 供应商选中 model-x 且 1M 开关开启后应用 - **THEN**
+      SONNET/OPUS/FABLE/ANTHROPIC_MODEL/SUBAGENT 字段为 "model-x[1M]"，HAIKU 为
+      "model-x"，四个显示名字段在可覆盖时为 "model-x"
+    result: pending
+    reason: null
+  - id: A23
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 应用时 Haiku 显示名同步 - **WHEN** 供应商 env 含
+      ANTHROPIC_DEFAULT_HAIKU_MODEL="old-haiku" 与
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME="old-haiku"，用户应用 model-x（1M 关） -
+      **THEN** ANTHROPIC_DEFAULT_HAIKU_MODEL 与
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME 均为 "model-x"
+    result: pending
+    reason: null
+  - id: A24
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 应用时保留自定义 Haiku 显示名 - **WHEN** ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME
+      为用户自定义值（非空且不等于旧 base / 旧 base[1M]） - **THEN** 应用新模型后该显示名保持不变
+    result: pending
+    reason: null
+  - id: A25
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 仅开 1M 保留角色差异 - **WHEN** 供应商 SONNET="model-a"、OPUS="model-b"（无
+      [1M]），用户未选模型把 1M 开关打开后保存 - **THEN**
+      SONNET="model-a[1M]"、OPUS="model-b[1M]"，HAIKU 与显示名字段不变
+    result: pending
+    reason: null
+  - id: A26
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 仅关 1M - **WHEN** 供应商 SONNET="model-a[1M]"，用户未选模型把 1M 开关关闭后保存 -
+      **THEN** SONNET="model-a"，HAIKU 与显示名字段不变
+    result: pending
+    reason: null
+  - id: A27
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Codex 应用 - **WHEN** Codex 供应商选中 model-y 后应用 - **THEN** config TOML 的 model
+      = "model-y"，其余 TOML 字段不变
+    result: pending
+    reason: null
+  - id: A28
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 改动集中 - **WHEN** 检查本 change 改动文件 - **THEN** 新逻辑在 ModelQuickSwitch/ 目录与
+      providerModelUtils 工具；ProviderCard 仅模型徽章渲染（含 1M 标记）与弹窗挂载注入点
+    result: pending
+    reason: null
+builder_handoff: null
+blockers: []
+verification: null
+history: []
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pending
+verification_report: null
+archived: false
+created_at: 2026-09-06T04:33:33.356Z

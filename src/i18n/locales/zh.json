@@ -1393,6 +1393,7 @@
     "currentModel": "当前模型",
     "applyOneM": "应用 1M 标记",
     "applied": "已切换为 {{model}}",
+    "appliedOneMOnly": "已更新 1M 标记，模型保持不变",
     "applyFailed": "应用模型失败",
     "noCredentials": "请先在编辑表单配置 API Key 与请求地址",
     "oneMBadge": "1M",
