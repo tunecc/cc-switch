@@ -2682,12 +2682,20 @@ pub fn handle_tray_icon_event(tray: &TrayIcon, event: TrayIconEvent) {
         ..
     } = &event
     {
-        if cfg!(target_os = "windows") && *button == MouseButton::Left {
-            crate::tray_panel::hide_panel(tray.app_handle());
-            show_main_window(tray.app_handle());
-        } else if !crate::tray_panel::uses_native_menu() {
-            crate::tray_panel::toggle(tray.app_handle(), rect);
+        if !crate::tray_panel::uses_native_menu() {
+            // 面板已显示：左键收起面板（上游语义）；左键且面板关着：切换主窗口。
+            let panel_visible = crate::tray_panel::panel_visible(tray.app_handle());
+            if *button == MouseButton::Left && !panel_visible {
+                toggle_main_window(tray.app_handle());
+            } else {
+                crate::tray_panel::toggle(tray.app_handle(), rect);
+            }
             return;
+        }
+        // 原生菜单：Windows 的习惯是左键打开应用、右键出菜单；macOS 左右键都出菜单。
+        // fork 叠加：左键改为切换主窗口（显示/隐藏），不再只显示。
+        if *button == MouseButton::Left {
+            toggle_main_window(tray.app_handle());
         } else {
             // 弹出的菜单里已经有反馈行了：算显示过，下次悬停重建时拿掉。
             mark_feedback_seen();
@@ -3096,6 +3104,38 @@ pub fn apply_tray_policy(app: &tauri::AppHandle, dock_visible: bool) {
 
     if let Err(err) = app.set_activation_policy(desired_policy) {
         log::warn!("设置激活策略失败: {err}");
+    }
+}
+
+/// 隐藏主窗口到托盘：平台处理与"关闭到托盘"（CloseRequested 且
+/// minimize_to_tray_on_close）分支一致——Windows 隐藏任务栏项，macOS 隐藏 Dock 图标。
+pub fn hide_main_window(app: &tauri::AppHandle) {
+    let Some(window) = app.get_webview_window("main") else {
+        return;
+    };
+    let _ = window.hide();
+    #[cfg(target_os = "windows")]
+    {
+        let _ = window.set_skip_taskbar(true);
+    }
+    #[cfg(target_os = "macos")]
+    apply_tray_policy(app, false);
+}
+
+/// 托盘图标左键单击：主窗口可见且未最小化时隐藏到托盘，否则还原显示并聚焦。
+///
+/// 调用方需保证只在左键 `Click`（`button_state` 为 `Up`）时触发一次：
+/// macOS/Windows 每次点击会先后产生 Down/Up 两次 `Click` 事件，不过滤会双切。
+pub fn toggle_main_window(app: &tauri::AppHandle) {
+    let Some(window) = app.get_webview_window("main") else {
+        show_main_window(app);
+        return;
+    };
+    let is_minimized = window.is_minimized().unwrap_or(false);
+    if window.is_visible().unwrap_or(false) && !is_minimized {
+        hide_main_window(app);
+    } else {
+        show_main_window(app);
     }
 }
 

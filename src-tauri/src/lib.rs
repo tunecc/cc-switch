@@ -1195,7 +1195,7 @@ pub fn run() {
                 Err(e) => log::warn!("读取启动时的深链接失败: {e}"),
             }
 
-            // 构建托盘：Windows 左键打开主界面，右键默认弹出面板；macOS 左右键默认都弹出面板。
+            // 构建托盘：fork 语义——左键单击切换主窗口显示/隐藏；右键按所选样式弹出面板或原生菜单。
             // 设置里打开「原生托盘菜单」就挂原生菜单（`tray::apply_tray_style` 运行时切换）。
             // Linux（AppIndicator）不派发点击事件，只能出原生菜单，菜单里有一项打开面板。
             let native_menu = tray_panel::uses_native_menu();
@@ -1205,7 +1205,8 @@ pub fn run() {
                 .on_menu_event(|app, event| {
                     tray::handle_tray_menu_event(app, &event.id.0);
                 })
-                .show_menu_on_left_click(tray::native_menu_on_left_click(native_menu));
+                // fork：左键不弹菜单（改为切换主窗口 / 面板），菜单仅右键弹出。
+                .show_menu_on_left_click(false);
             if native_menu {
                 let menu = tray::create_tray_menu(app.handle(), &app_state)?;
                 tray_builder = tray_builder.menu(&menu);
@@ -1999,20 +2000,9 @@ pub fn run() {
             // RunEvent::Opened（ccswitch:// 链接）不在这里处理：deep-link 插件的 on_event 已把它
             // 转成 on_open_url 回调，这里再处理一遍会让同一条链接触发两次导入。
             if let RunEvent::Reopen { .. } = event {
-                if let Some(window) = app_handle.get_webview_window("main") {
-                    #[cfg(target_os = "windows")]
-                    {
-                        let _ = window.set_skip_taskbar(false);
-                    }
-                    let _ = window.unminimize();
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                    tray::apply_tray_policy(app_handle, true);
-                } else if crate::lightweight::is_lightweight_mode() {
-                    if let Err(e) = crate::lightweight::exit_lightweight_mode(app_handle) {
-                        log::error!("退出轻量模式重建窗口失败: {e}");
-                    }
-                }
+                // fork：与 show_main 菜单事件复用 tray::show_main_window（含窗口恢复、apply_tray_policy
+                // 与轻量模式退出）。
+                tray::show_main_window(app_handle);
             }
         }
 
