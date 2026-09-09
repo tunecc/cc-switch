@@ -101,7 +101,8 @@ function settingsToForm(settings: ConnectivityTestSettings): FormState {
       settings.headers !== undefined
         ? JSON.stringify(settings.headers, null, 2)
         : "",
-    bodyText: settings.body !== undefined ? JSON.stringify(settings.body, null, 2) : "",
+    bodyText:
+      settings.body !== undefined ? JSON.stringify(settings.body, null, 2) : "",
   };
 }
 
@@ -181,8 +182,7 @@ function SummaryGrid({ stats }: { stats: SummaryStat[] }) {
           <div
             className={cn(
               "text-base font-semibold tabular-nums",
-              stat.tone === "success" &&
-                "text-green-600 dark:text-green-400",
+              stat.tone === "success" && "text-green-600 dark:text-green-400",
               stat.tone === "failed" && "text-red-600 dark:text-red-400",
             )}
           >
@@ -288,15 +288,11 @@ export function ConnectivityTestDialog({
   const updateForm = (patch: Partial<FormState>) =>
     setForm((prev) => ({ ...prev, ...patch }));
 
-  const allSelected =
-    allIds.length > 0 && selected.length === allIds.length;
+  const allSelected = allIds.length > 0 && selected.length === allIds.length;
   const someSelected = selected.length > 0 && !allSelected;
 
   const anyRunning = useMemo(
-    () =>
-      allIds.some(
-        (modelId) => results[modelId]?.status === "running",
-      ),
+    () => allIds.some((modelId) => results[modelId]?.status === "running"),
     [allIds, results],
   );
 
@@ -352,10 +348,7 @@ export function ConnectivityTestDialog({
         }
       })
       .catch((err) => {
-        console.warn(
-          "[ConnectivityTest] Failed to fetch models:",
-          err,
-        );
+        console.warn("[ConnectivityTest] Failed to fetch models:", err);
         showFetchModelsError(err, t);
       })
       .finally(() => setIsFetching(false));
