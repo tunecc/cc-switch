@@ -692,9 +692,7 @@ export function ProviderList({
           appId={appId}
           open={testProvider.open}
           onOpenChange={(open) =>
-            setTestProvider((prev) =>
-              prev ? { ...prev, open } : prev,
-            )
+            setTestProvider((prev) => (prev ? { ...prev, open } : prev))
           }
         />
       )}
