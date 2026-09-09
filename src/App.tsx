@@ -325,8 +325,11 @@ function App() {
   const currentProviderId = data?.currentProviderId ?? "";
   // 批量连通性探针：状态提升到 App（header 按钮与供应商卡片徽标的最近
   // 公共祖先）；App 不随 app 切换重挂，appId 自清空由 hook 内部完成
-  const { results: probeResults, probeAll, stopProbe } =
-    useConnectivityProbe(activeApp);
+  const {
+    results: probeResults,
+    probeAll,
+    stopProbe,
+  } = useConnectivityProbe(activeApp);
   const isProbeRunning = Object.values(probeResults).some(
     (entry) => entry.status === "waiting" || entry.status === "running",
   );

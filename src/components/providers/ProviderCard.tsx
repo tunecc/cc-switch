@@ -793,11 +793,11 @@ export function ProviderCard({
                 // 后端 is_probe_capable 同口径。点击只打开弹窗，真实请求由
                 // ConnectivityTestDialog 内部的 useConnectivityTest 触发。
                 onTest &&
-                  shouldShowTestEntry(
-                    appId,
-                    provider.category,
-                    provider.meta?.providerType,
-                  )
+                shouldShowTestEntry(
+                  appId,
+                  provider.category,
+                  provider.meta?.providerType,
+                )
                   ? () => onTest(provider)
                   : undefined
               }
