@@ -112,10 +112,7 @@ pub fn build_claude(
             let model = transform_gemini::extract_gemini_model(&body)
                 .map(|m| normalize_gemini_model_id(m).to_string())
                 .unwrap_or_else(|| "unknown".to_string());
-            let is_stream = body
-                .get("stream")
-                .and_then(Value::as_bool)
-                .unwrap_or(false);
+            let is_stream = body.get("stream").and_then(Value::as_bool).unwrap_or(false);
             if is_stream {
                 format!("/v1beta/models/{model}:streamGenerateContent?alt=sse")
             } else {
@@ -130,9 +127,7 @@ pub fn build_claude(
     // 非 anthropic 格式复用代理层转换函数得到最终协议请求体。
     if claude_api_format_needs_transform(api_format) {
         body = transform_claude_request_for_api_format(body, provider, api_format, None, None)
-            .map_err(|e| {
-                AppError::Message(format!("转换 Claude 请求为 {api_format} 失败: {e}"))
-            })?;
+            .map_err(|e| AppError::Message(format!("转换 Claude 请求为 {api_format} 失败: {e}")))?;
     }
 
     // URL：gemini_native 走专门解析（含 full-URL 归一化）；full-URL 直接使用 base；
@@ -161,7 +156,10 @@ pub fn build_claude(
     // 真实链路：Claude + anthropic 格式补 anthropic-version / anthropic-beta。
     if api_format == "anthropic" {
         headers.push(("anthropic-version".to_string(), "2023-06-01".to_string()));
-        headers.push(("anthropic-beta".to_string(), "claude-code-20250219".to_string()));
+        headers.push((
+            "anthropic-beta".to_string(),
+            "claude-code-20250219".to_string(),
+        ));
     }
     headers.push(("Content-Type".to_string(), "application/json".to_string()));
 
@@ -253,7 +251,9 @@ pub fn build_codex(
             body,
             DEFAULT_CODEX_ANTHROPIC_MAX_TOKENS,
         )
-        .map_err(|e| AppError::Message(format!("转换 Codex 请求为 Anthropic Messages 失败: {e}")))?;
+        .map_err(|e| {
+            AppError::Message(format!("转换 Codex 请求为 Anthropic Messages 失败: {e}"))
+        })?;
         if let Some(model) = body.get("model").and_then(Value::as_str) {
             let stripped = strip_one_m_suffix_for_upstream(model);
             if stripped != model {
@@ -298,7 +298,10 @@ pub fn build_codex(
     if codex_responses_to_anthropic {
         headers.push(("anthropic-version".to_string(), "2023-06-01".to_string()));
         if codex_anthropic_one_m {
-            headers.push(("anthropic-beta".to_string(), "context-1m-2025-08-07".to_string()));
+            headers.push((
+                "anthropic-beta".to_string(),
+                "context-1m-2025-08-07".to_string(),
+            ));
         }
         if !stream {
             headers.push(("Accept".to_string(), "application/json".to_string()));
@@ -321,7 +324,12 @@ pub fn build_codex(
 fn auth_headers_vec(headers: Vec<(http::HeaderName, http::HeaderValue)>) -> Vec<(String, String)> {
     headers
         .into_iter()
-        .map(|(name, value)| (name.to_string(), value.to_str().unwrap_or_default().to_string()))
+        .map(|(name, value)| {
+            (
+                name.to_string(),
+                value.to_str().unwrap_or_default().to_string(),
+            )
+        })
         .collect()
 }
 
@@ -420,7 +428,11 @@ fn json_reports_error(value: &Value) -> Option<String> {
     {
         return Some(describe_error(value));
     }
-    if value.get("status").and_then(Value::as_str).is_some_and(|s| s == "failed") {
+    if value
+        .get("status")
+        .and_then(Value::as_str)
+        .is_some_and(|s| s == "failed")
+    {
         return Some(describe_error(value));
     }
     if let Some(response) = value.get("response") {
@@ -438,15 +450,12 @@ fn json_reports_error(value: &Value) -> Option<String> {
 
 /// 提取错误描述：优先取 `message`，其次 `error.message`。
 fn describe_error(value: &Value) -> String {
-    let message = value
-        .get("message")
-        .and_then(Value::as_str)
-        .or_else(|| {
-            value
-                .get("error")
-                .and_then(|error| error.get("message"))
-                .and_then(Value::as_str)
-        });
+    let message = value.get("message").and_then(Value::as_str).or_else(|| {
+        value
+            .get("error")
+            .and_then(|error| error.get("message"))
+            .and_then(Value::as_str)
+    });
     match message {
         Some(msg) if !msg.trim().is_empty() => format!("error: {}", msg.trim()),
         _ => "error".to_string(),
@@ -514,7 +523,12 @@ fn describe_sse(block: &str, event: Option<&str>) -> String {
     let detail = sse_data_payload(block)
         .as_deref()
         .and_then(|payload| serde_json::from_str::<Value>(payload).ok())
-        .and_then(|value| value.get("message").and_then(Value::as_str).map(ToString::to_string))
+        .and_then(|value| {
+            value
+                .get("message")
+                .and_then(Value::as_str)
+                .map(ToString::to_string)
+        })
         .map(|message| format!(": {}", message.trim()))
         .unwrap_or_default();
     format!("sse {event_desc}{detail}")
@@ -578,7 +592,10 @@ mod tests {
         }));
         let params = ConnectivityTestParams::default();
         let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
-        assert_eq!(header(&target.headers, "Authorization"), Some("Bearer sk-ant-token"));
+        assert_eq!(
+            header(&target.headers, "Authorization"),
+            Some("Bearer sk-ant-token")
+        );
         assert!(header(&target.headers, "x-api-key").is_none());
     }
 
@@ -612,7 +629,10 @@ mod tests {
         }));
         let params = ConnectivityTestParams::default();
         let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
-        assert_eq!(header(&target.headers, "x-api-key"), Some("sk-ant-top-level"));
+        assert_eq!(
+            header(&target.headers, "x-api-key"),
+            Some("sk-ant-top-level")
+        );
         assert!(header(&target.headers, "Authorization").is_none());
     }
 
@@ -625,7 +645,10 @@ mod tests {
         }));
         let params = ConnectivityTestParams::default();
         let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
-        assert_eq!(header(&target.headers, "x-api-key"), Some("sk-ant-top-snake"));
+        assert_eq!(
+            header(&target.headers, "x-api-key"),
+            Some("sk-ant-top-snake")
+        );
     }
 
     #[test]
@@ -672,7 +695,10 @@ mod tests {
         }));
         let params = ConnectivityTestParams::default();
         let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
-        assert_eq!(header(&target.headers, "Authorization"), Some("Bearer sk-ant-token"));
+        assert_eq!(
+            header(&target.headers, "Authorization"),
+            Some("Bearer sk-ant-token")
+        );
         assert!(header(&target.headers, "x-api-key").is_none());
     }
 
@@ -777,7 +803,10 @@ mod tests {
         };
         let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
         assert_eq!(header(&target.headers, "X-Test"), Some("abc"));
-        assert_eq!(header(&target.headers, "content-type"), Some("application/json"));
+        assert_eq!(
+            header(&target.headers, "content-type"),
+            Some("application/json")
+        );
         // 流式请求需要 Accept: text/event-stream
         assert_eq!(header(&target.headers, "accept"), Some("text/event-stream"));
     }
@@ -828,7 +857,10 @@ mod tests {
         assert!(header(&target.headers, "anthropic-version").is_none());
         assert!(header(&target.headers, "anthropic-beta").is_none());
         // 鉴权与真实链路同源：AUTH_TOKEN → Bearer
-        assert_eq!(header(&target.headers, "authorization"), Some("Bearer sk-ant-token"));
+        assert_eq!(
+            header(&target.headers, "authorization"),
+            Some("Bearer sk-ant-token")
+        );
     }
 
     #[test]
@@ -932,7 +964,10 @@ mod tests {
             ..ConnectivityTestParams::default()
         };
         let target = build_claude(&p, "gemini-2.5-pro", &params).unwrap();
-        assert_eq!(header(&target.headers, "authorization"), Some("Bearer ya-token"));
+        assert_eq!(
+            header(&target.headers, "authorization"),
+            Some("Bearer ya-token")
+        );
         assert!(header(&target.headers, "x-goog-api-key").is_none());
     }
 
@@ -948,8 +983,14 @@ mod tests {
         let params = ConnectivityTestParams::default();
         let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
         assert_eq!(target.url, "https://api.anthropic.com/v1/messages");
-        assert_eq!(header(&target.headers, "anthropic-version"), Some("2023-06-01"));
-        assert_eq!(header(&target.headers, "anthropic-beta"), Some("claude-code-20250219"));
+        assert_eq!(
+            header(&target.headers, "anthropic-version"),
+            Some("2023-06-01")
+        );
+        assert_eq!(
+            header(&target.headers, "anthropic-beta"),
+            Some("claude-code-20250219")
+        );
     }
 
     #[test]
@@ -978,7 +1019,10 @@ mod tests {
         }));
         let params = ConnectivityTestParams::default();
         let target = build_claude(&p, "claude-sonnet-5", &params).unwrap();
-        assert_eq!(header(&target.headers, "authorization"), Some("Bearer sk-or-token"));
+        assert_eq!(
+            header(&target.headers, "authorization"),
+            Some("Bearer sk-or-token")
+        );
         assert!(header(&target.headers, "x-api-key").is_none());
     }
 
@@ -1056,29 +1100,35 @@ wire_api = "responses"
         // env.OPENAI_API_KEY 优先
         let p = provider(json!({
             "config": r#"base_url = "https://api.openai.com/v1"
-"#,
+        "#,
             "env": { "OPENAI_API_KEY": "sk-env-key" },
             "auth": { "OPENAI_API_KEY": "sk-auth-key" }
         }));
         let params = ConnectivityTestParams::default();
         let target = build_codex(&p, "gpt-5.5", &params).unwrap();
-        assert_eq!(header(&target.headers, "Authorization"), Some("Bearer sk-env-key"));
+        assert_eq!(
+            header(&target.headers, "Authorization"),
+            Some("Bearer sk-env-key")
+        );
 
         // auth.OPENAI_API_KEY 兜底
         let p2 = provider(json!({
             "config": r#"base_url = "https://api.openai.com/v1"
-"#,
+        "#,
             "auth": { "OPENAI_API_KEY": "sk-auth-key" }
         }));
         let target2 = build_codex(&p2, "gpt-5.5", &params).unwrap();
-        assert_eq!(header(&target2.headers, "Authorization"), Some("Bearer sk-auth-key"));
+        assert_eq!(
+            header(&target2.headers, "Authorization"),
+            Some("Bearer sk-auth-key")
+        );
     }
 
     #[test]
     fn codex_missing_auth_is_error() {
         let p = provider(json!({
             "config": r#"base_url = "https://api.openai.com/v1"
-"#
+        "#
         }));
         let params = ConnectivityTestParams::default();
         assert!(build_codex(&p, "gpt-5.5", &params).is_err());
@@ -1130,7 +1180,10 @@ wire_api = "responses"
         let target = build_codex(&p, "gpt-5.5", &params).unwrap();
         assert_eq!(target.body["store"], true);
         // 自定义 header 覆盖默认 Authorization
-        assert_eq!(header(&target.headers, "Authorization"), Some("Bearer custom"));
+        assert_eq!(
+            header(&target.headers, "Authorization"),
+            Some("Bearer custom")
+        );
         // 显式提供的 temperature 写入请求体
         assert_eq!(target.body["temperature"], 0.9);
     }
@@ -1163,7 +1216,10 @@ wire_api = "chat"
         // 非默认 wire 不带 anthropic 头
         assert!(header(&target.headers, "anthropic-version").is_none());
         // 鉴权仍为 Bearer
-        assert_eq!(header(&target.headers, "authorization"), Some("Bearer sk-key"));
+        assert_eq!(
+            header(&target.headers, "authorization"),
+            Some("Bearer sk-key")
+        );
     }
 
     #[test]
@@ -1199,10 +1255,16 @@ wire_api = "anthropic"
         assert_eq!(target.body["max_tokens"], 8192);
         assert_eq!(target.body["stream"], true);
         // apiKeyField=ANTHROPIC_API_KEY → x-api-key，Bearer 不出现
-        assert_eq!(header(&target.headers, "x-api-key"), Some("sk-anthropic-key"));
+        assert_eq!(
+            header(&target.headers, "x-api-key"),
+            Some("sk-anthropic-key")
+        );
         assert!(header(&target.headers, "authorization").is_none());
         // anthropic-version 补默认值（无 beta，除非 [1m] / 伪装）
-        assert_eq!(header(&target.headers, "anthropic-version"), Some("2023-06-01"));
+        assert_eq!(
+            header(&target.headers, "anthropic-version"),
+            Some("2023-06-01")
+        );
         assert!(header(&target.headers, "anthropic-beta").is_none());
     }
 
@@ -1223,7 +1285,10 @@ wire_api = "anthropic"
             ..ConnectivityTestParams::default()
         };
         let target = build_codex(&p, "claude-sonnet-5", &params).unwrap();
-        assert_eq!(header(&target.headers, "authorization"), Some("Bearer sk-anthropic-token"));
+        assert_eq!(
+            header(&target.headers, "authorization"),
+            Some("Bearer sk-anthropic-token")
+        );
         assert!(header(&target.headers, "x-api-key").is_none());
         // 非流式补 Accept: application/json，且不带 text/event-stream
         assert_eq!(header(&target.headers, "Accept"), Some("application/json"));
@@ -1245,8 +1310,14 @@ wire_api = "anthropic"
         let params = ConnectivityTestParams::default();
         let target = build_codex(&p, "claude-sonnet-5[1m]", &params).unwrap();
         assert_eq!(target.body["model"], "claude-sonnet-5");
-        assert_eq!(header(&target.headers, "anthropic-beta"), Some("context-1m-2025-08-07"));
-        assert_eq!(header(&target.headers, "anthropic-version"), Some("2023-06-01"));
+        assert_eq!(
+            header(&target.headers, "anthropic-beta"),
+            Some("context-1m-2025-08-07")
+        );
+        assert_eq!(
+            header(&target.headers, "anthropic-version"),
+            Some("2023-06-01")
+        );
     }
 
     #[test]
@@ -1309,8 +1380,14 @@ wire_api = "anthropic"
 
     #[test]
     fn for_app_maps_claude_and_codex_only() {
-        assert_eq!(TargetBuilder::for_app(&AppType::Claude), Some(TargetBuilder::Claude));
-        assert_eq!(TargetBuilder::for_app(&AppType::Codex), Some(TargetBuilder::Codex));
+        assert_eq!(
+            TargetBuilder::for_app(&AppType::Claude),
+            Some(TargetBuilder::Claude)
+        );
+        assert_eq!(
+            TargetBuilder::for_app(&AppType::Codex),
+            Some(TargetBuilder::Codex)
+        );
         assert_eq!(TargetBuilder::for_app(&AppType::Gemini), None);
         assert_eq!(TargetBuilder::for_app(&AppType::OpenCode), None);
     }
@@ -1342,7 +1419,10 @@ wire_api = "anthropic"
 
     #[test]
     fn json_response_status_failed_reports_error() {
-        assert!(body_reports_error(br#"{"response":{"status":"failed","error":{"message":"failed"}}}"#).is_some());
+        assert!(body_reports_error(
+            br#"{"response":{"status":"failed","error":{"message":"failed"}}}"#
+        )
+        .is_some());
     }
 
     #[test]
