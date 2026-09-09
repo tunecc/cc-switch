@@ -126,12 +126,8 @@ async fn run_one(
 
     // 构造 target（URL + headers + body）；错误不 panic，转 error result
     let target = match builder {
-        protocol::TargetBuilder::Claude => {
-            protocol::build_claude(provider, model_id, params)
-        }
-        protocol::TargetBuilder::Codex => {
-            protocol::build_codex(provider, model_id, params)
-        }
+        protocol::TargetBuilder::Claude => protocol::build_claude(provider, model_id, params),
+        protocol::TargetBuilder::Codex => protocol::build_codex(provider, model_id, params),
     };
     let target = match target {
         Ok(target) => target,
@@ -152,23 +148,11 @@ async fn run_one(
     for (name, value) in &target.headers {
         let header_name = match reqwest::header::HeaderName::from_bytes(name.as_bytes()) {
             Ok(name) => name,
-            Err(_) => {
-                return error_result(
-                    model_id,
-                    &format!("非法请求头名: {name}"),
-                    &started,
-                )
-            }
+            Err(_) => return error_result(model_id, &format!("非法请求头名: {name}"), &started),
         };
         let header_value = match reqwest::header::HeaderValue::from_str(value) {
             Ok(value) => value,
-            Err(_) => {
-                return error_result(
-                    model_id,
-                    &format!("非法请求头值: {name}"),
-                    &started,
-                )
-            }
+            Err(_) => return error_result(model_id, &format!("非法请求头值: {name}"), &started),
         };
         header_map.insert(header_name, header_value);
     }
@@ -198,7 +182,12 @@ async fn run_one(
         &response
             .headers()
             .iter()
-            .map(|(name, value)| (name.to_string(), value.to_str().unwrap_or_default().to_string()))
+            .map(|(name, value)| {
+                (
+                    name.to_string(),
+                    value.to_str().unwrap_or_default().to_string(),
+                )
+            })
             .collect::<Vec<(String, String)>>(),
     );
 
@@ -244,22 +233,20 @@ async fn run_one(
         // 非流式：读取完整 body；reqwest 的请求级 `.timeout()` 只覆盖建连+响应头，
         // 这里再用剩余总超时兜底 body 读取（对齐"timeout_secs 覆盖整流"语义）
         match remaining_total_timeout(total_timeout, started.elapsed()) {
-            Some(remaining) => {
-                match tokio::time::timeout(remaining, response.bytes()).await {
-                    Ok(Ok(bytes)) => {
-                        drained = Some(bytes.to_vec());
-                        if first_byte_ms.is_none() {
-                            first_byte_ms = Some(elapsed_ms(&started));
-                        }
-                    }
-                    Ok(Err(e)) => {
-                        stream_error = Some(e.to_string());
-                    }
-                    Err(_) => {
-                        stream_error = Some("response body exceeded the total timeout".to_string());
+            Some(remaining) => match tokio::time::timeout(remaining, response.bytes()).await {
+                Ok(Ok(bytes)) => {
+                    drained = Some(bytes.to_vec());
+                    if first_byte_ms.is_none() {
+                        first_byte_ms = Some(elapsed_ms(&started));
                     }
                 }
-            }
+                Ok(Err(e)) => {
+                    stream_error = Some(e.to_string());
+                }
+                Err(_) => {
+                    stream_error = Some("response body exceeded the total timeout".to_string());
+                }
+            },
             None => {
                 stream_error = Some("response body exceeded the total timeout".to_string());
             }
@@ -369,11 +356,7 @@ fn elapsed_ms(started: &Instant) -> u64 {
 }
 
 /// 构造错误结果：仅填充 model_id / status / error_message / 度量与空请求元数据。
-fn error_result(
-    model_id: &str,
-    error_message: &str,
-    started: &Instant,
-) -> ConnectivityTestResult {
+fn error_result(model_id: &str, error_message: &str, started: &Instant) -> ConnectivityTestResult {
     ConnectivityTestResult {
         model_id: model_id.to_string(),
         status: "error".to_string(),
@@ -533,8 +516,7 @@ mod tests {
             None,
         );
         let params = ConnectivityTestParams::default();
-        let target =
-            protocol::build_claude(&provider, "claude-sonnet-5", &params).unwrap();
+        let target = protocol::build_claude(&provider, "claude-sonnet-5", &params).unwrap();
         let request_headers = headers_to_value(&target.headers);
         let json = serde_json::to_value(&request_headers).unwrap();
         assert!(json.get("Authorization").is_none());
