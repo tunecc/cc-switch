@@ -1410,4 +1410,6 @@ impl Database {
 }
 
 #[cfg(test)]
+<<<<<<< HEAD
 mod tests;
+=======
