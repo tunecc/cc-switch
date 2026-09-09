@@ -17,7 +17,10 @@ pub fn model_ids_from_settings(app_type: &AppType, settings: &Value) -> Vec<Stri
     if out.is_empty() {
         match app_type {
             AppType::Claude => {
-                if let Some(m) = settings.pointer("/env/ANTHROPIC_MODEL").and_then(Value::as_str) {
+                if let Some(m) = settings
+                    .pointer("/env/ANTHROPIC_MODEL")
+                    .and_then(Value::as_str)
+                {
                     let t = m.trim();
                     if !t.is_empty() {
                         out.push(t.to_string());
@@ -104,7 +107,10 @@ mod tests {
         );
         // 无 modelCatalog → 回退 ANTHROPIC_MODEL
         let s2 = json!({ "env": { "ANTHROPIC_MODEL": "kimi-k2.7-code" } });
-        assert_eq!(model_ids_from_settings(&AppType::Claude, &s2), vec!["kimi-k2.7-code"]);
+        assert_eq!(
+            model_ids_from_settings(&AppType::Claude, &s2),
+            vec!["kimi-k2.7-code"]
+        );
         // 都空 → 空 list
         assert!(model_ids_from_settings(&AppType::Claude, &json!({})).is_empty());
     }
