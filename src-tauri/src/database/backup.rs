@@ -2327,14 +2327,7 @@ mod tests {
                 (SELECT COUNT(*) FROM usage_daily_rollups),
                 (SELECT COUNT(*) FROM session_log_sync)",
             [],
-            |row| {
-                Ok((
-                    row.get(0)?,
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                ))
-            },
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
         )?;
         assert_eq!(
             preserved_counts,
