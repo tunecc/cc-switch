@@ -1,0 +1,514 @@
+schema: comet.native.v4
+name: sync-upstream
+language: zh-CN
+phase: archive
+status: done
+state_version: 23
+brief: brief.md
+shape_confirmation_hash: b25d317c963af12ea4df9aad2c75e23f33ad25e49ad7eab65d6dcf67dbf6acd2
+spec_changes:
+  - capability: upstream-sync
+    operation: create
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 3
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main upstream/main` 等于 upstream/main
+      HEAD（f3b18df1），且 `git log upstream/main..main` 只包含 fork 提交。"
+    result: passed
+    reason:
+      text: 实测 git merge-base main upstream/main =
+        f3b18df12007d0fd79fd8ad8d310880664015197，与 git rev-parse upstream/main
+        完全一致
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: fork 全部本地提交在 rebase 后仍存在（提交数与内容对应，无丢失；可用 `git log --oneline
+      upstream/main..main | wc -l` 与 rebase 前对比）。"
+    result: passed
+    reason:
+      text: rev-list --no-merges upstream/main..main 计 98（rebase 前 3217f725..22f5f1a1
+        非合并提交 96 + 收尾 b8a51f4b/9f88f31f 2 个），--cherry-pick --right-only
+        main...upstream/main 为空（上游 54 提交全包含）、left-only 计
+        98，forkBuild.ts/connectivity_test.rs/ModelQuickSwitch 等 fork 专属文件均在
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml` 的
+      version 均为 `3.20.2-1`。"
+    result: passed
+    reason:
+      text: package.json、src-tauri/tauri.conf.json 的 "version" 与 src-tauri/Cargo.toml
+        的 version 实测均为 3.20.2-1
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4: 冲突解决符合文档 §3 约定：白名单文件保留 fork 侧改动；共享文件以上游为基础叠加 fork 改动（抽查
+      `src/App.tsx`、`src/contexts/UpdateContext.tsx`、`src/config/piProviderPres\
+      ets.ts`、`src/i18n/locales/zh.json`）。"
+    result: passed
+    reason:
+      text: 抽查通过：App.tsx:212 有 IS_FORK_BUILD 守卫、UpdateContext.tsx:119 保留 fork
+        关闭自动更新语义、piProviderPresets.ts 的 hidden 字段(49 行)与上游 SoleAPI 预设(723
+        行)共存、zh.json 同时含 devpanel 与 connectivityTest 键段、lib.rs:1099 保留
+        show_menu_on_left_click(false)、README.md 为 fork 重写版
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: `pnpm typecheck` 通过。"
+    result: passed
+    reason:
+      text: Runtime v3-typecheck 已执行通过（exit 0, 9145ms），按验收约定采信该结果
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: `pnpm test:unit`（vitest）通过。"
+    result: passed
+    reason:
+      text: Runtime v3-vitest 已执行通过（exit 0, 28156ms），按验收约定采信该结果
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: `cargo check`（src-tauri）通过。"
+    result: passed
+    reason:
+      text: Runtime v3-cargo-check 已执行通过（exit 0, 786ms），按验收约定采信该结果
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `cargo test`（src-tauri）通过。已知环境性例外：上游自带测试
+      `update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover\
+      _is_active` 在本机 cc-switch 应用运行时会因代理默认端口 15721
+      被占用而失败（上游测试设计如此，需绑定真实端口），该失败不构成本次同步引入的缺陷；用户已明确接受此例外。验收执行时以 `cargo test --
+      --skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active` 作为检查命令（显式跳过该环境性测试，跳过原因记录于检查计划），其余全部测试必须通过。"
+    result: passed
+    reason:
+      text: Runtime 按修订标准执行 cargo test -- --skip <该测试> 通过（exit 0）；独立核验：该测试名在
+        src-tauri/src 仅出现 1 处（services/provider/mod.rs:2010），--skip
+        子串过滤只跳过目标测试；环境性证据成立——lsof 实测运行中 cc-switch（PID 2353）LISTEN
+        127.0.0.1:15721，schema.rs 多处 DEFAULT 15721，panic 文案「地址绑定失败」源自
+        proxy/error.rs:20，且该测试上游自带（upstream/main 的 mod.rs:2006 同名），fork sanitize
+        测试（live.rs:2449）与上游测试并存
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `docs/HOW_TO_REBASE_UPSTREAM.md` 白名单包含本次新增 fork
+      专属文件（连通性测试、双官网链接、托盘左键切换等）。"
+    result: passed
+    reason:
+      text: §4
+        白名单表包含连通性测试前后端（connectivity_test.rs、services/connectivity_test/、各弹窗/hooks/api
+        文件）、模型快捷切换（providerModelIds/ModelQuickSwitch 等）、CI
+        裁剪（ci.yml/release.yml）、README/CHANGELOG 等新条目，§3.1 已含 2026-09-08
+        修正说明（rebase 中 --theirs 为 fork 侧）
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: 经用户授权后，`git push --force-with-lease origin main` 成功，origin/main 与本地
+      main 一致。"
+    result: passed
+    reason:
+      text: 实测 git rev-parse origin/main 与 main 均为
+        9f88f31ff16afa22aa2e70fafb11eb7a8684d313，git status 显示分支与 origin/main 一致
+      truncated: false
+builder_handoff:
+  candidate_id: ed315db9-1af2-4728-931a-c152dface885
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:7dd6da86-faf5-4cd2-b7d2-120c0510594b
+  iteration: 1
+  summary:
+    text: 重新提交同一候选（实现零变化；本轮验收标准已按用户确认修订：A8 含环境性例外条款）。上游 v3.20.2 同步已完成：git rebase
+      upstream/main 将 96 个 fork 非合并提交全部重放到 f3b18df1（merge-base 对齐，上游 54 提交内容经
+      cherry 检查全部包含，无残留冲突标记）。冲突按 docs/HOW_TO_REBASE_UPSTREAM.md 约定解决：版本文件保留 fork
+      侧、Cargo.lock 取上游侧后由 cargo check 重新同步（updater 依赖树随 fork Cargo.toml
+      移除）、README 保留 fork 重写版、live.rs 上游新测试与 fork sanitize 测试并存、AboutSection 保留
+      fork releases 跳转语义。版本号三处统一 3.20.2-1（b8a51f4b），白名单文档补充连通性测试时代 fork 专属文件并修正
+      §3.1 rebase 方向错误（9f88f31f）。已按用户授权 force-with-lease 推送
+      origin/main（9f88f31f，远端一致）。本轮 Runtime 检查计划按修订后的 A8 执行：cargo test
+      显式跳过环境性测试（端口 15721 被运行中应用占用，上游测试设计如此）。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+  checks:
+    - name:
+        text: git merge-base main upstream/main == f3b18df1
+        truncated: false
+      result: passed
+      note:
+        text: A1
+        truncated: false
+    - name:
+        text: git rev-list --count --no-merges upstream/main..main == 98（重放 96 + 收尾 2）
+        truncated: false
+      result: passed
+      note:
+        text: A2
+        truncated: false
+    - name:
+        text: git log --cherry-pick --right-only main...upstream/main 为空
+        truncated: false
+      result: passed
+      note:
+        text: A2 上游内容完整性
+        truncated: false
+    - name:
+        text: package.json/tauri.conf.json/Cargo.toml version == 3.20.2-1
+        truncated: false
+      result: passed
+      note:
+        text: A3
+        truncated: false
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: A5
+        truncated: false
+    - name:
+        text: pnpm test:unit（vitest）146 文件 1222 测试全过
+        truncated: false
+      result: passed
+      note:
+        text: A6
+        truncated: false
+    - name:
+        text: cargo check（src-tauri）
+        truncated: false
+      result: passed
+      note:
+        text: A7，Cargo.lock 已同步
+        truncated: false
+    - name:
+        text: cargo test -- --skip
+          update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+        truncated: false
+      result: passed
+      note:
+        text: A8 按修订后标准执行：显式跳过环境性测试（端口 15721 被运行中应用占用，上游测试设计如此，用户已确认例外），其余 2877 项全部通过
+        truncated: false
+    - name:
+        text: git push --force-with-lease origin main
+        truncated: false
+      result: passed
+      note:
+        text: A10：22f5f1a1...9f88f31f forced update，origin/main == 本地 main
+        truncated: false
+    - name:
+        text: 冲突解决抽查（App.tsx/UpdateContext/presets hidden/locales
+          devpanel+connectivity/托盘左键）
+        truncated: false
+      result: passed
+      note:
+        text: A4
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 环境性测试
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+        被显式跳过（用户确认的 A8 例外条款）；应用退出后完整 cargo test 应通过
+      truncated: false
+    - text: rebase 线性化了 2 个 fork 合并提交（默认 rebase 行为），96 个非合并提交全部保留
+      truncated: false
+    - text: ddbee229 重放时版本号按上次同步先例适配为 3.20.2-fork.1（原为 3.20.0-fork.1），最终版本由 b8a51f4b
+        统一为 3.20.2-1
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 全新只读复查（goal_cycle 3）：merge-base=f3b18df1、fork 非合并提交 98、三处版本号
+        3.20.2-1、无残留冲突标记、origin/main==main==9f88f31f、fork 功能文件抽查齐全；A8
+        按修订后标准以显式跳过命令验证（其余 2877 项全过）。候选内容与上轮验收时零差异，仅验收标准按用户确认修订。
+      truncated: false
+    reviewer_execution_ref: builder-fresh-review-g3-iter1
+  submitted_at: 2026-09-09T02:29:41.416Z
+blockers: []
+verification:
+  candidate_id: ed315db9-1af2-4728-931a-c152dface885
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:e62d3123-3f33-4f50-9d28-c4ee970a81bc
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: v3-merge-base
+      name:
+        text: merge-base 对齐 upstream/main HEAD (f3b18df1)（A1）
+        truncated: false
+      argv_display:
+        - text: merge-base
+          truncated: false
+        - text: main
+          truncated: false
+        - text: upstream/main
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 37
+    - id: v3-fork-count
+      name:
+        text: fork 非合并提交数（重放 96 + 收尾 2 = 98）（A2）
+        truncated: false
+      argv_display:
+        - text: rev-list
+          truncated: false
+        - text: --count
+          truncated: false
+        - text: --no-merges
+          truncated: false
+        - text: upstream/main..main
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 16
+    - id: v3-upstream-complete
+      name:
+        text: 上游内容完整性（cherry right-only 为空）（A1/A2）
+        truncated: false
+      argv_display:
+        - text: log
+          truncated: false
+        - text: --oneline
+          truncated: false
+        - text: --cherry-pick
+          truncated: false
+        - text: --right-only
+          truncated: false
+        - text: main...upstream/main
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 15
+    - id: v3-version
+      name:
+        text: 三处版本号统一 3.20.2-1（A3）
+        truncated: false
+      argv_display:
+        - text: -H
+          truncated: false
+        - text: version
+          truncated: false
+        - text: package.json
+          truncated: false
+        - text: src-tauri/tauri.conf.json
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4
+    - id: v3-remote-sync
+      name:
+        text: origin/main 与本地 main 一致（A10）
+        truncated: false
+      argv_display:
+        - text: rev-parse
+          truncated: false
+        - text: origin/main
+          truncated: false
+        - text: main
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 15
+    - id: v3-typecheck
+      name:
+        text: 前端类型检查（A5）
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 9145
+    - id: v3-vitest
+      name:
+        text: 前端单元测试（A6）
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 28156
+    - id: v3-cargo-check
+      name:
+        text: 后端编译检查（A7）
+        truncated: false
+      argv_display:
+        - text: check
+          truncated: false
+      argv_truncated: false
+      cwd_ref: src-tauri
+      status: passed
+      exit_code: 0
+      duration_ms: 786
+    - id: v3-cargo-test
+      name:
+        text: 后端测试（A8；按修订后标准显式跳过环境性测试：端口 15721 被运行中应用占用，上游测试设计如此，用户已确认例外）
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+        - text: --
+          truncated: false
+        - text: --skip
+          truncated: false
+        - text: update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+          truncated: false
+      argv_truncated: false
+      cwd_ref: src-tauri
+      status: passed
+      exit_code: 0
+      duration_ms: 13147
+  summary:
+    text: 独立核验全部通过：main 已干净落在上游 v3.20.2（f3b18df1）之上，96 个 fork 非合并提交全部重放并追加 2
+      个收尾提交，版本三处统一 3.20.2-1，fork 魔改关键语义（IS_FORK_BUILD
+      守卫、禁用更新器、预设过滤、连通性测试、托盘左键、README 重写版）逐项实测保留，origin/main 已推送一致。A8
+      按用户确认的修订标准执行，环境性跳过的唯一性与端口占用证据均独立成立。唯一残留是白名单文档 §3.2 的一处方向注释未随 §3.1
+      同步修正，建议下次同步前顺手更正。
+    truncated: false
+  risks:
+    - text: docs/HOW_TO_REBASE_UPSTREAM.md §3.2 第 93 行注释仍写「rebase 中上游即 --theirs」，与
+        §3.1 已修正的方向说明（rebase 中上游侧为 --ours）自相矛盾，属残留文档错误，可能误导下次同步共享文件冲突取侧（不影响本轮 A9
+        判定，因验收项仅要求 §3.1 修正）
+      truncated: false
+    - text: rebase 线性化了 2 个 fork 合并提交（upstream/main..main 现为 0 个 merge），提交数量按非合并口径对齐
+        96+2=98，属 rebase 固有语义且 Builder 已披露
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-09T02:59:33.406Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Formal requirement write requested for brief.md
+      truncated: false
+    completed_at: 2026-09-08T13:39:49.729Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: execution-error
+    unresolved_ids: []
+    summary:
+      text: "Native Verifier response was invalid: Native Verifier check ID
+        chk-merge-base conflicts with a Runtime check"
+      truncated: false
+    completed_at: 2026-09-09T00:27:32.009Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: 首轮 Runtime 检查计划因 argv 格式错误（误含 executable 前缀；spawn 语义 argv
+        应为纯参数）全部执行失败，已解析计划无法修改或重跑。实现本身无变化，按流程回到 Build 重新提交同一候选，再用修正后的检查计划重新验收。
+      truncated: false
+    completed_at: 2026-09-09T00:36:30.067Z
+  - goal_cycle: 2
+    iteration: 2
+    attempt: 1
+    outcome: execution-error
+    unresolved_ids: []
+    summary:
+      text: "Native Verifier response was invalid: Native verification cannot pass
+        before every required check succeeds"
+      truncated: false
+    completed_at: 2026-09-09T01:32:02.293Z
+  - goal_cycle: 2
+    iteration: 2
+    attempt: 2
+    outcome: blocked
+    unresolved_ids:
+      - A8
+    summary:
+      text: 独立核验除 A8 外全部通过：merge-base 精确对齐上游 v3.20.2 HEAD，98 个 fork
+        非合并提交完整重放且上游内容无缺失，三处版本号统一 3.20.2-1，冲突解决抽查均符合文档 §3 约定，白名单文档已更新并修正 §3.1
+        方向说明，远端已同步。唯一 cargo test 失败经独立查证为运行中应用占用端口 15721 的环境性问题（测试本身上游已有，其余 2877
+        项全过），并非同步引入的缺陷；因 Runtime 机械规则要求全部检查通过才可判
+        pass，且需求所有者已明确接受该环境性阻塞并选择降级归档，故最终判定 blocked。
+      truncated: false
+    completed_at: 2026-09-09T01:48:55.260Z
+  - goal_cycle: 2
+    iteration: 2
+    attempt: 2
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: 用户决定：不退出运行中的应用，正式接受 A8 的环境性例外（cargo test 唯一失败项因端口 15721
+        被运行中应用占用，上游自带测试，非同步引入缺陷）。按流程将验收标准修订为含环境性例外的明确表述，回到 Shape 更新正式产物后重新确认。
+      truncated: false
+    completed_at: 2026-09-09T02:15:15.218Z
+  - goal_cycle: 3
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 独立核验全部通过：main 已干净落在上游 v3.20.2（f3b18df1）之上，96 个 fork 非合并提交全部重放并追加 2
+        个收尾提交，版本三处统一 3.20.2-1，fork 魔改关键语义（IS_FORK_BUILD
+        守卫、禁用更新器、预设过滤、连通性测试、托盘左键、README 重写版）逐项实测保留，origin/main 已推送一致。A8
+        按用户确认的修订标准执行，环境性跳过的唯一性与端口占用证据均独立成立。唯一残留是白名单文档 §3.2 的一处方向注释未随 §3.1
+        同步修正，建议下次同步前顺手更正。
+      truncated: false
+    completed_at: 2026-09-09T02:59:33.406Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-08T12:36:54.971Z
