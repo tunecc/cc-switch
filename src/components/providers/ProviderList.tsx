@@ -659,9 +659,7 @@ export function ProviderList({
                     ? handleTest
                     : undefined
                 }
-                isTesting={
-                  probeResults[provider.id]?.status === "running"
-                }
+                isTesting={probeResults[provider.id]?.status === "running"}
                 connectivityProbe={probeResults[provider.id]}
                 isProxyRunning={supportsFailover && isProxyRunning}
                 isProxyTakeover={supportsFailover && isProxyTakeover}
@@ -797,9 +795,7 @@ export function ProviderList({
           appId={appId}
           open={testProvider.open}
           onOpenChange={(open) =>
-            setTestProvider((prev) =>
-              prev ? { ...prev, open } : prev,
-            )
+            setTestProvider((prev) => (prev ? { ...prev, open } : prev))
           }
         />
       )}
