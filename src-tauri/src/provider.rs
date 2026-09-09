@@ -1178,8 +1178,7 @@ mod tests {
         assert_eq!(value["websiteUrl"], "https://first.example.com");
         assert_eq!(value["websiteUrl2"], "https://second.example.com");
 
-        let decoded: Provider =
-            serde_json::from_value(value).expect("deserialize Provider");
+        let decoded: Provider = serde_json::from_value(value).expect("deserialize Provider");
         assert_eq!(
             decoded.website_url_2.as_deref(),
             Some("https://second.example.com")

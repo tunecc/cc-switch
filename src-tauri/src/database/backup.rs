@@ -2246,14 +2246,7 @@ mod tests {
                 (SELECT COUNT(*) FROM usage_daily_rollups),
                 (SELECT COUNT(*) FROM session_log_sync)",
             [],
-            |row| {
-                Ok((
-                    row.get(0)?,
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                ))
-            },
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
         )?;
         assert_eq!(
             preserved_counts,
@@ -3059,11 +3052,7 @@ mod tests {
 
         let _test_home = TestHomeGuard::new();
 
-        fn populate(
-            db: &Database,
-            log_rows: usize,
-            rollup_rows: usize,
-        ) -> Result<(), AppError> {
+        fn populate(db: &Database, log_rows: usize, rollup_rows: usize) -> Result<(), AppError> {
             let mut conn = crate::database::lock_conn!(db.conn);
             let tx = conn.transaction()?;
             for i in 0..50 {

@@ -1225,7 +1225,8 @@ fn provider_website_url_2_round_trips_through_dao() {
         icon_color: None,
         in_failover_queue: false,
     };
-    db.save_provider("claude", &provider).expect("save provider");
+    db.save_provider("claude", &provider)
+        .expect("save provider");
 
     // 新建路径：两个字段各自读回（A9）
     let loaded = db
@@ -1252,7 +1253,8 @@ fn provider_website_url_2_round_trips_through_dao() {
     // 更新路径：清空第二链接后更新，字段应变为 NULL（A13/A8）
     let mut updated = loaded.clone();
     updated.website_url_2 = None;
-    db.save_provider("claude", &updated).expect("update provider");
+    db.save_provider("claude", &updated)
+        .expect("update provider");
     let reloaded = db
         .get_provider_by_id("dual-links", "claude")
         .expect("reload provider")

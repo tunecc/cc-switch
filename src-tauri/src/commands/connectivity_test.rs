@@ -109,11 +109,7 @@ pub async fn connectivity_test_provider_models(
         )));
     }
 
-    let model_ids = resolve_test_model_ids(
-        model_ids,
-        &app_type,
-        &provider.settings_config,
-    );
+    let model_ids = resolve_test_model_ids(model_ids, &app_type, &provider.settings_config);
     if model_ids.is_empty() {
         return Err(AppError::Message("供应商没有可测试的模型".to_string()));
     }
