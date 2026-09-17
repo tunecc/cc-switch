@@ -163,6 +163,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | --- | --- |
 | `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` 及相关处理） |
 | `src/components/settings/AboutSection.tsx` | 「检查更新」改为打开 fork GitHub Releases 页（禁用应用内更新器） |
+| `src/components/proxy/RoutingActivationBrand.tsx` | 主页左上角 "CC Switch" 品牌链接的跳转目标（fork 改为 `https://github.com/farion1231/cc-switch`，上游为 `https://ccswitch.io`） |
 | `src/contexts/UpdateContext.tsx` | 取消启动自检（fork 关闭自动更新） |
 | `src/lib/updater.ts` | 恒返回 up-to-date（fork 关闭自动更新） |
 | `src/config/*ProviderPresets.ts` ×8 | 预设接口的 `hidden?: boolean` 字段与官方预设过滤接线 |
