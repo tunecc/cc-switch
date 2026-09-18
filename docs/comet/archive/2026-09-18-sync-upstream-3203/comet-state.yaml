@@ -1,0 +1,350 @@
+schema: comet.native.v4
+name: sync-upstream-3203
+language: zh-CN
+phase: archive
+status: done
+state_version: 24
+brief: brief.md
+shape_confirmation_hash: b74a82e963a814b649edb4bb7c9bcce385c48c2f51aaa7bcd83aea9fafeb9114
+spec_changes: []
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 12
+  retry_epoch: 1
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main upstream/main` == 06082e18，`git log
+      upstream/main..main` 仅含 fork 提交。"
+    result: passed
+    reason:
+      text: git merge-base main upstream/main ==
+        06082e189d65e6d6dbadc35dacdac1ce6c79d89a（与期望完全一致）；upstream/main..main 共
+        102 个提交，grep '(#' 命中 0，即仅含 fork 提交，无上游提交混入。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: fork 本地提交 rebase 后无丢失（`git rev-list --no-merges upstream/main..main |
+      wc -l` 与 rebase 前一致，cherry-mark 检查为空）。"
+    result: passed
+    reason:
+      text: rebase 前旧基线 f3b18df1..1e29dfde 的 fork 专属提交为 101 个（--no-merges），rebase 后
+        upstream/main..main 为 102 个（多出的是本次同步提交 12f67010，内容为 fork
+        专属改动）。逐一按提交消息核对：surface Claude fallback model as
+        quick-access、供应商支持第二个官网链接、移除旧 stream_check 可达性探测全链路、add sidebar panel
+        visibility settings and wire into toolbar buttons、disable in-app
+        updater、bump version to 3.19.2-fork.1 and rename product、rewrite README
+        to document fork differences、archive ccs-fork-app-name-cc-switch、bump
+        fork version to 3.20.2-1 等全部在当前 upstream/main..main 中存在。patch-id
+        差异经抽查确认是 rebase 冲突解决（ClaudeFormFields 一键设置取值顺序按 D6 保留 fork
+        的兜底模型优先）与上下文行变化所致，非提交丢失。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3:
+      `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-ta\
+      uri/Cargo.lock` 的 version 均为 `3.20.3-1`。"
+    result: passed
+    reason:
+      text: 'package.json "version": "3.20.3-1"；src-tauri/tauri.conf.json "version":
+        "3.20.3-1"；src-tauri/Cargo.toml version =
+        "3.20.3-1"；src-tauri/Cargo.lock 中 name = "cc-switch" 的条目 version =
+        "3.20.3-1"。四处一致。'
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4: 冲突解决符合 §3 约定（白名单文件保留 fork 侧；共享文件以上游为基础叠加 fork 必要改动；ProviderCard 的
+      onTest 冲突保留 `shouldShowTestEntry` 并叠加 mcode 隐藏语义）。"
+    result: passed
+    reason:
+      text: 'ProviderCard.tsx 的 onTest 保留 fork 的 shouldShowTestEntry(appId,
+        provider.category, provider.meta?.providerType) 调用（第 796-802
+        行）；ProviderList.tsx 的 isProviderInConfig 含 appId === "mcode" 分支（第 153
+        行）；AppVisibilitySettings.tsx 的 APP_CONFIG 含 { id: "mcode", icon:
+        "minimax", nameKey: "apps.mcode" }（第 38 行）；schema.rs 的 v18=>v19 迁移臂（第
+        558-572 行）同时执行上游的 mcp_servers/skills enabled_mcode 列追加与 fork 的 providers
+        website_url_2 列迁移。ClaudeFormFields 保留 fork 直达区与兜底模型优先语义（与 D6 一致）。'
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: 'A5: 主页左上角 "CC Switch" 品牌链接渲染的 `href` 为
+      `https://github.com/farion1231/cc-switch`，点击在新标签打开该地址；代理激活态的绿色样式与粒子动画不受影响。'
+    result: passed
+    reason:
+      text: 'RoutingActivationBrand.tsx 第 87-90 行 motion.a
+        href="https://github.com/farion1231/cc-switch"、target="_blank"、rel="noreferrer"。与上游同文件的完整
+        diff 只有这一行 href 变化，绿色激活态样式与 showBurst 粒子动画代码（第 128-131 行 motion.span
+        particles）完全未改动。forkOfficialAllowlist.ts 已补 mcode: []（第 20 行）。'
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: `pnpm typecheck` 通过。"
+    result: passed
+    reason:
+      text: Runtime 执行 pnpm typecheck（tsc --noEmit）exit 0，日志
+        logs/checks/...-typecheck.log。
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: `pnpm test:unit`（vitest）通过。"
+    result: passed
+    reason:
+      text: Runtime 执行 pnpm test:unit（vitest run）：149 文件 / 1255 测试全部通过，耗时 28.95s，日志
+        ...-test-unit.log。
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `cargo check`（src-tauri）通过。"
+    result: passed
+    reason:
+      text: Runtime 执行 cargo check（src-tauri）：cc-switch v3.20.3-1 finished，exit
+        0；cargo fmt --check 无差异。
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `cargo
+      test`（src-tauri）通过。已知环境性例外：`update_current_claude_desktop_provider_syncs_\
+      profile_when_proxy_takeover_is_active` 在本机 cc-switch 运行时因代理端口 15721
+      被占用而失败；以 `cargo test -- --skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active` 执行，其余全部通过。"
+    result: passed
+    reason:
+      text: Runtime 执行 cargo test -- --skip
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active：全部测试二进制
+        0 失败。跳过的唯一测试是上游自带的环境性测试（本机 cc-switch 运行时代理端口 15721 被占用），非本次同步引入，符合 brief
+        约定的已知环境性例外。
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: `docs/HOW_TO_REBASE_UPSTREAM.md` §4 补充 `RoutingActivationBrand.tsx`
+      品牌跳转目标的 fork 专属语义条目。"
+    result: passed
+    reason:
+      text: docs/HOW_TO_REBASE_UPSTREAM.md §4 白名单表（第 166
+        行）已补充条目：src/components/proxy/RoutingActivationBrand.tsx | 主页左上角 CC
+        Switch 品牌链接的跳转目标（fork 改为 https://github.com/farion1231/cc-switch，上游为
+        https://ccswitch.io）。
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: "A11: 经用户授权后 `git push --force-with-lease origin main` 成功，origin/main 与本地
+      main 一致。"
+    result: passed
+    reason:
+      text: git push --force-with-lease origin main 已执行：+ 1e29dfde...12f67010 main ->
+        main (forced update)。git fetch origin main 后 git rev-parse origin/main
+        == 12f67010c51db2d2ab044860ab2e6bf056784f19，与本地 HEAD 完全一致，远端与本地 main
+        已同步。
+      truncated: false
+builder_handoff:
+  candidate_id: a7473c83-d750-4758-8c2f-07ffcab19c2a
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:5ff4990f-b830-4f1d-b49f-2afced04bacf
+  iteration: 1
+  summary:
+    text: '已把 fork main rebase 到 upstream/main (v3.20.3, 06082e18, 33 个上游新提交)，101 个
+      fork 提交全部无丢失重放。冲突解决：版本号文件取 fork 侧后解决为 3.20.3-1；README.md 保留 fork
+      侧；ClaudeFormFields 模型映射一键设置按钮区域保留 fork 侧（按钮已移至直达区）；ProviderCard onTest 保留
+      fork 的 shouldShowTestEntry(appId, provider.category) 调用（覆盖官方供应商过滤；上游的
+      appId !== "mcode" 隐藏语义由该判定天然满足，因为 shouldShowTestEntry 仅对 claude/codex 返回
+      true）；schema.rs 的 v18=>v19 迁移臂合并了上游 mcp_servers/skills 的 enabled_mcode 列与
+      fork 的 website_url_2 列两段逻辑。品牌跳转改造：RoutingActivationBrand.tsx 的 motion.a
+      href 从 https://ccswitch.io 改为
+      https://github.com/farion1231/cc-switch（target=_blank rel=noreferrer
+      不变，样式与粒子动画不变）。forkOfficialAllowlist 补 mcode: []（无官方预设，与
+      hermes/openclaw/opencode/pi 同口径）。HOW_TO_REBASE_UPSTREAM.md §4 补充
+      RoutingActivationBrand 品牌跳转条目。版本号 3.20.3-1 已写入
+      package.json/tauri.conf.json/Cargo.toml/Cargo.lock。运行的开发期检查：pnpm typecheck
+      通过；pnpm test:unit 通过（149 文件 / 1255 测试全过）；cargo check 通过；cargo test --
+      --skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+      全部通过（15 个 test 二进制，2952+ 测试 0 失败，仅跳过已知环境性例外）；cargo fmt --check 与 prettier
+      --check 均通过。改动已提交为 12f67010。已知限制：跳过的那一个 cargo 测试是上游自带的环境性测试（本机 cc-switch
+      运行时代理端口 15721 被占用），非本次同步引入。'
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit exit 0
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 149 files / 1255 tests passed
+        truncated: false
+    - name:
+        text: cargo check
+        truncated: false
+      result: passed
+      note:
+        text: cc-switch v3.20.3-1 finished
+        truncated: false
+    - name:
+        text: cargo test
+        truncated: false
+      result: passed
+      note:
+        text: all binaries 0 failures; 1 skipped env-dependent test
+          update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+        truncated: false
+    - name:
+        text: cargo fmt --check
+        truncated: false
+      result: passed
+      note:
+        text: no diff
+        truncated: false
+    - name:
+        text: prettier --check
+        truncated: false
+      result: passed
+      note:
+        text: changed files clean
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: A11（force-push origin/main）尚未执行：等待用户在验收通过后授权；用户已在 Shape 确认时预授权，但按约定在
+        Verify 通过后执行。
+      truncated: false
+    - text: cargo test 跳过上游自带的环境性测试
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active（代理端口
+        15721 被占用），非本次同步引入的缺陷。
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-09-17T12:09:11.211Z
+blockers: []
+verification:
+  candidate_id: a7473c83-d750-4758-8c2f-07ffcab19c2a
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:0ff1617b-e9d8-4949-bd70-39f12695610d
+  iteration: 1
+  attempt: 12
+  assurance: skill-coordinated
+  verdict: pass
+  checks: []
+  summary:
+    text: A11 复核通过：用户已授权并执行 git push --force-with-lease origin
+      main（1e29dfde...12f67010 main -> main forced update）；fetch 复核确认
+      origin/main == 12f67010c51db2d2ab044860ab2e6bf056784f19 == 本地
+      main，远端与本地一致。A1-A10 已由前序验收记录为 passed，A11 现满足，11 项全部通过。
+    truncated: false
+  risks: []
+  risks_truncated: false
+  completed_at: 2026-09-18T02:24:30.358Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 7
+    outcome: execution-error
+    unresolved_ids: []
+    summary:
+      text: Verifier subagent 在核查过程中因宿主 API 速率限制（HTTP 429：5 分钟内最多请求 25 次，模型
+        glm-5.3-200k）提前终止，未返回最终验收结果。终止前已完成的只读核查内容保留在会话记录中：包括读取 brief、git 历史与
+        rebase 前后树状态对比（确认 productName 在 pre/post 侧最终一致为 CC Switch），但未产出覆盖 A1-A11
+        的结构化结论。失败原因与恢复方式变化：重试时将拆分为更小的核查批次以规避速率上限，或直接由当前会话按验收清单逐项只读核查后提交
+        verifier-response。
+      truncated: false
+    completed_at: 2026-09-18T01:41:53.330Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 9
+    outcome: blocked
+    unresolved_ids:
+      - A11
+    summary:
+      text: 候选 12f67010 的同步结果经独立只读核查：A1-A10 全部通过（rebase 基线 06082e18 正确、101 个 fork
+        提交无丢失、版本号均为 3.20.3-1、冲突按 §3 约定解决、品牌链接仅改 href 且样式/粒子动画不变、6 项 Runtime
+        检查全过、HOW_TO_REBASE 白名单已补充）。A11 为授权型动作：force-push origin main
+        尚未执行（origin/main 仍为 1e29dfde，本地 main 为 12f67010），等待用户授权后执行。
+      truncated: false
+    completed_at: 2026-09-18T02:04:18.769Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 9
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: A11 阻塞已解决：用户已授权并执行 git push --force-with-lease origin
+        main，推送成功（1e29dfde...12f67010 main -> main forced update）。fetch 复核确认
+        origin/main 与本地 main 均为
+        12f67010c51db2d2ab044860ab2e6bf056784f19，完全一致。A1-A11 全部满足。
+      truncated: false
+    completed_at: 2026-09-18T02:10:11.559Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 10
+    outcome: execution-error
+    unresolved_ids: []
+    summary:
+      text: "Native Verifier response was invalid: Native Verifier acceptance coverage
+        is invalid (duplicate: none; unknown: A1, A2, A3, A4, A5, A6, A7, A8,
+        A9, A10; missing: none)"
+      truncated: false
+    completed_at: 2026-09-18T02:17:51.377Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 11
+    outcome: execution-error
+    unresolved_ids: []
+    summary:
+      text: "Native Verifier response was invalid: Native Verifier acceptance coverage
+        is invalid (duplicate: none; unknown: A1, A2, A3, A4, A5, A6, A7, A8,
+        A9, A10; missing: none)"
+      truncated: false
+    completed_at: 2026-09-18T02:20:12.061Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 12
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A11 复核通过：用户已授权并执行 git push --force-with-lease origin
+        main（1e29dfde...12f67010 main -> main forced update）；fetch 复核确认
+        origin/main == 12f67010c51db2d2ab044860ab2e6bf056784f19 == 本地
+        main，远端与本地一致。A1-A10 已由前序验收记录为 passed，A11 现满足，11 项全部通过。
+      truncated: false
+    completed_at: 2026-09-18T02:24:30.358Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-17T06:13:12.244Z
