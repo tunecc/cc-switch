@@ -17,9 +17,6 @@ export const forkOfficialAllowlist: Record<AppId, string[]> = {
   openclaw: [],
   hermes: [],
   pi: [],
-<<<<<<< HEAD
   // mcode（MiniMax Code，上游 v4 新增）同样无官方预设
-=======
->>>>>>> d482254b (chore: sync fork with upstream v3.20.3 and rebrand top-left link to GitHub)
   mcode: [],
 };
