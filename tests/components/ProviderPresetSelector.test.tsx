@@ -474,6 +474,39 @@ describe("ProviderPresetSelector", () => {
       within(host).getByText("providerPreset.noResults"),
     ).toBeInTheDocument();
   });
+  it("extraActions 插槽渲染在选择器上方，且不参与预设按钮清单", () => {
+    render(
+      <PresetStepContext.Provider
+        value={{
+          appId: "claude",
+          step: "pick",
+          setStep: vi.fn(),
+          host: null,
+          registerSelector: () => () => undefined,
+        }}
+      >
+        <form>
+          <ProviderPresetSelector
+            selectedPresetId="custom"
+            presetEntries={entries}
+            onPresetChange={vi.fn()}
+            extraActions={<button type="button">import-entry</button>}
+          />
+        </form>
+      </PresetStepContext.Provider>,
+    );
+
+    // 插槽按钮渲染在选择器上方
+    expect(
+      screen.getByRole("button", { name: "import-entry" }),
+    ).toBeInTheDocument();
+    // 插槽按钮不会污染预设清单
+    expect(
+      getVisiblePresetEntries(entries, { query: "", t }).map(
+        (entry) => entry.id,
+      ),
+    ).not.toContain("import-entry");
+  });
 
   it("picks the first version of a merged row, then switches plan and region in the bar", async () => {
     const user = userEvent.setup();
