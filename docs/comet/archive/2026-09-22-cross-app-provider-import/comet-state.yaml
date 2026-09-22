@@ -1,0 +1,461 @@
+schema: comet.native.v4
+name: cross-app-provider-import
+language: zh-CN
+phase: archive
+status: done
+state_version: 27
+brief: brief.md
+document_constraints_version: 1
+shape_confirmation_hash: 2cc0fe289143c296f0884846e118ee9f0e7d5f09e6315a96a4efb60441368094
+spec_changes:
+  - capability: provider-cross-app-import
+    operation: create
+    source: specs/provider-cross-app-import/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 3
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: 新建供应商表单中，来源应用导入按钮出现在预设供应商区域内；按钮只对「已在设置中启用、该应用至少有 1
+      个供应商、且不是当前应用」的应用出现。"
+    result: passed
+    reason:
+      text: Add mode passes the button row into the preset region via
+        extraActions={importEntry}
+        (src/components/providers/forms/ProviderForm.tsx:2305-2316); the slot
+        renders inside the region, directly above the preset grid
+        (src/components/providers/forms/ProviderPresetSelector.tsx:402); the
+        three filter conditions live in
+        src/components/providers/forms/hooks/useProviderImportSources.ts:35-41,85-92;
+        the whole row is not rendered when there is no source
+        (src/components/providers/forms/ProviderImportEntry.tsx:136); the other
+        four forms are wired the same way.
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: 编辑供应商表单中，同一组来源应用导入按钮出现在表单顶部的独立入口行。"
+    result: passed
+    reason:
+      text: Edit mode renders the same button row at the top of the form
+        (src/components/providers/forms/ProviderForm.tsx:2318-2322, and the
+        other four forms at 935-940 / 495-500 / 240-245 / 1334-1339); add mode
+        is gated on !initialData everywhere, so it cannot double-render.
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 点击来源应用按钮后弹出该应用的供应商列表，展示名称、备注与请求地址摘要，并展示本次将写入的字段；取消不改变表单任何字段。"
+    result: passed
+    reason:
+      text: The dialog shows name, note (with a placeholder when empty) and the
+        request-URL summary (with a placeholder when empty)
+        (src/components/providers/forms/ProviderImportEntry.tsx:206-251); the
+        'will be written' list only lists fields that actually have a value
+        (:91-105); cancelling only clears local state and never calls onImport
+        (:277-281,71-79).
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4: 编辑模式下，弹窗明确提示导入会覆盖当前表单已填写的名称 / 备注 / 官网 / 密钥 / 请求地址。"
+    result: passed
+    reason:
+      text: The isEditMode warning paragraph names all five fields
+        (src/components/providers/forms/ProviderImportEntry.tsx:197-204) and
+        overwriteWarning exists in all four locales; tests assert it is absent
+        in add mode and present in edit mode.
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: 选中来源供应商并确认后，表单的供应商名称、备注、官网链接、API Key、API
+      请求地址、默认模型名被替换为该来源供应商的对应值；`meta.apiFormat`
+      在来源取值属于目标应用支持集合时一并替换，否则保持目标应用默认值。"
+    result: passed
+    reason:
+      text: src/components/providers/forms/hooks/useProviderImportApply.ts:70-108
+        replaces the identity fields and injects the mapped config; apiFormat is
+        applied only when resolveImportedApiFormat returns a value, otherwise
+        the target default is left alone (src/utils/providerImport.ts:227-235);
+        three end-to-end assertions land on the real submitted payload.
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: 导入不影响导入范围之外的表单状态：新建模式下预设选中态回到「自定义」；图标、第二个官网链接等保持导入前状态；编辑模式下
+      providerKey、模型表、Codex `modelCatalog`、Gemini 顶层 `config`、`env` / `options`
+      / `auth` 中的其他键（含 Codex `auth.json` 的登录态键）全部原样存活。"
+    result: passed
+    reason:
+      text: "Edit mode uses in-place patches only: resetOpencodeState /
+        resetOpenclawState / resetHermesState are all mode === 'add' gated;
+        resetCodexConfig is passed the existing codexCatalogModels;
+        resetGeminiConfig is passed the existing top-level config; grokbuild
+        never touches profile / upstreamModel; pi keeps models + providerKey. I
+        re-ran both write paths for all 10 targets to confirm."
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: 'A7: 保存出的供应商 `settingsConfig` 形状与目标应用原生新建一致（claude 写
+      `env.ANTHROPIC_BASE_URL` / `env.ANTHROPIC_AUTH_TOKEN`；codex 写
+      `auth.OPENAI_API_KEY` 与 TOML `base_url`，`wire_api` 恒为 `"responses"`；gemini
+      写 `env.GOOGLE_GEMINI_BASE_URL` / `env.GEMINI_API_KEY`；opencode 写
+      `options.baseURL` / `options.apiKey`；openclaw 写 `baseUrl` /
+      `apiKey`；hermes 写 `base_url` / `api_key`；pi 写 `baseUrl` / `apiKey`；mcode 写
+      `options.baseURL` / `options.apiKey`；grokbuild 写 TOML `base_url` /
+      `api_key`）。'
+    result: passed
+    reason:
+      text: All 10 targets' write locations match the spec table item by item
+        (src/utils/providerImport.ts:247-353); codex wire_api stays 'responses';
+        each app's add shape matches its own custom default.
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: 来源供应商缺少某项字段（无备注、无官网链接、无 Key、无地址）时，对应表单字段留空，不写入 `undefined`、占位文本或
+      `null`。"
+    result: passed
+    reason:
+      text: Missing values become '' and the write side either skips the key
+        (claude/claude-desktop/pi) or deletes it (setOrDelete, :358-365) or
+        writes an empty string per template; gemini's envObjToString drops empty
+        env keys, so GEMINI_MODEL:'' never reaches the DB.
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: 默认模型名只在 claude / codex / gemini
+      三者间迁移（读侧与写侧都受限，新建与编辑两条写路径对同一目标的字段集合必须一致）；来源或目标没有该字段时目标模型字段留空（Codex 删掉模板自带的
+      `model` 行，不填占位模型）。"
+    result: passed
+    reason:
+      text: Both write paths write the model only for claude/codex/gemini;
+        claude-desktop has a dedicated branch (:260-265) plus a patch-side if
+        (targetAppId === 'claude') guard (:400-402); grokbuild does not write
+        upstreamModel (:292-299); the read side returns '' for 7 apps; the
+        dialog uses the same predicate
+        (src/components/providers/forms/ProviderImportEntry.tsx:103); codex
+        deletes the template model line when the source has no model
+        (src/utils/providerConfigUtils.ts:1422-1428). Verified by running both
+        directions for all 10 targets in an out-of-repo scratch harness.
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: 各来源 × 目标应用组合的读写映射有单元测试覆盖，至少包含
+      claude↔codex、claude↔gemini、codex↔claude、opencode↔claude、hermes↔codex
+      五组方向，以及全部 10 个应用的读取用例；编辑模式的就地覆盖路径对每个目标应用都有「保留范围外键」的断言。"
+    result: passed
+    reason:
+      text: "Read cases exist for all 10 apps; the five directions are covered
+        (claude<->codex, claude<->gemini, codex->claude, opencode->claude,
+        hermes->codex); each of the 10 targets has a 'preserves out-of-scope
+        keys' assertion. The assertions are non-vacuous: reverting either
+        round-4 fix makes them fail."
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: "A11: API Key 不出现在弹窗 DOM、console 日志与 toast 中（弹窗只展示地址与名称摘要）。"
+    result: passed
+    reason:
+      text: The dialog renders only name, note, URL summary and field labels; the
+        import path emits no toast; the new code has only two console.error
+        calls printing API error objects, which contain no provider data.
+      truncated: false
+  - id: A12
+    source: brief.md
+    text: "A12: 既有
+      `tests/components/ProviderPresetSelector.test.tsx`、`tests/components/AddP\
+      roviderDialog.test.tsx`、`tests/components/EditProviderDialog.test.tsx`
+      用例不回归。"
+    result: passed
+    reason:
+      text: "I re-ran the full suite: 152 files / 1320 tests pass;
+        tests/components/ProviderPresetSelector.test.tsx is purely additive and
+        asserts the slot does not pollute the preset list; AddProviderDialog (7)
+        and EditProviderDialog (11) pass on their own."
+      truncated: false
+builder_handoff:
+  candidate_id: dd1dc05f-8a95-4628-9097-9c9ea71fccf9
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:d32aa00f-fcee-4e3d-b853-0da533f3b915
+  iteration: 1
+  summary:
+    text: 修复第三轮独立验收的唯一失败项 A9（写侧未限制目标）。buildImportedSettingsConfig 原先把 claude 与
+      claude-desktop 共用一支，导致向新建的 claude-desktop 供应商导入时也写下
+      env.ANTHROPIC_MODEL——弹窗的「本次将写入」清单用的是
+      targetSupportsDefaultModel（claude-desktop 为 false），所以这个键从未被预告，用户会在 JSON
+      编辑器里看到一个来路不明的值。影响被 ClaudeDesktopProviderForm 提交时按 baseUrl/apiKey 重建 env
+      挡在数据库之外，但确实违反 A9「读侧与写侧都受限」。修法：claude-desktop 拆成独立分支，只写 ANTHROPIC_BASE_URL
+      与 ANTHROPIC_AUTH_TOKEN；编辑路径本来就有 if (targetAppId === "claude")
+      守卫，两条写路径对同一目标的字段集合现在一致。同时补两条测试关闭上一轮「无法验证」项：claude-desktop 两条写路径都不出现
+      ANTHROPIC_MODEL 且保留范围外键；把全部 7 个无默认模型字段的目标应用一次跑遍，断言来源模型不出现在 build 与 patch
+      的产物里。另补 gemini「导入→保存」端到端测试（上一轮只追过代码没有实证）。brief 的 A9 与 D10 已同步更新。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit 无输出
+        truncated: false
+    - name:
+        text: pnpm format:check
+        truncated: false
+      result: passed
+      note:
+        text: prettier --check 全部符合
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 152 文件 / 1320 用例全通过；tests/utils/providerImport.test.ts 增至
+          43（claude-desktop 模型守卫 + 7
+          个无模型字段目标一次跑遍），tests/components/ProviderForm.crossAppImport.test.tsx 增至
+          9（gemini 端到端）
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 导入只预填表单，没有在真实 app 里手点验证过（需要 pnpm tauri dev 人工确认）。
+      truncated: false
+    - text: claude
+        新建模式下若配置了通用配置片段，选中过预设再导入会把片段合并进导入后的配置（新增键而非清空，属表单既有行为），无片段的绝大多数用户不受影响。
+      truncated: false
+    - text: 编辑模式没有独立的二次确认框，只在弹窗内用一行警示说明会覆盖哪些字段。
+      truncated: false
+    - text: opencode / mcode / openclaw / hermes 的 base URL 写入沿用各表单既有入口的尾斜杠归一化；claude
+        / codex / gemini / pi / grokbuild 的地址按原样复制。
+      truncated: false
+    - text: 每个供应商表单挂载时会拉取一次 settings 与各已启用应用的供应商列表；刻意不用 react-query，因为若干表单测试直接 render
+        而不挂 QueryClientProvider。
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-09-22T11:07:53.968Z
+blockers: []
+verification:
+  candidate_id: dd1dc05f-8a95-4628-9097-9c9ea71fccf9
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:0de84898-a1db-4674-b737-08733fb15704
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unit-tests
+      name:
+        text: pnpm test:unit
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 32987
+    - id: typecheck
+      name:
+        text: pnpm typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8663
+    - id: format-check
+      name:
+        text: pnpm format:check
+        truncated: false
+      argv_display:
+        - text: format:check
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 3069
+  summary:
+    text: "verdict=pass: all of A1-A12 passed. The round-4 A9 write-side fix is
+      correct (claude-desktop has a dedicated build branch and a patch-side
+      guard; only claude/codex/gemini carry the model in both write paths, and
+      the dialog uses the same predicate). The round-1 (A6 edit-mode write
+      boundary), round-2 (Codex add-mode preset-then-import) and round-3 (A9
+      read side) fixes all still hold, verified per app with an out-of-repo
+      scratch harness plus the full suite re-run by me (152 files / 1320 tests
+      pass). Regression sweep clean: source filtering, both entry points, the 10
+      apps' field locations, wire_api staying 'responses', TOML writes through
+      the repo's existing prefix-preserving helpers, the source settingsConfig
+      never copied wholesale, no DB write, no live-config sync, no invoke( in
+      the new files, src-tauri untouched, UniversalProvider and
+      import_claude_desktop_providers_from_claude untouched, and the API key
+      absent from DOM, console and toast. Five non-blocking risks are listed for
+      human judgement rather than defects I can assert; the only thing not
+      verifiable read-only is a real Tauri app click-through."
+    truncated: false
+  risks:
+    - text: "Verbatim address copying vs form-side normalization: the spec says no
+        trailing-slash stripping, but opencode
+        (src/components/providers/forms/hooks/useOpencodeFormState.ts:139),
+        openclaw (useOpenclawFormState.ts:124), hermes
+        (useHermesFormState.ts:143) and claude-desktop
+        (ClaudeDesktopProviderForm.tsx:812-816) pass the URL through a
+        trailing-slash-stripping input handler. The mapping layer and the
+        visible input stay verbatim; only the persisted config is normalized —
+        consistent with manual entry, and disclosed in the Builder's
+        known_limits."
+      truncated: false
+    - text: The opencode add shape lacks options.setCacheKey:true and name, which its
+        own template has
+        (src/components/providers/forms/helpers/opencodeFormUtils.ts:35-47). All
+        keys A7 enumerates are present.
+      truncated: false
+    - text: "codex edit mode: importing with no source model deletes the TOML model
+        line, but the existing backfill logic at save time writes the first
+        modelCatalog row back
+        (src/components/providers/forms/ProviderForm.tsx:1567-1575). The import
+        layer behaves correctly."
+      truncated: false
+    - text: 'Test fragility: tests/components/ProviderImportEntry.test.tsx:127 relies
+        on name: "common.cancel", a bare i18n key that only resolves because the
+        test harness loads no translation bundle. The assertion is non-vacuous
+        today but will break if the harness ever loads real copy.'
+      truncated: false
+    - text: tests/components/ProviderForm.crossAppImport.test.tsx:451 is named 'after
+        a preset was selected first' but does not select a preset; it only
+        proves gemini's ordinary import-then-save path.
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-22T11:24:13.876Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: 撤回本轮候选：Builder 交接在提交时误用了占位文案（summary=probe、仅列 A1），正式产物与实现均已完成且检查通过，需要回到
+        Build 重新提交正确的交接供独立验收读取。
+      truncated: false
+    completed_at: 2026-09-22T09:02:27.511Z
+  - goal_cycle: 1
+    iteration: 2
+    attempt: 1
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Observed implementation write before src/utils/providerImport.ts
+      truncated: false
+    completed_at: 2026-09-22T09:06:34.604Z
+  - goal_cycle: 1
+    iteration: 3
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native confirmed acceptance criteria changed
+      truncated: false
+    completed_at: 2026-09-22T09:37:32.617Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Observed implementation write before
+        src/components/providers/forms/ProviderForm.tsx
+      truncated: false
+    completed_at: 2026-09-22T10:10:41.575Z
+  - goal_cycle: 2
+    iteration: 2
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native check input changed after the candidate was built; a new Builder
+        candidate is required before checks can run again.
+      truncated: false
+    completed_at: 2026-09-22T10:18:54.089Z
+  - goal_cycle: 2
+    iteration: 3
+    attempt: 1
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Observed implementation write before src/utils/providerImport.ts
+      truncated: false
+    completed_at: 2026-09-22T10:37:04.613Z
+  - goal_cycle: 2
+    iteration: 4
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native confirmed acceptance criteria changed
+      truncated: false
+    completed_at: 2026-09-22T10:39:03.785Z
+  - goal_cycle: 3
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: "verdict=pass: all of A1-A12 passed. The round-4 A9 write-side fix is
+        correct (claude-desktop has a dedicated build branch and a patch-side
+        guard; only claude/codex/gemini carry the model in both write paths, and
+        the dialog uses the same predicate). The round-1 (A6 edit-mode write
+        boundary), round-2 (Codex add-mode preset-then-import) and round-3 (A9
+        read side) fixes all still hold, verified per app with an out-of-repo
+        scratch harness plus the full suite re-run by me (152 files / 1320 tests
+        pass). Regression sweep clean: source filtering, both entry points, the
+        10 apps' field locations, wire_api staying 'responses', TOML writes
+        through the repo's existing prefix-preserving helpers, the source
+        settingsConfig never copied wholesale, no DB write, no live-config sync,
+        no invoke( in the new files, src-tauri untouched, UniversalProvider and
+        import_claude_desktop_providers_from_claude untouched, and the API key
+        absent from DOM, console and toast. Five non-blocking risks are listed
+        for human judgement rather than defects I can assert; the only thing not
+        verifiable read-only is a real Tauri app click-through."
+      truncated: false
+    completed_at: 2026-09-22T11:24:13.876Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-22T08:04:28.912Z
