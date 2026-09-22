@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -22,6 +22,8 @@ import { BasicFormFields } from "./BasicFormFields";
 import { OpenCodeFormFields } from "./OpenCodeFormFields";
 import { ProviderPresetSelector } from "./ProviderPresetSelector";
 import { usePresetStep } from "./presetStep";
+import { ProviderImportEntry } from "./ProviderImportEntry";
+import { useProviderImportApply, useProviderImportSources } from "./hooks";
 import { normalizeRequestHeaders } from "./helpers/requestHeaders";
 import {
   mergeOpencodeExtraOptionRows,
@@ -192,6 +194,48 @@ export function McodeProviderForm({
       settingsConfig: JSON.stringify(next),
     });
   };
+  // 跨应用导入：mcode 的 SSOT 是 config 对象，jsonText / jsonValid 都由
+  // update() 一起维护，所以只替换 options 里的地址与密钥，模型表等其余
+  // 结构留给用户继续填（与 choosePreset 同一套入口）。dsh 复用本表单，
+  // 但导入映射尚未覆盖 dsh 方言，入口只在 mcode 下提供。
+  const importSources = useProviderImportSources("mcode");
+  const handleProviderImport = useProviderImportApply({
+    appId: "mcode",
+    form,
+    isEditMode: Boolean(initialData),
+    // 编辑模式同样没有预设选择器，不改变 presetId（它参与 category 推导）。
+    resetPresetSelection: useCallback(() => {
+      if (initialData) return;
+      setPresetId("custom");
+    }, [initialData]),
+    handlers: {
+      // 两种模式都走合并：mcode 的 SSOT 是 config 对象，只替换 options 里的
+      // 地址与密钥，模型表等其余结构留给用户继续填。
+      syncAppState: (settingsConfig) => {
+        const options =
+          settingsConfig.options && typeof settingsConfig.options === "object"
+            ? (settingsConfig.options as Record<string, unknown>)
+            : {};
+        update({
+          ...config,
+          options: {
+            ...config.options,
+            baseURL: typeof options.baseURL === "string" ? options.baseURL : "",
+            apiKey: typeof options.apiKey === "string" ? options.apiKey : "",
+          },
+        });
+      },
+    },
+  });
+  const importEntry =
+    appId === "mcode" ? (
+      <ProviderImportEntry
+        appId="mcode"
+        sources={importSources}
+        isEditMode={Boolean(initialData)}
+        onImport={handleProviderImport}
+      />
+    ) : null;
   const presetSelector = !initialData && (
     <ProviderPresetSelector
       selectedPresetId={presetId}
@@ -204,6 +248,7 @@ export function McodeProviderForm({
       }}
       onPresetChange={choosePreset}
       category={category}
+      extraActions={importEntry}
     />
   );
   if (isAccountLogin) {
@@ -272,6 +317,11 @@ export function McodeProviderForm({
         })}
       >
         {presetSelector}
+        {initialData && importEntry && (
+          <div className="rounded-lg border border-border-default bg-muted/20 p-3">
+            {importEntry}
+          </div>
+        )}
         {error && (
           <p role="alert" className="text-sm text-destructive">
             {error}
