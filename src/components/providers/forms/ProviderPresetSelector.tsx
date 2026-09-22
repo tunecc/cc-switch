@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -131,7 +131,10 @@ interface ProviderPresetSelectorProps {
   onPresetChange: (value: string) => void;
   onUniversalPresetSelect?: (preset: UniversalProviderPreset) => void;
   onManageUniversalProviders?: () => void;
-  category?: ProviderCategory;
+  category?: ProviderCategory; // 当前选中的分类
+  categoryHint?: ReactNode;
+  /** 渲染在预设按钮区上方的额外入口（例如跨应用导入按钮行） */
+  extraActions?: ReactNode;
 }
 
 /**
@@ -144,6 +147,7 @@ export function ProviderPresetSelector({
   onPresetChange,
   onUniversalPresetSelect,
   onManageUniversalProviders,
+  extraActions,
 }: Readonly<ProviderPresetSelectorProps>) {
   const step = usePresetStep();
   const registerSelector = step?.registerSelector;
@@ -177,6 +181,7 @@ export function ProviderPresetSelector({
     const versions = entry ? presetVersions(presetEntries, entry) : [];
     return (
       <div className="space-y-3" data-preset-selector="">
+        {extraActions && <div className="flex flex-col">{extraActions}</div>}
         <div className="h-[420px] overflow-hidden rounded-panel border border-border">
           <PresetPicker
             entries={presetEntries}
@@ -198,14 +203,17 @@ export function ProviderPresetSelector({
   }
 
   return (
-    <PresetBar
-      appId={step.appId}
-      entry={entry}
-      versions={entry ? presetVersions(presetEntries, entry) : []}
-      onChange={() => step.setStep("pick")}
-      // 换版本 = 选了同一家的另一个预设，表单按它重填
-      onVersionChange={onPresetChange}
-    />
+    <div className="space-y-2">
+      {extraActions && <div className="flex flex-col">{extraActions}</div>}
+      <PresetBar
+        appId={step.appId}
+        entry={entry}
+        versions={entry ? presetVersions(presetEntries, entry) : []}
+        onChange={() => step.setStep("pick")}
+        // 换版本 = 选了同一家的另一个预设，表单按它重填
+        onVersionChange={onPresetChange}
+      />
+    </div>
   );
 }
 
