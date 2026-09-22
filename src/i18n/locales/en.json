@@ -1714,6 +1714,30 @@
     "sortOriginalTooltip": "Restore original order",
     "noSearchResults": "No provider presets match your search."
   },
+  "providerImport": {
+    "label": "Import from another app",
+    "button": "Import from {{app}}",
+    "dialogTitle": "Import a provider from {{app}}",
+    "dialogDescription": "Pick a provider to import. Only the name, note, website link, API key, request URL, default model and upstream format are carried over — fill in the rest yourself.",
+    "overwriteWarning": "Importing overwrites the name, note, website link, key and request URL currently in this form.",
+    "fieldsTitle": "Will be written",
+    "fieldsEmpty": "(nothing to write)",
+    "emptyNotes": "No note",
+    "noAddress": "No request URL configured",
+    "confirm": "Import",
+    "field": {
+      "name": "Provider name",
+      "notes": "Note",
+      "websiteUrl": "Website link",
+      "apiKey": "API key",
+      "baseUrl": "Request URL",
+      "model": "Default model"
+    },
+    "apiFormatWillImport": "Upstream format: {{format}}",
+    "apiFormatUnsupported": "This app does not store an upstream format, so that field is skipped",
+    "apiFormatNotMappable": "Upstream format {{format}} has no equivalent in this app; the default is kept",
+    "apiFormatMissing": "The source provider declares no upstream format; the default for this app is kept"
+  },
   "usage": {
     "title": "Usage Statistics",
     "subtitle": "View AI model usage and cost statistics",

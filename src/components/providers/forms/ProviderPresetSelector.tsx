@@ -152,6 +152,8 @@ interface ProviderPresetSelectorProps {
   onManageUniversalProviders?: () => void;
   category?: ProviderCategory; // 当前选中的分类
   categoryHint?: ReactNode;
+  /** 渲染在预设按钮区上方的额外入口（例如跨应用导入按钮行） */
+  extraActions?: ReactNode;
 }
 
 export function ProviderPresetSelector({
@@ -163,6 +165,7 @@ export function ProviderPresetSelector({
   onManageUniversalProviders,
   category,
   categoryHint,
+  extraActions,
 }: Readonly<ProviderPresetSelectorProps>) {
   const { t } = useTranslation();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -400,6 +403,7 @@ export function ProviderPresetSelector({
           </Button>
         </div>
       </div>
+      {extraActions && <div className="pt-1">{extraActions}</div>}
       <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
         <button
           type="button"

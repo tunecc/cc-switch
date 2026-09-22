@@ -229,7 +229,13 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: CC Switch ${{ github.ref_name }}
-          prerelease: true
+          # 直接以正式版发布：不再先挂 prerelease 等人工提升。
+          # 副作用是失去了那道人工放行关卡——tag 一推，发布立刻对
+          # /releases/latest、ccswitch.io/download 和应用内更新器可见。
+          # 想恢复关卡就改回 true。
+          # sync-r2 不受影响：它的 `released` 触发器对「直接以 stable 发布」
+          # 同样触发（见 sync-r2.yml 头部注释）。
+          prerelease: false
           body: |
             ## CC Switch ${{ github.ref_name }}
 

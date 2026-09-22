@@ -39,6 +39,8 @@ import type { ProviderFormProps, ProviderFormValues } from "./ProviderForm";
 import JsonEditor from "@/components/JsonEditor";
 import { BasicFormFields } from "./BasicFormFields";
 import { ProviderPresetSelector } from "./ProviderPresetSelector";
+import { ProviderImportEntry } from "./ProviderImportEntry";
+import { useProviderImportApply, useProviderImportSources } from "./hooks";
 import { RequestHeadersEditor } from "./RequestHeadersEditor";
 import { StructuredOptionsEditor } from "./StructuredOptionsEditor";
 import { ApiKeySection, EndpointField, ModelDropdown } from "./shared";
@@ -67,6 +69,7 @@ import { useDarkMode } from "@/hooks/useDarkMode";
 import { providerSchema, type ProviderFormData } from "@/lib/schemas/provider";
 import type { ProviderCategory } from "@/types";
 import { translatePiProviderMutationError } from "@/utils/errorUtils";
+import { buildPiSettingsConfig } from "@/utils/piProviderConfig";
 
 const PI_API_FORMATS = [
   { value: "openai-completions", label: "OpenAI Chat Completions" },
@@ -343,43 +346,6 @@ function modelPreview(model: PiModelDraft): Record<string, unknown> {
     ...(model.hasThinkingLevelMap
       ? { thinkingLevelMap: model.thinkingLevelMap }
       : {}),
-  };
-}
-
-function buildPiSettingsConfig({
-  passthrough,
-  nativeName,
-  baseUrl,
-  api,
-  includeApi,
-  apiKey,
-  headers,
-  compat,
-  includeCompat,
-  models,
-  includeModels,
-}: {
-  passthrough: Record<string, unknown>;
-  nativeName?: string;
-  baseUrl: string;
-  api: string;
-  includeApi: boolean;
-  apiKey: string;
-  headers: Record<string, string>;
-  compat: Record<string, unknown>;
-  includeCompat: boolean;
-  models: Record<string, unknown>[];
-  includeModels: boolean;
-}): Record<string, unknown> {
-  return {
-    ...passthrough,
-    ...(nativeName !== undefined ? { name: nativeName } : {}),
-    ...(baseUrl.trim() ? { baseUrl: baseUrl.trim() } : {}),
-    ...(includeApi && api.trim() ? { api: api.trim() } : {}),
-    ...(apiKey ? { apiKey } : {}),
-    ...(Object.keys(headers).length > 0 ? { headers } : {}),
-    ...(includeCompat ? { compat } : {}),
-    ...(includeModels ? { models } : {}),
   };
 }
 
@@ -832,6 +798,48 @@ export function PiProviderForm({
     setExpandedModelKeys(new Set());
     setExpandedThinkingMapKeys(new Set());
   };
+
+  // 跨应用导入：pi 的扁平 state 全部由 applySettingsConfig 从配置对象同步，
+  // 所以导入走同一条路径。编辑模式下 patchImportedSettingsConfig 保留了
+  // models / providerKey 等键，applySettingsConfig 从同一份配置重建扁平 state，
+  // 模型表因此不会丢。
+  const importSources = useProviderImportSources("pi");
+  const handleProviderImport = useProviderImportApply({
+    appId: "pi",
+    form,
+    isEditMode: isEdit,
+    // category 会作为 presetCategory 提交，编辑模式不能顺手改成 custom。
+    resetPresetSelection: useCallback(() => {
+      if (isEdit) return;
+      setSelectedPresetId("custom");
+      setSelectedPreset(null);
+      setCategory("custom");
+    }, [isEdit]),
+    handlers: {
+      syncAppState: (settingsConfig) => {
+        // 共享钩子已 form.reset 写回同一份 JSON；这里补 shouldDirty，避免
+        // 编辑模式下导入后表单看起来毫无改动。
+        form.setValue(
+          "settingsConfig",
+          JSON.stringify(settingsConfig, null, 2),
+          {
+            shouldDirty: true,
+            shouldValidate: true,
+          },
+        );
+        applySettingsConfig(settingsConfig, lastValidSettingsConfigRef.current);
+        lastValidSettingsConfigRef.current = settingsConfig;
+      },
+    },
+  });
+  const importEntry = (
+    <ProviderImportEntry
+      appId="pi"
+      sources={importSources}
+      isEditMode={isEdit}
+      onImport={handleProviderImport}
+    />
+  );
 
   const updateModelOverride = (
     key: string,
@@ -1323,7 +1331,14 @@ export function PiProviderForm({
             presetCategoryLabels={presetCategoryLabels}
             onPresetChange={selectPreset}
             category={category}
+            extraActions={importEntry}
           />
+        )}
+
+        {isEdit && importEntry && (
+          <div className="rounded-lg border border-border-default bg-muted/20 p-3">
+            {importEntry}
+          </div>
         )}
 
         {formError && (

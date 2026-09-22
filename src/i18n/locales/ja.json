@@ -1702,6 +1702,30 @@
     "sortOriginalTooltip": "元の順序に戻す",
     "noSearchResults": "一致するプロバイダープリセットがありません。"
   },
+  "providerImport": {
+    "label": "他のアプリからインポート",
+    "button": "{{app}} からインポート",
+    "dialogTitle": "{{app}} からプロバイダーをインポート",
+    "dialogDescription": "インポートするプロバイダーを選択してください。名前、メモ、公式サイトリンク、API キー、リクエスト URL、既定モデル、アップストリーム形式のみ移行します。残りは各自入力してください。",
+    "overwriteWarning": "インポートすると、現在フォームに入力されている名前、メモ、公式サイトリンク、キー、リクエスト URL を上書きします。",
+    "fieldsTitle": "書き込まれる項目",
+    "fieldsEmpty": "（書き込める項目はありません）",
+    "emptyNotes": "メモなし",
+    "noAddress": "リクエスト URL 未設定",
+    "confirm": "インポート",
+    "field": {
+      "name": "プロバイダー名",
+      "notes": "メモ",
+      "websiteUrl": "公式サイトリンク",
+      "apiKey": "API キー",
+      "baseUrl": "リクエスト URL",
+      "model": "既定モデル"
+    },
+    "apiFormatWillImport": "アップストリーム形式：{{format}}",
+    "apiFormatUnsupported": "このアプリはアップストリーム形式を保存しないため、この項目は書き込まれません",
+    "apiFormatNotMappable": "アップストリーム形式 {{format}} はこのアプリに対応する値がないため、既定値を維持します",
+    "apiFormatMissing": "元のプロバイダーはアップストリーム形式を宣言していないため、このアプリの既定値を維持します"
+  },
   "usage": {
     "title": "利用統計",
     "subtitle": "AI モデルの利用状況とコスト統計を表示",

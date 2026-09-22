@@ -1714,6 +1714,30 @@
     "sortOriginalTooltip": "恢复原始顺序",
     "noSearchResults": "没有匹配的预设供应商。"
   },
+  "providerImport": {
+    "label": "从其他应用导入",
+    "button": "从 {{app}} 导入",
+    "dialogTitle": "从 {{app}} 导入供应商",
+    "dialogDescription": "选择要导入的供应商。仅迁移名称、备注、官网链接、API Key、请求地址、默认模型与上游格式，其余配置请自行填写。",
+    "overwriteWarning": "导入会覆盖当前表单已填写的名称、备注、官网链接、密钥和请求地址。",
+    "fieldsTitle": "本次将写入",
+    "fieldsEmpty": "（没有可写入的字段）",
+    "emptyNotes": "无备注",
+    "noAddress": "未配置请求地址",
+    "confirm": "导入",
+    "field": {
+      "name": "供应商名称",
+      "notes": "备注",
+      "websiteUrl": "官网链接",
+      "apiKey": "API Key",
+      "baseUrl": "请求地址",
+      "model": "默认模型"
+    },
+    "apiFormatWillImport": "上游格式：{{format}}",
+    "apiFormatUnsupported": "当前应用不保存上游格式，该字段不会写入",
+    "apiFormatNotMappable": "上游格式 {{format}} 在当前应用没有对应取值，将保持默认",
+    "apiFormatMissing": "来源供应商未声明上游格式，将保持当前应用默认"
+  },
   "usage": {
     "title": "使用统计",
     "subtitle": "查看 AI 模型的使用情况和成本统计",

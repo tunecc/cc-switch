@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -32,6 +32,8 @@ import type { ProviderFormProps, ProviderFormValues } from "./ProviderForm";
 import { BasicFormFields } from "./BasicFormFields";
 import { CodexFormFields } from "./CodexFormFields";
 import { ProviderPresetSelector } from "./ProviderPresetSelector";
+import { ProviderImportEntry } from "./ProviderImportEntry";
+import { useProviderImportApply, useProviderImportSources } from "./hooks";
 import {
   grokBuildOfficialPreset,
   grokBuildProviderPresets,
@@ -226,6 +228,52 @@ export function GrokBuildProviderForm({
     };
     setRawConfig((current) => updateGrokBuildConfig(current, next));
   };
+
+  // 跨应用导入：grokbuild 的 config.toml 由 updateGrokBuildConfig 组装，
+  // 与 preset / 手动改字段共用同一条写入路径。
+  const importSources = useProviderImportSources("grokbuild");
+  const handleProviderImport = useProviderImportApply({
+    appId: "grokbuild",
+    form,
+    isEditMode: Boolean(initialData),
+    // 编辑模式没有预设选择器；category / presetId 会进提交载荷，不能顺手改掉。
+    resetPresetSelection: useCallback(() => {
+      if (initialData) return;
+      setSelectedPresetId("custom");
+      setCategory("custom");
+      setIsPartner(false);
+      setPartnerPromotionKey(undefined);
+      setPresetEndpoints([]);
+    }, [initialData]),
+    handlers: {
+      syncAppState: (settingsConfig, mode) => {
+        // 映射层已给出完整的 config.toml；提交时再由 updateGrokBuildConfig
+        // 用最新扁平值重写一遍。编辑模式只动地址与密钥——profile 与
+        // upstreamModel 不属于导入范围，换了会把用户的模型表改掉。
+        const configText =
+          typeof settingsConfig.config === "string"
+            ? settingsConfig.config
+            : "";
+        const parsed = parseGrokBuildConfig(configText, form.getValues("name"));
+        if (mode === "add") {
+          setRawConfig(configText);
+          setProfile(parsed.model);
+          setUpstreamModel(parsed.upstreamModel ?? parsed.model);
+        }
+        setBaseUrl(parsed.baseUrl);
+        setApiKey(parsed.apiKey);
+      },
+      applyApiFormat: (apiFormat) => setApiFormat(apiFormat as CodexApiFormat),
+    },
+  });
+  const importEntry = (
+    <ProviderImportEntry
+      appId="grokbuild"
+      sources={importSources}
+      isEditMode={Boolean(initialData)}
+      onImport={handleProviderImport}
+    />
+  );
 
   const handlePresetChange = (presetId: string) => {
     setSelectedPresetId(presetId);
@@ -444,7 +492,14 @@ export function GrokBuildProviderForm({
             presetCategoryLabels={presetCategoryLabels}
             onPresetChange={handlePresetChange}
             category={category}
+            extraActions={importEntry}
           />
+        )}
+
+        {initialData && importEntry && (
+          <div className="rounded-lg border border-border-default bg-muted/20 p-3">
+            {importEntry}
+          </div>
         )}
 
         <BasicFormFields form={form} />
