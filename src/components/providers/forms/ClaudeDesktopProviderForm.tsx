@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -31,6 +31,8 @@ import { ApiKeySection } from "./shared/ApiKeySection";
 import { EndpointField } from "./shared/EndpointField";
 import { ModelDropdown } from "./shared/ModelDropdown";
 import { ProviderPresetSelector } from "./ProviderPresetSelector";
+import { ProviderImportEntry } from "./ProviderImportEntry";
+import { useProviderImportApply, useProviderImportSources } from "./hooks";
 import { useApiKeyLink } from "./hooks/useApiKeyLink";
 import { providerSchema, type ProviderFormData } from "@/lib/schemas/provider";
 import type {
@@ -499,6 +501,57 @@ export function ClaudeDesktopProviderForm({
     applyDesktopPreset(entry.preset);
   };
 
+  // 跨应用导入：Claude Desktop 的 settingsConfig 在提交时才由 baseUrl /
+  // apiKey / apiKeyField 重建，所以这里同步这三个扁平 state 即可，无需
+  // 另外写 settingsConfig（与 applyDesktopPreset 同一套入口）。
+  const importSources = useProviderImportSources("claude-desktop");
+  const handleProviderImport = useProviderImportApply({
+    appId: "claude-desktop",
+    form,
+    isEditMode: Boolean(initialData),
+    // 编辑模式没有预设选择器，不重置（见 ProviderFormFull 同款注释）。
+    resetPresetSelection: useCallback(() => {
+      if (initialData) return;
+      setSelectedPresetId("custom");
+      setActivePreset(null);
+    }, [initialData]),
+    handlers: {
+      syncAppState: (settingsConfig) => {
+        const env =
+          settingsConfig.env && typeof settingsConfig.env === "object"
+            ? (settingsConfig.env as Record<string, unknown>)
+            : {};
+        setBaseUrl(
+          typeof env.ANTHROPIC_BASE_URL === "string"
+            ? env.ANTHROPIC_BASE_URL
+            : "",
+        );
+        const nextApiKey =
+          typeof env.ANTHROPIC_AUTH_TOKEN === "string"
+            ? env.ANTHROPIC_AUTH_TOKEN
+            : typeof env.ANTHROPIC_API_KEY === "string"
+              ? env.ANTHROPIC_API_KEY
+              : "";
+        setApiKey(nextApiKey);
+        // 与 env 里实际落键的认证字段保持一致，避免 UI 与配置各说各话
+        setApiKeyField(
+          typeof env.ANTHROPIC_API_KEY === "string" &&
+            typeof env.ANTHROPIC_AUTH_TOKEN !== "string"
+            ? "ANTHROPIC_API_KEY"
+            : "ANTHROPIC_AUTH_TOKEN",
+        );
+      },
+    },
+  });
+  const importEntry = (
+    <ProviderImportEntry
+      appId="claude-desktop"
+      sources={importSources}
+      isEditMode={Boolean(initialData)}
+      onImport={handleProviderImport}
+    />
+  );
+
   const updateRoute = (index: number, patch: Partial<RouteRowValues>) => {
     setRoutes((current) =>
       current.map((row, i) => (i === index ? { ...row, ...patch } : row)),
@@ -879,7 +932,14 @@ export function ClaudeDesktopProviderForm({
             presetCategoryLabels={presetCategoryLabels}
             onPresetChange={handlePresetChange}
             category={activePreset?.category}
+            extraActions={importEntry}
           />
+        )}
+
+        {initialData && importEntry && (
+          <div className="rounded-lg border border-border-default bg-muted/20 p-3">
+            {importEntry}
+          </div>
         )}
 
         <BasicFormFields form={form} />

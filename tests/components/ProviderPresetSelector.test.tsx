@@ -603,4 +603,32 @@ describe("ProviderPresetSelector", () => {
       screen.getByRole("button", { name: "preset.gamma" }),
     ).toBeInTheDocument();
   });
+  it("extraActions 插槽渲染在预设按钮区上方，且不参与预设按钮清单", () => {
+    const Wrapper = () => {
+      const form = useForm();
+
+      return (
+        <Form {...form}>
+          <ProviderPresetSelector
+            selectedPresetId="custom"
+            presetEntries={presetEntries}
+            presetCategoryLabels={presetCategoryLabels}
+            onPresetChange={vi.fn()}
+            extraActions={<button type="button">import-entry</button>}
+          />
+        </Form>
+      );
+    };
+    render(<Wrapper />);
+
+    expect(screen.getByRole("button", { name: "import-entry" })).toBeInTheDocument();
+    // 插槽按钮不会污染 getPresetButtonTexts 的预设清单
+    expect(getPresetButtonTexts()).toEqual([
+      "providerPreset.custom",
+      "preset.alpha",
+      "Beta Gateway",
+      "Delta Mirror",
+      "preset.gamma",
+    ]);
+  });
 });

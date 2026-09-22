@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -80,6 +80,9 @@ import GeminiConfigEditor from "./GeminiConfigEditor";
 import JsonEditor from "@/components/JsonEditor";
 import { Label } from "@/components/ui/label";
 import { ProviderPresetSelector } from "./ProviderPresetSelector";
+import { ProviderImportEntry } from "./ProviderImportEntry";
+import { useProviderImportSources } from "./hooks/useProviderImportSources";
+import { useProviderImportApply } from "./hooks/useProviderImportApply";
 import { BasicFormFields } from "./BasicFormFields";
 import { ClaudeFormFields } from "./ClaudeFormFields";
 import { ClaudeDesktopProviderForm } from "./ClaudeDesktopProviderForm";
@@ -244,6 +247,15 @@ const normalizeCodexChatReasoningForSave = (
 
 const normalizeProviderKey = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+
+// 跨应用导入的同步辅助：从配置对象里取字符串字段，缺省按空串处理。
+const asRecordOrEmpty = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+
+const asTrimmedString = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
 
 type LocalProxyRequestOverridesBuildResult = ReturnType<
   typeof buildLocalProxyRequestOverrides
@@ -721,14 +733,25 @@ function ProviderFormFull({
     [setCodexConfig, debouncedValidate],
   );
 
+  // 新建的 Codex 表单进入时把「自定义」模板灌进扁平 state。
+  //
+  // 刻意只跑一次（按 appId 记 seeding）：用户点「自定义」由
+  // handlePresetChange("custom") 自己重置，这个 effect 不需要再监听
+  // selectedPresetId。此前它监听——跨应用导入会把预设选中态复位到「自定义」，
+  // 于是 effect 在 syncAppState 写入导入值之后又跑一遍，把 auth/TOML 冲回
+  // 模板；而 Codex 的保存路径只用 codexAuth/codexConfig 扁平 state 重建
+  // settingsConfig，导入值就这样静默丢失（选过预设再导入必现）。
+  const seededCodexTemplateFor = useRef<string | null>(null);
   useEffect(() => {
-    if (appId === "codex" && !initialData && selectedPresetId === "custom") {
-      const template = getCodexCustomTemplate();
-      resetCodexConfig(template.auth, template.config);
-      setCodexChatReasoning({});
-      setPromptCacheRouting("auto");
-    }
-  }, [appId, initialData, selectedPresetId, resetCodexConfig]);
+    if (appId !== "codex" || initialData) return;
+    if (seededCodexTemplateFor.current === appId) return;
+    seededCodexTemplateFor.current = appId;
+
+    const template = getCodexCustomTemplate();
+    resetCodexConfig(template.auth, template.config);
+    setCodexChatReasoning({});
+    setPromptCacheRouting("auto");
+  }, [appId, initialData, resetCodexConfig]);
 
   useEffect(() => {
     form.reset(defaultValues);
@@ -2156,6 +2179,121 @@ function ProviderFormFull({
     />
   );
 
+  // 跨应用导入：把其他应用的已有供应商预填进当前表单。
+  // 配置形状由 providerImport.ts 统一算，扁平 state 按应用分别同步——
+  // 与 handlePresetChange 走同一批 reset 入口，避免两套写入语义。
+  const importSources = useProviderImportSources(appId);
+  const handleProviderImport = useProviderImportApply({
+    appId,
+    form,
+    isEditMode,
+    // 编辑模式没有预设选择器，重置它会顺带动到 category / presetId 等提交字段，
+    // 所以只在新建模式复位。
+    resetPresetSelection: useCallback(() => {
+      if (initialData) return;
+      setSelectedPresetId("custom");
+      setActivePreset(null);
+    }, [initialData]),
+    handlers: {
+      // 编辑模式只同步导入范围内的扁平字段：整份 reset* 会清掉 providerKey、
+      // 模型表、modelCatalog、gemini 扩展 config——那些都不在导入范围内
+      // （A6）。新建模式没有需要保留的旧状态，按预设同款 reset 走。
+      syncAppState: (settingsConfig, mode) => {
+        if (appId === "codex") {
+          const auth = (settingsConfig.auth ?? {}) as Record<string, unknown>;
+          const config =
+            typeof settingsConfig.config === "string"
+              ? settingsConfig.config
+              : "";
+          resetCodexConfig(
+            auth,
+            config,
+            mode === "edit" ? codexCatalogModels : [],
+          );
+          return;
+        }
+        if (appId === "gemini") {
+          const env = (settingsConfig.env ?? {}) as Record<string, unknown>;
+          // patchImportedSettingsConfig 保留了顶层 config，这里原样喂回去
+          const existingConfig = (settingsConfig.config ?? {}) as Record<
+            string,
+            unknown
+          >;
+          resetGeminiConfig(env, existingConfig);
+          return;
+        }
+        if (appId === "opencode") {
+          if (mode === "add") {
+            opencodeForm.resetOpencodeState(
+              settingsConfig as unknown as Parameters<
+                typeof opencodeForm.resetOpencodeState
+              >[0],
+            );
+            omoDraft.resetOmoDraftState();
+            return;
+          }
+          opencodeForm.handleOpencodeBaseUrlChange(
+            asTrimmedString(asRecordOrEmpty(settingsConfig.options).baseURL),
+          );
+          opencodeForm.handleOpencodeApiKeyChange(
+            asTrimmedString(asRecordOrEmpty(settingsConfig.options).apiKey),
+          );
+          return;
+        }
+        if (appId === "openclaw") {
+          if (mode === "add") {
+            openclawForm.resetOpenclawState(
+              settingsConfig as Parameters<
+                typeof openclawForm.resetOpenclawState
+              >[0],
+            );
+            return;
+          }
+          openclawForm.handleOpenclawBaseUrlChange(
+            asTrimmedString(settingsConfig.baseUrl),
+          );
+          openclawForm.handleOpenclawApiKeyChange(
+            asTrimmedString(settingsConfig.apiKey),
+          );
+          return;
+        }
+        if (appId === "hermes") {
+          if (mode === "add") {
+            hermesForm.resetHermesState(
+              settingsConfig as Parameters<
+                typeof hermesForm.resetHermesState
+              >[0],
+            );
+            return;
+          }
+          hermesForm.handleHermesBaseUrlChange(
+            asTrimmedString(settingsConfig.base_url),
+          );
+          hermesForm.handleHermesApiKeyChange(
+            asTrimmedString(settingsConfig.api_key),
+          );
+        }
+      },
+      applyApiFormat: (apiFormat) => {
+        if (appId === "codex") {
+          setLocalCodexApiFormat(apiFormat as CodexApiFormat);
+          return;
+        }
+        setLocalApiFormat(apiFormat as ClaudeApiFormat);
+      },
+      applyAuthField: (field) =>
+        setLocalApiKeyField(field as ClaudeApiKeyField),
+    },
+  });
+  const importEntry = (
+    <ProviderImportEntry
+      appId={appId}
+      sources={importSources}
+      isEditMode={isEditMode}
+      onImport={handleProviderImport}
+    />
+  );
+
   return (
     <>
       <Form {...form}>
@@ -2173,7 +2311,14 @@ function ProviderFormFull({
               onUniversalPresetSelect={onUniversalPresetSelect}
               onManageUniversalProviders={onManageUniversalProviders}
               category={category}
+              extraActions={importEntry}
             />
+          )}
+
+          {initialData && importEntry && (
+            <div className="rounded-lg border border-border-default bg-muted/20 p-3">
+              {importEntry}
+            </div>
           )}
 
           <BasicFormFields
