@@ -1,5 +1,15 @@
 import { useTranslation } from "react-i18next";
-import { Boxes, Book, ChevronRight, History, Monitor, Moon, Sun, Wrench } from "lucide-react";
+import {
+  Activity,
+  Book,
+  Boxes,
+  ChevronRight,
+  History,
+  Monitor,
+  Moon,
+  Sun,
+  Wrench,
+} from "lucide-react";
 import type { SettingsFormState } from "@/hooks/useSettings";
 import { useTheme } from "@/components/theme-provider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -258,6 +268,7 @@ function SidebarPanelPillRow({
     sessions: true,
     mcp: true,
     prompts: true,
+    batchTest: true,
   };
   const toggle = (key: keyof typeof panels) =>
     void onAutoSave({
@@ -298,6 +309,12 @@ function SidebarPanelPillRow({
           onClick={() => toggle("prompts")}
           icon={<Book className="h-3.5 w-3.5" />}
           label={t("settings.sidebarPanels.prompts")}
+        />
+        <SidebarPanelButton
+          active={panels.batchTest}
+          onClick={() => toggle("batchTest")}
+          icon={<Activity className="h-3.5 w-3.5" />}
+          label={t("settings.sidebarPanels.batchTest")}
         />
       </div>
     </section>
