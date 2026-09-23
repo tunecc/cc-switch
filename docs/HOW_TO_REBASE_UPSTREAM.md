@@ -119,10 +119,11 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `package.json` | `version`（fork 版本号） |
 | `src-tauri/Cargo.toml` | `version`（与 `package.json` 对齐的 fork 版本号） |
 | `vite.config.ts` | `define` 中的 `__CCS_FORK_BUILD__` 等 fork 编译期常量 |
-| `vitest.config.ts` | `define` 中的 `__CCS_FORK_BUILD__`（测试环境编译期常量，整文件保留） |
+| `vitest.config.ts` | `define` 中的 `__CCS_FORK_BUILD__` 与 `testTimeout`（jsdom 组件测试超时 30s，整文件保留） |
 | `src/config/forkBuild.ts` | fork 构建配置（整文件保留） |
 | `src/components/devpanel/` | fork 专属 devpanel 组件目录（整目录保留） |
 | `src-tauri/tauri.windows.conf.json` | Windows 平台 title（`CC Switch`，与上游一致） |
+| `src-tauri/tauri.dev.conf.json` | fork dev 预览配置：独立 identifier 与配置目录（整文件保留） |
 | `src/App.tsx` | `IS_FORK_BUILD` + `isTauri` 双守卫下的 `setTitle` useEffect |
 | `src/components/settings/SettingsPage.tsx` | `IS_FORK_BUILD` 守卫下的 DevPanel 入口与挂载 |
 | `src/vite-env.d.ts` | `__CCS_FORK_BUILD__` 全局类型声明 |
@@ -144,6 +145,12 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/lib/providerModelIds.ts` | 供应商模型读写工具（整文件保留） |
 | `src/utils/providerModelUtils.ts` | 模型徽章提取 / 快捷切换工具（整文件保留） |
 | `src/components/providers/ModelQuickSwitch/` | 模型快捷切换弹窗组件（整目录保留） |
+| `src/components/providers/forms/shared/SearchableModelPicker.tsx` / `SearchableModelMultiPicker.tsx` | 可搜索模型选择器（从上游移植后的 fork 版，整文件保留） |
+| `tests/components/SearchableModelPickerScroll.test.tsx` / `SearchableModelMultiPicker.test.tsx` | 模型选择器测试（整文件保留） |
+| `src/components/providers/forms/ProviderImportEntry.tsx` | 从其他已启用应用导入供应商配置的入口（整文件保留） |
+| `src/components/providers/forms/hooks/useProviderImportApply.ts` / `useProviderImportSources.ts` | 跨应用导入的来源判定与写入 hooks（整文件保留） |
+| `src/utils/providerImport.ts` / `providerCredentials.ts` / `piProviderConfig.ts` | 跨应用导入的字段映射、凭据与 Pi 配置转换（整文件保留） |
+| `tests/components/ProviderImportEntry.test.tsx` / `ProviderForm.crossAppImport.test.tsx` / `tests/utils/providerImport.test.ts` | 跨应用导入测试（整文件保留） |
 | `tests/components/ConnectivityTestDialog.test.tsx` 等连通性测试 | `tests/components/connectivityEntry.test.ts`、`tests/hooks/useConnectivityProbe.test.ts`、`tests/hooks/useConnectivityTest.test.ts`、`tests/lib/connectivityTestSettings.test.ts`（整文件保留） |
 | `tests/lib/providerModelIds.test.ts` / `tests/utils/providerModelUtils.test.ts` | 模型工具测试（整文件保留） |
 | `tests/components/ProviderCard.websiteLinks.test.tsx` / `tests/lib/providerSchema.websiteUrl2.test.ts` | 双官网链接测试（整文件保留） |
