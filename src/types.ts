@@ -324,6 +324,7 @@ export interface VisibleSidebarPanels {
   sessions: boolean;
   mcp: boolean;
   prompts: boolean;
+  batchTest: boolean;
 }
 
 // WebDAV 同步状态
