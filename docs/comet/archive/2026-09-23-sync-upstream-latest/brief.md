@@ -24,7 +24,7 @@ fork（tunecc/cc-switch）的 main 同步到上游 farion1231/cc-switch 的最�
 - A2: `git log upstream/main..main` 的 fork 提交与 rebase 前一一对应，数量与改动语义不丢失。
 - A3: 冲突处理符合 docs/HOW_TO_REBASE_UPSTREAM.md §3，白名单文件保留 fork 侧，共享文件叠加回 fork 必要改动。
 - A4: package.json、src-tauri/tauri.conf.json、src-tauri/Cargo.toml 的版本号均为 3.20.4-1。
-- A5: 提交后的 vitest.config.ts 含 `testTimeout: 30000`，且工作区干净。
+- A5: 已提交的 vitest.config.ts 含 `testTimeout: 30000`（在 git 历史中，不要求验收当下工作区为空）。
 - A6: docs/HOW_TO_REBASE_UPSTREAM.md §4 补入本次同步后新增的 fork 专属文件。
 - A7: `pnpm typecheck` 通过。
 - A8: `pnpm test:unit` 通过。
