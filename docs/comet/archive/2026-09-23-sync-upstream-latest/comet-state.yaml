@@ -1,0 +1,252 @@
+schema: comet.native.v4
+name: sync-upstream-latest
+language: zh-CN
+phase: archive
+status: done
+state_version: 17
+brief: brief.md
+document_constraints_version: 1
+shape_confirmation_hash: 155614655e67a7475c6380dac03a4e2136911ed4779791250be18a6cff09451e
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 2
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: `git merge-base main upstream/main` 等于 upstream/main HEAD（8e478b2b）。"
+    result: passed
+    reason:
+      text: git merge-base main upstream/main 与 git rev-parse upstream/main 均为
+        8e478b2b9fbf89634f26f32a02c9a35ad87e6898。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: `git log upstream/main..main` 的 fork 提交与 rebase 前一一对应，数量与改动语义不丢失。"
+    result: passed
+    reason:
+      text: 沿用此前独立核实，本轮无代码变化：rebase 前 105 个提交，现为 106，多出的是同步提交，消息一一对应，无上游 PR 标记混入。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 冲突处理符合 docs/HOW_TO_REBASE_UPSTREAM.md §3，白名单文件保留 fork 侧，共享文件叠加回 fork
+      必要改动。"
+    result: passed
+    reason:
+      text: 沿用此前独立核实，本轮无代码变化：文件集合一致，README 无差异，AboutSection 保留 fork 的 Releases 行为。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4: package.json、src-tauri/tauri.conf.json、src-tauri/Cargo.toml 的版本号均为
+      3.20.4-1。"
+    result: passed
+    reason:
+      text: package.json、src-tauri/tauri.conf.json、src-tauri/Cargo.toml 三处 version 均为
+        3.20.4-1。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: 已提交的 vitest.config.ts 含 `testTimeout: 30000`（在 git 历史中，不要求验收当下工作区为空）。"
+    result: passed
+    reason:
+      text: "git grep -n testTimeout HEAD -- vitest.config.ts 输出
+        HEAD:vitest.config.ts:24: testTimeout: 30000。"
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: docs/HOW_TO_REBASE_UPSTREAM.md §4 补入本次同步后新增的 fork 专属文件。"
+    result: passed
+    reason:
+      text: 沿用此前独立核实，本轮无代码变化：白名单 §4 已包含跨应用导入、模型选择器、tauri.dev.conf.json 与 testTimeout。
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: `pnpm typecheck` 通过。"
+    result: passed
+    reason:
+      text: 采信 Runtime 独立执行：pnpm typecheck exit 0，耗时 8989ms。
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm test:unit` 通过。"
+    result: passed
+    reason:
+      text: 采信 Runtime 独立执行：pnpm test:unit exit 0，耗时 32332ms。
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `cargo check` 通过。"
+    result: passed
+    reason:
+      text: 采信 Runtime 独立执行：cargo check（cwd src-tauri）exit 0，耗时 3953ms。
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: `cargo test -- --skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active` 通过（该用例在本机 cc-switch 运行时因代理端口 15721 被占用而失败，属上游测试设计，沿用既有例外）。"
+    result: passed
+    reason:
+      text: 采信 Runtime 独立执行：cargo test 跳过端口占用用例（cwd src-tauri）exit 0。
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: "A11: origin/main 与本地 main 一致（--force-with-lease 推送成功）。"
+    result: passed
+    reason:
+      text: git rev-parse main、origin/main 与 git ls-remote 远端三者均为
+        4cb9666bc1cb38917ec8a4c24eeadd8722d3cf0c。
+      truncated: false
+builder_handoff:
+  candidate_id: f23e9682-d009-485c-a2ac-dd732a282e4e
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:b9634fe1-7701-4f67-a048-67934e38421d
+  iteration: 1
+  summary:
+    text: "按用户确认的收窄后 A5 复核：已提交的 vitest.config.ts 第 24 行含 testTimeout: 30000，位于提交
+      735cbfd3，HEAD 为 4cb9666b。A1-A4、A6-A11 的实现与上一轮核实后无变化。工作区现存的
+      brief.md、spec.md、comet-state.yaml、verification.md 改动都是本次 change 的产物与
+      Runtime 流程状态，按修订后的约定在归档时提交。"
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+  checks:
+    - name:
+        text: git grep testTimeout
+        truncated: false
+      result: passed
+      note:
+        text: "vitest.config.ts:24 为 testTimeout: 30000，已在提交 735cbfd3 中"
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 工作区里的 comet-state.yaml 与 verification.md 由 Runtime 每轮改写，按修订后的 A5
+        不计入验收，归档时提交。
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-09-23T02:01:03.431Z
+blockers: []
+verification:
+  candidate_id: f23e9682-d009-485c-a2ac-dd732a282e4e
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:56b7490f-dfd7-49bd-b770-441dc601f723
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: test-timeout-committed
+      name:
+        text: committed vitest config contains testTimeout
+        truncated: false
+      argv_display:
+        - text: grep
+          truncated: false
+        - text: -n
+          truncated: false
+        - text: testTimeout
+          truncated: false
+        - text: HEAD
+          truncated: false
+        - text: --
+          truncated: false
+        - text: vitest.config.ts
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 18
+  summary:
+    text: A1 至 A11 全部通过：上游基线对齐 8e478b2b，版本三处均为 3.20.4-1，HEAD 中 testTimeout 为
+      30000，本机 main、origin/main 与远端同为 4cb9666b；A2/A3/A6 沿用此前独立核实，A7-A10 采信
+      Runtime 独立执行且均为 exit 0。
+    truncated: false
+  risks: []
+  risks_truncated: false
+  completed_at: 2026-09-23T02:04:34.410Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: fail
+    unresolved_ids:
+      - A5
+    summary:
+      text: 11 项中 10 项通过，A5 失败：testTimeout 已在提交中，但工作区有未提交的 comet-state.yaml（Runtime 把
+        phase 从 build 推进到 verify 的流程状态改写）。
+      truncated: false
+    completed_at: 2026-09-23T01:45:28.930Z
+  - goal_cycle: 1
+    iteration: 2
+    attempt: 1
+    outcome: fail
+    unresolved_ids:
+      - A5
+    summary:
+      text: A5 再次失败，但原因是验收项本身与流程冲突：Runtime 每轮都会改写 comet-state.yaml 并在失败时删除
+        verification.md，这两个流程文件不可能在验收当下保持已提交。A11 通过。需要回到 Shape 收窄
+        A5，把流程状态文件的提交移到归档阶段。
+      truncated: false
+    completed_at: 2026-09-23T01:50:52.148Z
+  - goal_cycle: 1
+    iteration: 3
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Formal requirement write requested for brief.md
+      truncated: false
+    completed_at: 2026-09-23T01:52:50.461Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1 至 A11 全部通过：上游基线对齐 8e478b2b，版本三处均为 3.20.4-1，HEAD 中 testTimeout 为
+        30000，本机 main、origin/main 与远端同为 4cb9666b；A2/A3/A6 沿用此前独立核实，A7-A10 采信
+        Runtime 独立执行且均为 exit 0。
+      truncated: false
+    completed_at: 2026-09-23T02:04:34.410Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-23T01:15:10.213Z
