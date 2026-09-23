@@ -99,6 +99,8 @@ pub struct VisibleSidebarPanels {
     pub mcp: bool,
     #[serde(default = "default_true")]
     pub prompts: bool,
+    #[serde(default = "default_true")]
+    pub batch_test: bool,
 }
 
 impl Default for VisibleSidebarPanels {
@@ -108,6 +110,7 @@ impl Default for VisibleSidebarPanels {
             sessions: true,
             mcp: true,
             prompts: true,
+            batch_test: true,
         }
     }
 }
@@ -1252,6 +1255,20 @@ mod tests {
         .expect("visible apps");
 
         assert!(!visible.is_visible(&AppType::ClaudeDesktop));
+    }
+
+    #[test]
+    fn visible_sidebar_panels_missing_batch_test_defaults_true() {
+        let panels: VisibleSidebarPanels = serde_json::from_value(serde_json::json!({
+            "skills": false,
+            "sessions": true,
+            "mcp": true,
+            "prompts": true
+        }))
+        .expect("visible sidebar panels");
+
+        assert!(!panels.skills);
+        assert!(panels.batch_test);
     }
 
     #[test]

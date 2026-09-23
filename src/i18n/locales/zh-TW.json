@@ -737,7 +737,8 @@
       "skills": "Skills",
       "sessions": "會話記錄",
       "mcp": "MCP 伺服器",
-      "prompts": "提示詞管理"
+      "prompts": "提示詞管理",
+      "batchTest": "批量檢測"
     },
     "skillStorage": {
       "title": "Skills 儲存位置",

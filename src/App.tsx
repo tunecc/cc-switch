@@ -350,6 +350,15 @@ function App() {
   const isProbeRunning = Object.values(probeResults).some(
     (entry) => entry.status === "waiting" || entry.status === "running",
   );
+  const showBatchTestEntry =
+    shouldShowTestEntry(activeApp) && visibleSidebarPanels.batchTest;
+
+  // 顶栏入口被隐藏时，进行中的批量探测不再有停止按钮，直接停掉
+  useEffect(() => {
+    if (!showBatchTestEntry && isProbeRunning) {
+      stopProbe();
+    }
+  }, [showBatchTestEntry, isProbeRunning, stopProbe]);
   const isOpenClawView =
     activeApp === "openclaw" &&
     (currentView === "providers" ||
@@ -1742,7 +1751,7 @@ function App() {
                             </>
                           ) : (
                             <>
-                              {shouldShowTestEntry(activeApp) && (
+                              {showBatchTestEntry && (
                                 <Button
                                   variant="ghost"
                                   size="sm"

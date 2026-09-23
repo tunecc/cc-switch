@@ -1,0 +1,225 @@
+schema: comet.native.v4
+name: batch-test-panel-visibility
+language: zh-CN
+phase: archive
+status: done
+state_version: 8
+brief: brief.md
+document_constraints_version: 1
+shape_confirmation_hash: da7ec4ff2cfd8d1a1f8f06c1a2a30f4eb966be9a6e92075457bacb1cacd07954
+spec_changes:
+  - capability: sidebar-panels-visibility
+    operation: create
+    source: specs/sidebar-panels-visibility/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1 设置开关：设置页「侧边面板」开关组出现「批量检测」，与其余开关同一交互；点按后写入
+      `visibleSidebarPanels.batchTest` 并切换高亮状态。
+    result: passed
+    reason:
+      text: AppVisibilitySettings 有
+        SidebarPanelButton：active={visibleSidebarPanels.batchTest}，onClick 调
+        handleSidebarToggle("batchTest") 翻转该字段并 onChange 写入，variant 随 active 在
+        default 与 ghost 之间切换。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2 默认显示：未配置 `visibleSidebarPanels`，或已保存数据缺少 `batchTest` 字段时，claude/codex
+      供应商视图顶栏的批量检测按钮仍显示。
+    result: passed
+    reason:
+      text: DEFAULT_VISIBLE_SIDEBAR_PANELS.batchTest 为 true；App 用默认值与 settings
+        合并，缺字段仍为 true。后端 batch_test 使用 serde default_true 且 Default 为
+        true。claude/codex 时 shouldShowTestEntry 为 true，顶栏按钮仍显示。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3 隐藏入口：`batchTest` 为 false 时，顶栏批量检测按钮不渲染；其余面板按钮不受影响；`batchTest` 为 true
+      且应用支持测试时按钮显示。
+    result: passed
+    reason:
+      text: 非 hermes/openclaw 分支按钮条件为 showBatchTestEntry（shouldShowTestEntry 且
+        batchTest）；skills/sessions/mcp/prompts 各自看自身开关。false 不渲染，true 且支持时显示。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4 隐藏即停止：批量探测正在进行时把 `batchTest` 设为 false，正在进行的探测停止。
+    result: passed
+    reason:
+      text: useEffect 在入口隐藏且探测进行中时调用 stopProbe。stopProbe 推进代次并丢弃
+        waiting/running，只保留已完成项。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5 能力守卫仍在：gemini 等不支持批量测试的应用，无论 `batchTest` 取何值，顶栏都不出现批量检测按钮。
+    result: passed
+    reason:
+      text: shouldShowTestEntry 仅对 claude/codex 返回 true。其余应用 showBatchTestEntry 为
+        false，顶栏按钮不出现。ProviderCard 未引用 batchTest。
+      truncated: false
+builder_handoff:
+  candidate_id: b84ae75b-b57f-4d6d-941e-ed7d5a570143
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:d5a768e1-ca92-4479-a00e-74f5a807aa78
+  iteration: 1
+  summary:
+    text: 侧边面板新增批量检测开关。visibleSidebarPanels.batchTest 与后端 batch_test 默认 true，旧 JSON
+      缺字段经 serde default_true 回退 true。设置页开关组增加该按钮并写入字段。顶栏批量检测按钮改为
+      shouldShowTestEntry(activeApp) 且 batchTest 为 true 才渲染；开关关闭或切到不支持的应用时，若探测仍在
+      waiting/running，调用 stopProbe 停止。卡片内单供应商测试入口未改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+  checks:
+    - name:
+        text: pnpm exec vitest run tests/components/AppVisibilitySettings.test.tsx
+        truncated: false
+      result: passed
+      note:
+        text: 1 passed
+        truncated: false
+    - name:
+        text: pnpm exec tsc --noEmit
+        truncated: false
+      result: passed
+      note:
+        text: 无输出
+        truncated: false
+    - name:
+        text: cargo test
+          settings::tests::visible_sidebar_panels_missing_batch_test_defaults_true
+        truncated: false
+      result: passed
+      note:
+        text: 1 passed
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: A4 隐藏即停止与 A5 能力守卫叠加没有组件级测试，靠 App.tsx 中 showBatchTestEntry 条件与 effect 实现。
+      truncated: false
+    - text: 未启动桌面应用做手工点击验收。
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-09-23T03:34:02.022Z
+blockers: []
+verification:
+  candidate_id: b84ae75b-b57f-4d6d-941e-ed7d5a570143
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:3b6b8291-1990-4bba-b8c1-212f5aff33ee
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: frontend-toggle
+      name:
+        text: 侧边面板批量检测开关测试
+        truncated: false
+      argv_display:
+        - text: exec
+          truncated: false
+        - text: vitest
+          truncated: false
+        - text: run
+          truncated: false
+        - text: tests/components/AppVisibilitySettings.test.tsx
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 1493
+    - id: frontend-typecheck
+      name:
+        text: 前端类型检查
+        truncated: false
+      argv_display:
+        - text: exec
+          truncated: false
+        - text: tsc
+          truncated: false
+        - text: --noEmit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8270
+    - id: rust-batch-test-default
+      name:
+        text: 旧设置缺 batchTest 回退 true
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+        - text: --manifest-path
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+        - text: --lib
+          truncated: false
+        - text: settings::tests::visible_sidebar_panels_missing_batch_test_defaults_true
+          truncated: false
+        - text: --
+          truncated: false
+        - text: --exact
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 256
+  summary:
+    text: 批量检测顶栏入口已接入可见性开关：设置可写入并高亮 batchTest；缺字段时前后端默认 true；false 隐藏按钮并 stopProbe
+      清除 waiting/running；非 claude/codex 因 shouldShowTestEntry 不显示。
+    truncated: false
+  risks: []
+  risks_truncated: false
+  completed_at: 2026-09-23T03:39:11.471Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 批量检测顶栏入口已接入可见性开关：设置可写入并高亮 batchTest；缺字段时前后端默认 true；false 隐藏按钮并 stopProbe
+        清除 waiting/running；非 claude/codex 因 shouldShowTestEntry 不显示。
+      truncated: false
+    completed_at: 2026-09-23T03:39:11.471Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-23T02:46:07.790Z

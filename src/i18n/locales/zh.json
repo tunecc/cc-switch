@@ -749,7 +749,8 @@
       "skills": "Skills",
       "sessions": "会话记录",
       "mcp": "MCP 服务器",
-      "prompts": "提示词管理"
+      "prompts": "提示词管理",
+      "batchTest": "批量检测"
     },
     "skillStorage": {
       "title": "Skills 存储位置",

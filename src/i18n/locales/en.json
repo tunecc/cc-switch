@@ -749,7 +749,8 @@
       "skills": "Skills",
       "sessions": "Sessions",
       "mcp": "MCP Servers",
-      "prompts": "Prompts"
+      "prompts": "Prompts",
+      "batchTest": "Batch test"
     },
     "skillStorage": {
       "title": "Skill Storage Location",
