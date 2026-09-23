@@ -343,8 +343,8 @@ function App() {
   );
   const isOpenClawView = activeApp === "openclaw" && isAppPage(currentView);
 
-  // 批量检测入口：仅探针可用应用显示（侧边面板开关在后续提交接入）
-  const showBatchTestEntry = shouldShowTestEntry(activeApp);
+  const showBatchTestEntry =
+    shouldShowTestEntry(activeApp) && visibleSidebarPanels.batchTest;
 
   // 顶栏入口被隐藏时，进行中的批量探测不再有停止按钮，直接停掉
   useEffect(() => {
