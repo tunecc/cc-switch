@@ -25,7 +25,8 @@ fork（tunecc/cc-switch）维持"始终可干净 rebase 到上游 farion1231/cc-
 
 ### 工作区未提交改动
 
-- `vitest.config.ts` 的 `testTimeout: 30000` 在同步后仍然存在，并与本次同步一起提交。
+- `vitest.config.ts` 的 `testTimeout: 30000` 已进入 git 提交，同步后的历史中仍然存在。
+- 验收不要求工作区在验收当下为空：`comet-state.yaml` 与 `verification.md` 是 Runtime 每轮验收都会改写或删除的流程状态文件，它们在归档时随最终状态一并提交。
 - 该改动把 jsdom 组件测试超时从默认 5 秒提到 30 秒：PiProviderForm 等「渲染整个供应商表单」的测试稳定超过 5 秒，30 秒仍是硬边界，不会掩盖真正挂死的测试。
 
 ### fork 魔改保留清单（同步后必须仍然存在且可用）
