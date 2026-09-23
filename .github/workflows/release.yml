@@ -12,8 +12,12 @@ concurrency:
   group: release-${{ github.ref_name }}
   cancel-in-progress: true
 
+# 只在本 fork 发版时构建。上游原版 tag（纯 vX.Y.Z，无连字符）会随同步被推上来，但本仓库
+# 没有上游的签名密钥，跑了只会在 Prepare Tauri signing key 处失败空耗；fork 自己的发版 tag
+# 一律带 -N 后缀（如 v3.20.4-2）。其他 fork 克隆此仓库时同样跳过。
 jobs:
   release:
+    if: github.repository == 'tunecc/cc-switch' && contains(github.ref_name, '-')
     runs-on: ${{ matrix.os }}
     environment: release
     strategy:
@@ -208,6 +212,8 @@ jobs:
     name: Publish GitHub Release
     runs-on: ubuntu-22.04
     needs: release
+    # 自定义 if 会替换默认的 success() 检查，必须写明，否则构建失败时这里仍会执行。
+    if: success() && github.repository == 'tunecc/cc-switch' && contains(github.ref_name, '-')
     permissions:
       contents: write
     steps:

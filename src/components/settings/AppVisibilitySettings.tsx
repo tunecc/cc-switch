@@ -1,5 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Activity, Boxes, Book, FolderOpen, History, Wrench } from "lucide-react";
+import {
+  Activity,
+  Boxes,
+  Book,
+  FolderOpen,
+  History,
+  Wrench,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleRow } from "@/components/ui/toggle-row";
 import { cn } from "@/lib/utils";
