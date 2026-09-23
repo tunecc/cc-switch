@@ -881,7 +881,8 @@
       "skills": "Skills",
       "sessions": "会话记录",
       "mcp": "MCP 服务器",
-      "prompts": "提示词管理"
+      "prompts": "提示词管理",
+      "batchTest": "批量检测"
     },
     "terminal": {
       "title": "首选终端",
