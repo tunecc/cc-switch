@@ -29,6 +29,7 @@ exports[`ProviderForm 预设新增行金标 > claude > AWS Bedrock (API Key) 1`]
       },
     },
     "websiteUrl": "https://aws.amazon.com/bedrock/",
+    "websiteUrl2": "",
   },
 }
 `;
@@ -50,6 +51,7 @@ exports[`ProviderForm 预设新增行金标 > claude > Claude Official 1`] = `
       "env": {},
     },
     "websiteUrl": "https://www.anthropic.com/claude-code",
+    "websiteUrl2": "",
   },
 }
 `;
@@ -78,6 +80,7 @@ exports[`ProviderForm 预设新增行金标 > claude > E-FlowCode 1`] = `
       },
     },
     "websiteUrl": "https://e-flowcode.cc",
+    "websiteUrl2": "",
   },
 }
 `;
@@ -111,6 +114,7 @@ exports[`ProviderForm 预设新增行金标 > claude > Kimi For Coding 1`] = `
       },
     },
     "websiteUrl": "https://www.kimi.com/code/?aff=cc-switch",
+    "websiteUrl2": "",
   },
 }
 `;
@@ -142,6 +146,7 @@ exports[`ProviderForm 预设新增行金标 > claude > Nvidia 1`] = `
       },
     },
     "websiteUrl": "https://build.nvidia.com",
+    "websiteUrl2": "",
   },
 }
 `;
@@ -169,6 +174,7 @@ exports[`ProviderForm 预设新增行金标 > claude > RelaxyCode 1`] = `
       },
     },
     "websiteUrl": "https://www.relaxycode.com",
+    "websiteUrl2": "",
   },
 }
 `;
@@ -207,6 +213,7 @@ model_context_window = 1000000
 model_auto_compact_token_limit = 9000000",
     },
     "websiteUrl": "https://e-flowcode.cc",
+    "websiteUrl2": "",
   },
 }
 `;
@@ -270,6 +277,7 @@ requires_openai_auth = true",
       },
     },
     "websiteUrl": "https://build.nvidia.com",
+    "websiteUrl2": "",
   },
 }
 `;
@@ -292,6 +300,7 @@ exports[`ProviderForm 预设新增行金标 > codex > OpenAI Official 1`] = `
       "config": "",
     },
     "websiteUrl": "https://chatgpt.com/codex",
+    "websiteUrl2": "",
   },
 }
 `;
@@ -364,6 +373,7 @@ requires_openai_auth = true",
       },
     },
     "websiteUrl": "https://x.ai/api",
+    "websiteUrl2": "",
   },
 }
 `;
