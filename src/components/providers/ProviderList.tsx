@@ -655,7 +655,11 @@ export function ProviderList({
       // Antigravity 的「打开终端」已经是主按钮，「更多」菜单里不再重复
       onOpenTerminal={appId === "agy" ? undefined : onOpenTerminal}
       onTest={
-        shouldShowTestEntry(appId, provider.category, provider.meta?.providerType)
+        shouldShowTestEntry(
+          appId,
+          provider.category,
+          provider.meta?.providerType,
+        )
           ? handleTest
           : undefined
       }
