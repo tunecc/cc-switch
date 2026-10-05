@@ -276,7 +276,6 @@ const asRecordOrEmpty = (value: unknown): Record<string, unknown> =>
 const asTrimmedString = (value: unknown): string =>
   typeof value === "string" ? value.trim() : "";
 
-
 type LocalProxyRequestOverridesBuildResult = ReturnType<
   typeof buildLocalProxyRequestOverrides
 >;

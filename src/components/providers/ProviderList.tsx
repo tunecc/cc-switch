@@ -583,7 +583,11 @@ export function ProviderList({
       onOpenWebsite={onOpenWebsite}
       onOpenTerminal={onOpenTerminal}
       onTest={
-        shouldShowTestEntry(appId, provider.category, provider.meta?.providerType)
+        shouldShowTestEntry(
+          appId,
+          provider.category,
+          provider.meta?.providerType,
+        )
           ? handleTest
           : undefined
       }
