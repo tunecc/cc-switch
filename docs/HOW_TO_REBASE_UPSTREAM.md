@@ -90,8 +90,8 @@ git rebase --continue
 优先取上游版本，再手动合并 fork 必要改动：
 
 ```bash
-# 取上游版本（rebase 中上游即 --theirs）
-git checkout --theirs <file>
+# 取上游版本（rebase 中上游即 --ours，正在重放的 fork 提交才是 --theirs）
+git checkout --ours <file>
 
 # 手动编辑该文件，把 fork 必要的改动叠加回去
 # ...编辑...
@@ -125,7 +125,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src-tauri/tauri.windows.conf.json` | Windows 平台 title（`CC Switch`，与上游一致） |
 | `src-tauri/tauri.dev.conf.json` | fork dev 预览配置：独立 identifier 与配置目录（整文件保留） |
 | `src/App.tsx` | `IS_FORK_BUILD` + `isTauri` 双守卫下的 `setTitle` useEffect |
-| `src/components/settings/SettingsPage.tsx` | `IS_FORK_BUILD` 守卫下的 DevPanel 入口与挂载 |
+| `src/components/settings/SettingsPage.tsx` | `IS_FORK_BUILD` 守卫下的 DevPanel 入口与挂载（v4.0 起为 sections 结构，DevPanel 挂在 about 分组） |
 | `src/vite-env.d.ts` | `__CCS_FORK_BUILD__` 全局类型声明 |
 | `src/i18n/locales/zh.json` / `en.json` / `ja.json` / `zh-TW.json` | `devpanel` 段 + `connectivityTest` / `connectivityCheck` 等连通性测试键段（fork 新增键；上游新增键按共享合并） |
 | `tests/msw/tauriMocks.ts` | `isTauri` mock 导出 |
@@ -168,9 +168,20 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 
 | 文件 | fork 专属语义 |
 | --- | --- |
-| `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` 及相关处理） |
-| `src/components/settings/AboutSection.tsx` | 「检查更新」改为打开 fork GitHub Releases 页（禁用应用内更新器） |
-| `src/components/proxy/RoutingActivationBrand.tsx` | 主页左上角 "CC Switch" 品牌链接的跳转目标（fork 改为 `https://github.com/farion1231/cc-switch`，上游为 `https://ccswitch.io`） |
+| `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` + `TrayIconEvent::Click` 左键 Up 分支调 `tray::toggle_main_window`） |
+| `src/components/settings/AboutSection.tsx` | 「检查更新」/发行说明指向 fork GitHub Releases（tunecc/cc-switch），禁用应用内更新器；v4.0.1 上游已删 RoutingActivationBrand（左上角品牌链接组件不再存在，无需叠加） |
+| `src/components/shell/Sidebar.tsx` | fork：全局面板项（MCP/Skills/会话/Prompts）按 `visibleSidebarPanels` 过滤 |
+| `src/components/settings/sections/GeneralSection.tsx` | fork：侧边面板可见性 pill 开关行（skills/sessions/mcp/prompts/batchTest） |
+| `src/App.tsx` | fork：批量连通性探针状态提升（useConnectivityProbe）、页头「批量检测」按钮按 `visibleSidebarPanels.batchTest` 与 `shouldShowTestEntry` 门控、托盘同款 window-title 守卫 |
+| `src/components/providers/ProviderCardActions.tsx` | fork：右键菜单「模型」快捷切换入口（上游 v4 删除 ProviderActions 后的移植位置） |
+| `src/components/providers/ProviderCard.tsx` | fork：模型徽章（extractModelBadgeForProvider）、ConnectivityBadge 探针徽标、双官网链接横排、右键菜单挂载 |
+| `src/components/providers/ProviderList.tsx` | fork：右键一键置顶/置底（applyQuickSort + updateTrayMenu 刷新）、ConnectivityTestDialog、批量探针徽标接线、websiteUrl2 搜索 |
+| `src/lib/query/mutations.ts` | fork：新增供应商默认插入第二位（sortIndex 让位重写） |
+| `src/components/providers/forms/ProviderForm.tsx` | fork：跨应用导入接线（ProviderImportEntry + useProviderImportApply，编辑/新建两条同步路径） |
+| `src/components/providers/forms/ProviderPresetSelector.tsx` | fork：`extraActions` 插槽（跨应用导入入口行，v4 两步外壳的外层渲染） |
+| `src/components/providers/forms/ClaudeFormFields.tsx` | fork：兜底模型直达区（fallbackQuickAccessSection，仅经典布局渲染）、API 格式选择器随端点输入框、1M 全选 |
+| `src/components/providers/forms/GrokBuildProviderForm.tsx` | fork：跨应用导入接线（grokbuild config.toml 路径） |
+| `src/config/forkOfficialAllowlist.ts` | 上游 v4 新增 mcode 应用后补 `mcode: []` 空白名单 |
 | `src/contexts/UpdateContext.tsx` | 取消启动自检（fork 关闭自动更新） |
 | `src/lib/updater.ts` | 恒返回 up-to-date（fork 关闭自动更新） |
 | `src/config/*ProviderPresets.ts` ×8 | 预设接口的 `hidden?: boolean` 字段与官方预设过滤接线 |
@@ -180,5 +191,6 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 说明：
 
 - 这些文件 rebase 冲突时按第 3.1 节保留 fork 侧。
+- 上游 v4.0 删除的组件（`ProviderActions.tsx`、`RoutingActivationBrand.tsx`、`AppVisibilitySettings.tsx`、`SkillStorageLocationSettings.tsx` 等）：fork 的对应改动按第 3.2 节移植到新位置（ProviderCardActions / AboutSection / GeneralSection），不要按白名单复活旧文件。
 - `.gitignore` 整体不是 fork 专属，但其末尾的 fork 工具产物段需保留；其余 `.gitignore` 改动按共享文件处理。
 - 白名单随 fork 魔改范围扩展而更新；新增 fork 专属文件时同步补充本表。

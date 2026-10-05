@@ -385,6 +385,7 @@ describe("useAddProviderMutation", () => {
       expect.objectContaining({ id: "generated-uuid", sortIndex: 1 }),
       "claude",
       undefined,
+      undefined,
     );
   });
 
@@ -411,6 +412,7 @@ describe("useAddProviderMutation", () => {
     expect(apiMocks.add).toHaveBeenCalledWith(
       expect.not.objectContaining({ sortIndex: expect.anything() }),
       "claude",
+      undefined,
       undefined,
     );
   });
