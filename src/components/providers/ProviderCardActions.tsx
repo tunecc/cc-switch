@@ -222,9 +222,7 @@ export function ProviderCardActions({
             onQuickModel ||
             onTest ||
             onConfigureUsage ||
-            onOpenTerminal) && (
-            <DropdownMenuSeparator />
-          )}
+            onOpenTerminal) && <DropdownMenuSeparator />}
           <DropdownMenuItem
             disabled={Boolean(presentation.deleteDisabledReason)}
             onSelect={onDelete}
