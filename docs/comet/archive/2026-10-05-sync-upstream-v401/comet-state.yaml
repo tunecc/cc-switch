@@ -1,0 +1,544 @@
+schema: comet.native.v4
+name: sync-upstream-v401
+language: zh-CN
+phase: archive
+status: done
+state_version: 18
+brief: brief.md
+document_constraints_version: 2
+shape_confirmation_hash: c5ab082ace2217123f0eaa3a046cb92d494da35adb376ba38752bd038ea5d04f
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 2
+  iteration: 3
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 1
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main upstream/main` 等于
+      4804b723d49aca7f85218a95e9030005ec395d9f（upstream/main HEAD），且 `git log
+      upstream/main..main` 只包含 fork 提交。"
+    result: passed
+    reason:
+      text: git merge-base main upstream/main =
+        4804b723d49aca7f85218a95e9030005ec395d9f（v4.0.1 同步基线）；git log
+        upstream/main..main 共 108 个提交，git cherry 无任何 patch-equivalent 上游提交，全部为
+        fork 提交。upstream/main 现已前进至 f5db60db（基线后 9 个 post-release 提交），spec
+        已明确记录其不在本次已确认范围，不影响判定。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: `git log upstream/main..main` 的提交与 rebase 前改动语义一一对应：110 个原始提交中 106
+      个逐一重放，4 个按 spec 记录的映射处理（1 个冗余跳过、1 个被新架构取代、2 个合并重放），外加本次同步提交；全部 fork
+      功能语义保留。"
+    result: passed
+    reason:
+      text: "rebase 前 110 个与 rebase 后 108 个提交的 subject diff 与 spec 4 项映射逐一吻合：WSL2 ci
+        提交冗余跳过；hermes toolbar guard 被 v4 Sidebar 全局面板过滤架构取代；两个 fallback 提交合并重放为
+        feat(form) 5b97a33b（提交说明注明合并原 8b4947a8 与 db988d14，共享
+        fallbackQuickAccessSection 适配 v4 双布局）；后端直连执行器同题提交 2→1 合并为 223ac64c；另加 2
+        个本次同步提交（chore: sync fork with upstream v4.0.1、chore: remove dead
+        AppVisibilitySettings component）。数量自洽：110-5+3=108。"
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 冲突解决符合 docs/HOW_TO_REBASE_UPSTREAM.md §3：白名单文件保留 fork
+      侧；共享文件以上游版本为基础叠加回 fork 必要改动（src-tauri/src/lib.rs 托盘左键切换、AboutSection
+      检查更新指向 fork Releases、RoutingActivationBrand 品牌链接指向 fork
+      GitHub、UpdateContext/updater 关闭自动更新、8 个 ProviderPresets 的 hidden
+      字段与接线、provider.ts 的 websiteUrl2、i18n locales 的 devpanel/connectivityTest
+      键段等）。"
+    result: passed
+    reason:
+      text: docs/HOW_TO_REBASE_UPSTREAM.md §3/3.2 的 ours/theirs 指引正确（86 行修正旧版误写）；共享文件
+        fork 叠加逐项在位：lib.rs show_menu_on_left_click(false)（托盘左键切换）、AboutSection
+        tunecc/cc-switch/releases ×3（检查更新指向 fork Releases）、Sidebar
+        visibleSidebarPanels ×3、UpdateContext 启动不检查更新（手动检查由 AboutSection 打开
+        GitHub releases）、9 个 *ProviderPresets.ts 含 hidden、provider.ts
+        websiteUrl2 schema、i18n locales devpanel（zh/en，与 rebase 前覆盖完全一致）与
+        connectivityTest（4 语言）键段。RoutingActivationBrand.tsx 已被上游 v4.0.1 删除，文档
+        172 行明确记录组件不再存在无需叠加、194 行给出已删组件移植指引，属按文档的一致处理而非遗漏。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4:
+      package.json、src-tauri/tauri.conf.json、src-tauri/Cargo.toml、src-tauri/Car\
+      go.lock 的版本号均为 4.0.1-1。"
+    result: passed
+    reason:
+      text: package.json、src-tauri/tauri.conf.json 的 "version" 均为
+        4.0.1-1；src-tauri/Cargo.toml version = "4.0.1-1"；src-tauri/Cargo.lock 中
+        cc-switch 包 version = "4.0.1-1"。四处一致。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: fork 魔改保留清单（specs/upstream-sync/spec.md）中的每一项在同步后仍然存在且可用：产品名 CC
+      Switch 与
+      DevPanel、侧边栏面板可见性、模型徽章与快捷切换、官方预设过滤、逐模型连通性测试、双官网链接、托盘左键切换、跨应用导入、禁用应用内更新器、f\
+      ork CI。"
+    result: passed
+    reason:
+      text: "fork 魔改保留清单逐项存在：src/components/devpanel/DevPanel.tsx + forkBuild.ts
+        CCS_DEV_PANEL 门控；Sidebar.tsx 按 visibleSidebarPanels 过滤 +
+        settings/sections/GeneralSection.tsx 紧凑 pill 开关行（含 batchTest）+ 后端
+        AppSettings 持久化；providerModelUtils.ts extractModelBadgeForProvider +
+        ModelQuickSwitch/ModelQuickSwitchDialog.tsx；ClaudeFormFields.tsx
+        fallbackQuickAccess 快捷访问区；ProviderList.tsx
+        quickMoveTop；lib/query/mutations.ts sortIndex；forkOfficialAllowlist.ts
+        补上游 v4 新增的 mcode:
+        []；services/connectivity_test/{mod,model_ids,protocol}.rs +
+        commands/connectivity_test.rs + ConnectivityTestDialog.tsx；provider.ts
+        websiteUrl2 + 多个表单组件接线；lib.rs/tray.rs
+        toggle_main_window；utils/providerImport.ts +
+        forms/ProviderImportEntry.tsx 跨应用导入；updater.ts 恒返回 up-to-date（fork
+        已关闭自动更新）；README fork 版（CC Switch (Fork) + tunecc badge +
+        差异说明）；release.yml 跳过上游纯版本 tag；App.tsx 批量检测门控。"
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（default_workflow:
+      native，workflows 含 native 与 classic），未被历史重放改写。"
+    result: passed
+    reason:
+      text: "git diff backup/sync-upstream-v401-pre:.comet/config.yaml
+        .comet/config.yaml 为空；当前内容 default_workflow: native 且 workflows 含 native
+        与 classic，未被历史重放改写。"
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: docs/HOW_TO_REBASE_UPSTREAM.md §4 已补充本次同步后新增的 fork 专属文件（如有）。"
+    result: passed
+    reason:
+      text: docs/HOW_TO_REBASE_UPSTREAM.md §4 白名单表已补充本次同步后的 v4 条目：SettingsPage
+        sections 结构下 DevPanel 入口（128）、SearchableModelPicker
+        移植版（148）、AboutSection 与 RoutingActivationBrand 已删说明（172）、Sidebar
+        visibleSidebarPanels 过滤（173）、App.tsx 批量检测门控（175）、ProviderCardActions
+        模型快捷切换移植位置（176）、ProviderPresetSelector extraActions
+        跨应用导入（181）、forkOfficialAllowlist mcode 空白名单（184）；194
+        行新增已删组件（ProviderActions/RoutingActivationBrand/AppVisibilitySettings/SkillStorageLocationSettings）移植到新位置、不复活旧文件的指引；vitest.config.ts
+        testTimeout 保留范围已记录（122）。
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm typecheck` 通过。"
+    result: passed
+    reason:
+      text: 复用 Runtime 检查记录（state.json
+        candidateId=8c7a6ce2-9e43-4caf-9b6c-798782093329 与本次候选一致，operationId
+        ba233cc2，evidence:runtime，evidenceDigest 84a6993…）：pnpm typecheck
+        exitCode 0（14:52:45-14:52:55）。实现与检查均针对当前候选，未重跑。
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `pnpm test:unit` 通过。"
+    result: passed
+    reason:
+      text: 复用同一 Runtime 检查记录：pnpm test:unit exitCode
+        0（14:52:55-14:53:22，evidenceDigest a09cd8f…）。未重跑。
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: `cargo check` 通过。"
+    result: passed
+    reason:
+      text: 复用同一 Runtime 检查记录：cargo check --manifest-path src-tauri/Cargo.toml
+        exitCode 0（evidenceDigest 56898f6…）。未重跑。
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: "A11: `cargo test -- --skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active` 通过（该用例在本机 cc-switch 运行时因代理端口 15721
+      被占用而失败，属上游测试设计，沿用既有例外并显式记录）。"
+    result: passed
+    reason:
+      text: 复用同一 Runtime 检查记录：cargo test --manifest-path src-tauri/Cargo.toml --
+        --skip
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+        exitCode 0（evidenceDigest b122c43…），跳过的用例名与验收指定完全一致，其余测试全部通过。未重跑。
+      truncated: false
+  - id: A12
+    source: brief.md
+    text: "A12: origin/main 与本地 main 一致（--force-with-lease 推送成功）。用户已授权推送。"
+    result: passed
+    reason:
+      text: git rev-parse main 与 origin/main 均为
+        22b042bb1880cc3f91b33cd85fb666dd9471d58f，本地与远端一致（第 2 轮失败项已解决）。
+      truncated: false
+builder_handoff:
+  candidate_id: 8c7a6ce2-9e43-4caf-9b6c-798782093329
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:287b6c99-7898-4508-8016-69f77015773e
+  iteration: 3
+  summary:
+    text: "迭代 3（修复 A12）：上一轮 Verifier 判 A12 失败，原因是死代码清理提交 22b042bb 未推送（origin/main 停在
+      5b87c6d4）。现已推送：git push --force-with-lease origin main
+      成功（5b87c6d4..22b042bb），origin/main == 本地 main ==
+      22b042bb，实现代码与上一候选完全相同（无新提交、无文件改动）。其余 11 项（A1-A11）上一轮已全部通过，本轮预期仅 A12
+      需复核。同步 fork main 至上游 v4.0.1（4804b723，220 个新提交）。110 个原始 fork 提交中 106
+      个逐一重放，4 个按映射处理（1 个上游冗余跳过、1 个被 v4 Sidebar
+      架构取代、兜底模型直达区两提交合并重放、原有同题重复执行器提交合并），外加同步提交 5b87c6d4（版本
+      4.0.1-1、白名单文档更新、测试适配），共 107 个提交。上游 v4.0 重写 UI shell 并删除
+      ProviderActions/RoutingActivationBrand/AppVisibilitySettings 后，fork
+      特性全部移植到新架构（模型徽章/快捷切换与探针徽标进 ProviderCardActions/ProviderCard
+      chips；侧边面板可见性过滤 Sidebar globals + GeneralSection pill 行；批量探针状态提升 App
+      页头按钮；DevPanel 挂 about 分组；兜底模型直达区仅经典布局；跨应用导入接 v4 表单 state
+      hooks；托盘左键切换进新事件句柄；sanitize 保留为纵深防御）。已按 Shape 授权完成 --force-with-lease
+      推送。开发期检查：pnpm typecheck 通过；pnpm test:unit 2348/2348 通过；cargo check 通过（0
+      警告）；cargo test -- --skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active 全部通过（lib 3388 通过/1 按例外跳过，合计约 3570 通过/0 失败）。已知限制：同步期间 upstream
+      又出现 5 个 post-release 提交（至 d455dd85），不在本次确认范围，留待下次同步。 "
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+  acceptance_review:
+    - id: A1
+      status: implemented-with-evidence
+      evidence:
+        - git merge-base main upstream/main == git rev-parse upstream/main ==
+          4804b723d49aca7f85218a95e9030005ec395d9f（对 v4.0.1 基线实测）
+        - git log upstream/main..main 仅含 fork 提交（107 个，无上游提交）
+      note: 基线锁定 4804b723（v4.0.1）；同步期间 upstream 远端前进到 d455dd85 属后续范围
+    - id: A2
+      status: implemented-with-evidence
+      evidence:
+        - git log --oneline 4804b723..main | wc -l = 107
+        - "原始 110 提交中 106 个逐一重放；diff 对比两侧 subjects：ci: stop flaky
+          WSL2（上游等价内容，git 判定冗余）、hermes skills guard（被 Sidebar 过滤架构取代）、fallback
+          quick-access 两提交合并为一个重放、后端直连执行器同题重复合并为一"
+      note: 全部 fork 功能语义保留（映射记录于 specs/upstream-sync/spec.md）
+    - id: A3
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md 白名单/共享语义表已更新（修正 §3.2 方向注释、记录 v4
+          移植位置与已删组件处理）
+        - 白名单文件（tauri.conf.json 版本、vite/vitest
+          define、forkBuild、devpanel、连通性测试文件、ModelQuickSwitch、forkOfficialAllowlist、ci.yml/release.yml、README、CHANGELOG、.comet/config.yaml
+          等）均保留 fork 侧
+        - 共享文件叠加：lib.rs 托盘左键 toggle、AboutSection 指向 tunecc releases、Sidebar
+          面板过滤、GeneralSection pill、ProviderCardActions 模型入口、ProviderCard
+          徽标/探针/双链接、ProviderList 右键排序/搜索、mutations.ts
+          插入第二位、ProviderForm/GrokBuild 跨应用导入、ProviderPresetSelector
+          extraActions、ClaudeFormFields 兜底直达区、8 个 ProviderPresets hidden
+          字段、provider.ts websiteUrl2、四语言 locales fork 键段
+      note: RoutingActivationBrand/ProviderActions/AppVisibilitySettings 被上游删除，fork
+        语义移植到新位置
+    - id: A4
+      status: implemented-with-evidence
+      evidence:
+        - package.json / src-tauri/tauri.conf.json / src-tauri/Cargo.toml /
+          src-tauri/Cargo.lock 均为 4.0.1-1（同步提交 5b87c6d4 实测）
+      note: 沿用「上游版本 + -1」惯例
+    - id: A5
+      status: implemented-with-evidence
+      evidence:
+        - 产品名/DevPanel：DevPanel.tsx 存在、SettingsPage about 分组挂载 +
+          IS_FORK_BUILD&&DEV_PANEL_ENABLED 守卫
+        - 侧边面板可见性：Sidebar.tsx visibleSidebarPanels 过滤 + GeneralSection 五个
+          pill（skills/sessions/mcp/prompts/batchTest）
+        - 模型徽章与快捷切换：extractModelBadgeForProvider 徽章 + ProviderCardActions Boxes
+          入口 + ModelQuickSwitchDialog
+        - "官方预设过滤：forkOfficialAllowlist.ts（含 v4 新增 mcode: []）+
+          forkPresetFilter.ts + hidden 字段"
+        - 逐模型连通性测试：services/connectivity_test/（mod.rs、model_ids.rs）+
+          commands/connectivity_test.rs +
+          ConnectivityTestDialog/DetailDialog/Badge + 四语言 connectivityTest 键 +
+          sanitize 保留
+        - 双官网链接：provider.ts websiteUrl2 + ProviderCard website-links 横排 + DAO
+          往返测试
+        - 托盘左键切换：lib.rs show_menu_on_left_click(false) + Click 左键 Up 分支调
+          toggle_main_window（macOS/Windows 生效）
+        - 跨应用导入：providerImport.ts + ProviderImportEntry +
+          useProviderImportSources/Apply + 表单接线 + 9 项测试全过
+        - 右上品牌/更新器：AboutSection handleCheckUpdate/handleOpenReleaseNotes 指向
+          tunecc releases
+        - README fork 重写版保留；CI 裁剪版 release.yml 保留且含上游 tag 跳过逻辑
+        - 批量检测：App 页头按钮 + visibleSidebarPanels.batchTest 门控 + stopProbe effect
+      note: 全清单核验通过
+    - id: A6
+      status: implemented-with-evidence
+      evidence:
+        - .comet/config.yaml 与 rebase 前逐字节一致（git diff
+          backup/sync-upstream-v401-pre:.comet/config.yaml 实测为空）
+        - "default_workflow: native，workflows 含 native+classic"
+      note: 重放期间未被历史提交改写
+    - id: A7
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md 更新：§3.2 方向注释修正为 --ours；新增
+          Sidebar/GeneralSection/App/ProviderCardActions/ProviderCard/ProviderList/mutations/ProviderForm/ProviderPresetSelector/ClaudeFormFields/GrokBuild/forkOfficialAllowlist
+          的 v4 移植语义；新增「上游 v4 已删组件」处理指引；SettingsPage 条目更新为 sections 结构
+      note: 同步提交 5b87c6d4 已包含
+    - id: A8
+      status: implemented-with-evidence
+      evidence:
+        - pnpm typecheck 零错误
+      note: tsc --noEmit
+    - id: A9
+      status: implemented-with-evidence
+      evidence:
+        - pnpm test:unit：199 个文件 / 2348 个测试全部通过
+      note: 含 fork 移植测试（右键菜单、双链接、跨应用导入、插入第二位、websiteUrl2 搜索、pill 插槽等）
+    - id: A10
+      status: implemented-with-evidence
+      evidence:
+        - cargo check 通过（无错误、无警告）
+      note: 无额外说明
+    - id: A11
+      status: implemented-with-evidence
+      evidence:
+        - cargo test -- --skip
+          update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active：约
+          3570 个测试通过、0 失败；lib 套件 3388 通过 / 1 filtered（即显式跳过项）
+      note: 跳过项为本机 cc-switch 运行时代理端口 15721 占用的既有环境例外
+    - id: A12
+      status: implemented-with-evidence
+      evidence:
+        - git push --force-with-lease origin main 成功（5b87c6d4..22b042bb
+          fast-forward）
+        - git rev-parse origin/main main 一致（22b042bb）
+      note: 迭代 2 失败项已修复：清理提交 22b042bb 已推送，origin 与本地一致
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: 零错误
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 2348/2348
+        truncated: false
+    - name:
+        text: cargo check
+        truncated: false
+      result: passed
+      note:
+        text: 无警告
+        truncated: false
+    - name:
+        text: cargo test (skip known env exception)
+        truncated: false
+      result: passed
+      note:
+        text: 约 3570 通过 0 失败，1 项按例外跳过
+        truncated: false
+    - name:
+        text: git 状态核对
+        truncated: false
+      result: passed
+      note:
+        text: merge-base/版本号/config.yaml/推送一致
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 同步期间 upstream 远端新增 5 个 post-release 提交（4804b723..d455dd85），按已确认范围锁定 v4.0.1
+        基线，未包含在本次同步中
+      truncated: false
+    - text: 重建历史时修正了 6 个由 git 段错误产生的重复提交；A2 的 4 项映射已在 spec 记录
+      truncated: false
+    - text: 兜底模型直达区在 Stack 布局不渲染（v4 Stack 布局以模型列表行为主 UI，与上游测试期望一致）
+      truncated: false
+    - text: 历史遗留 AppVisibilitySettings.tsx 死代码已在 22b042bb 移除（Verifier 第一轮发现的清理项）
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-10-05T14:52:44.280Z
+blockers: []
+verification:
+  candidate_id: 8c7a6ce2-9e43-4caf-9b6c-798782093329
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:6482e939-9fc9-4056-9cc3-23f3ebd1b643
+  iteration: 3
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: typecheck
+      name:
+        text: pnpm typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 10091
+    - id: test-unit
+      name:
+        text: pnpm test:unit
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 27169
+    - id: cargo-check
+      name:
+        text: cargo check
+        truncated: false
+      argv_display:
+        - text: check
+          truncated: false
+        - text: --manifest-path
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 729
+    - id: cargo-test
+      name:
+        text: cargo test (skip known env exception)
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+        - text: --manifest-path
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+        - text: --
+          truncated: false
+        - text: --skip
+          truncated: false
+        - text: update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 30969
+  summary:
+    text: 第 3 轮独立复核全部 12 项验收均通过。fork main 已 rebase 到 upstream
+      v4.0.1（4804b723）之上：merge-base 正确、108 个 fork 提交无上游混入；110 个原始提交中 106 个逐一重放、4
+      个按 spec 映射处理（WSL2 冗余跳过、hermes guard 被 v4 架构取代、fallback 两合一、执行器同题合一），外加 2
+      个同步提交；冲突解决符合 HOW_TO_REBASE_UPSTREAM.md §3（含 RoutingActivationBrand
+      被上游删除的文档化处理）；版本号 4.0.1-1 四处一致；.comet/config.yaml 未被改写；§4 白名单已补 v4
+      移植条目与已删组件指引；Runtime 4 项构建/测试检查（typecheck / test:unit / cargo check / cargo
+      test --skip 已知环境例外）均 exitCode 0 并复用候选一致的检查证据；origin/main == main ==
+      22b042bb，第 2 轮唯一失败项 A12 已解决。
+    truncated: false
+  risks:
+    - text: upstream/main 已继续前进至 f5db60db（本次基线 4804b723 之后 9 个 post-release 提交），spec
+        已声明不在本次范围；下一次同步需基于新基线重新评估冲突面。
+      truncated: false
+    - text: docs/HOW_TO_REBASE_UPSTREAM.md 白名单表仅显式列出 src-tauri/Cargo.toml 的 version
+        条目（120 行），未含 Cargo.lock
+        版本联动的独立条目（spec「白名单文档更新」节曾提及），属微小文档缺口，可随下次同步补记，不影响本次验收。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-10-05T15:02:25.654Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native confirmed acceptance criteria changed
+      truncated: false
+    completed_at: 2026-10-05T13:36:52.150Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: execution-error
+    unresolved_ids: []
+    summary:
+      text: Verifier 子代理两次因推理网关 503（所有供应商已熔断 / No active API keys
+        available）被平台终止，未产出验收结果。已提交启动回执前中断。另：候选冻结后 Builder 发现并移除了遗留死代码
+        AppVisibilitySettings.tsx（22b042bb，typecheck 通过），候选实现版本已变化。
+      truncated: false
+    completed_at: 2026-10-05T14:14:43.837Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native check input changed after the candidate was built; a new Builder
+        candidate is required before checks can run again.
+      truncated: false
+    completed_at: 2026-10-05T14:24:09.808Z
+  - goal_cycle: 2
+    iteration: 2
+    attempt: 1
+    outcome: fail
+    unresolved_ids:
+      - A12
+    summary:
+      text: 独立复核 12 项验收：A1-A11 全部通过（rebase 基线 4804b723 正确、110→108 提交映射与 spec 4
+        项映射完全吻合、版本 4.0.1-1、fork 14 项魔改全部实测存在、config.yaml 与 backup
+        逐字节一致、白名单文档已更新、4 项 Runtime 冻结检查 exit 0）；仅 A12 失败：origin/main(5b87c6d4)
+        落后本地 main(22b042bb) 1 个提交，死代码清理提交待推送。verdict=fail，待 Builder 推送 22b042bb
+        后重验 A12。
+      truncated: false
+    completed_at: 2026-10-05T14:43:41.868Z
+  - goal_cycle: 2
+    iteration: 3
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 第 3 轮独立复核全部 12 项验收均通过。fork main 已 rebase 到 upstream
+        v4.0.1（4804b723）之上：merge-base 正确、108 个 fork 提交无上游混入；110 个原始提交中 106
+        个逐一重放、4 个按 spec 映射处理（WSL2 冗余跳过、hermes guard 被 v4 架构取代、fallback
+        两合一、执行器同题合一），外加 2 个同步提交；冲突解决符合 HOW_TO_REBASE_UPSTREAM.md §3（含
+        RoutingActivationBrand 被上游删除的文档化处理）；版本号 4.0.1-1 四处一致；.comet/config.yaml
+        未被改写；§4 白名单已补 v4 移植条目与已删组件指引；Runtime 4 项构建/测试检查（typecheck / test:unit /
+        cargo check / cargo test --skip 已知环境例外）均 exitCode 0
+        并复用候选一致的检查证据；origin/main == main == 22b042bb，第 2 轮唯一失败项 A12 已解决。
+      truncated: false
+    completed_at: 2026-10-05T15:02:25.654Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-10-05T05:20:28.014Z
