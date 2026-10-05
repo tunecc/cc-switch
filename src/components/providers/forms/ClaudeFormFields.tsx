@@ -1069,50 +1069,50 @@ export function ClaudeFormFields({
           />
         )}
 
-      {shouldShowModelSelector && (
-        <Collapsible
-          open={stackAdvancedExpanded}
-          onOpenChange={setStackAdvancedExpanded}
-          className="rounded-lg border border-border p-4"
-        >
-          <CollapsibleTrigger asChild>
-            <Button
-              type="button"
-              variant={null}
-              size="sm"
-              className="h-8 w-full justify-start gap-1.5 px-0 text-sm font-medium text-fg-1 hover:opacity-70"
-            >
-              {stackAdvancedExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-              {t("providerForm.advancedOptionsToggle")}
-            </Button>
-          </CollapsibleTrigger>
-          {!stackAdvancedExpanded && (
-            <p className="text-xs text-fg-2 mt-1 ml-1">
-              {t("providerForm.stackLayout.advancedHint", {
-                defaultValue: "自定义 User-Agent 与请求覆盖，一般无需修改。",
-              })}
-            </p>
-          )}
-          <CollapsibleContent className="space-y-4 pt-2">
-            <CustomUserAgentField
-              id="claude-custom-user-agent"
-              value={customUserAgent}
-              onChange={onCustomUserAgentChange}
-            />
-            <div className="border-t border-border pt-3">
-              <LocalProxyRequestOverridesField
-                headersJson={localProxyHeadersOverride}
-                bodyJson={localProxyBodyOverride}
-                onHeadersJsonChange={onLocalProxyHeadersOverrideChange}
-                onBodyJsonChange={onLocalProxyBodyOverrideChange}
+        {shouldShowModelSelector && (
+          <Collapsible
+            open={stackAdvancedExpanded}
+            onOpenChange={setStackAdvancedExpanded}
+            className="rounded-lg border border-border p-4"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                type="button"
+                variant={null}
+                size="sm"
+                className="h-8 w-full justify-start gap-1.5 px-0 text-sm font-medium text-fg-1 hover:opacity-70"
+              >
+                {stackAdvancedExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                {t("providerForm.advancedOptionsToggle")}
+              </Button>
+            </CollapsibleTrigger>
+            {!stackAdvancedExpanded && (
+              <p className="text-xs text-fg-2 mt-1 ml-1">
+                {t("providerForm.stackLayout.advancedHint", {
+                  defaultValue: "自定义 User-Agent 与请求覆盖，一般无需修改。",
+                })}
+              </p>
+            )}
+            <CollapsibleContent className="space-y-4 pt-2">
+              <CustomUserAgentField
+                id="claude-custom-user-agent"
+                value={customUserAgent}
+                onChange={onCustomUserAgentChange}
               />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+              <div className="border-t border-border pt-3">
+                <LocalProxyRequestOverridesField
+                  headersJson={localProxyHeadersOverride}
+                  bodyJson={localProxyBodyOverride}
+                  onHeadersJsonChange={onLocalProxyHeadersOverrideChange}
+                  onBodyJsonChange={onLocalProxyBodyOverrideChange}
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
       </>
     );
