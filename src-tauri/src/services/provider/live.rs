@@ -18,7 +18,6 @@ use crate::store::AppState;
 
 use super::normalize_claude_models_in_value;
 
-
 /// fork：剥离仅供 cc-switch 内部使用的字段，防止写入 Claude Code settings.json。
 /// 上游 v4 的 ClaudeProjection 白名单（live/floor.rs）本身已不投影这些字段，
 /// 此处作为纵深防御保留；当前仅由测试直接调用。
@@ -1566,16 +1565,8 @@ mod tests {
         assert!(sanitized.get("env").is_some());
     }
 
-
-
-
-
-
-
-
     /// 往返不动点：注入产物只活在 live，切走回灌后存储配置必须与注入前一致，
     /// 否则程序默认值固化成"用户显式值"，之后调默认值永远压不动。
-
 
     /// C5 回归锁：前端表单的合并/剥离必须走 toml_edit 文档模型。
     /// smol-toml 的 parse→merge→stringify 整文档重序列化会丢注释、
@@ -1584,8 +1575,6 @@ mod tests {
     /// 合并时标量=片段覆盖供应商值（与 Claude 侧 deepMerge 一致）；
     /// 剥离按值匹配：用户改过的值不删（与 strip 路径的
     /// toml_value_is_subset 语义一致）。
-
-
 
     #[test]
     fn codex_managed_oauth_live_auth_matches_codex_cli_shape() {

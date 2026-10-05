@@ -1167,9 +1167,8 @@ export function ClaudeFormFields({
         )}
 
         {fallbackQuickAccessSection}
-
-        {/* 高级区只有 UA 和请求覆盖；Copilot 的转发会跳过这两项，整块不显示 */}
-        {!isCopilotPreset && (
+        {/* 高级区只有 UA 和请求覆盖；无模型选择器时整块没有内容，Copilot 的转发也会跳过这两项 */}
+        {shouldShowModelSelector && !isCopilotPreset && (
           <Collapsible
             open={stackAdvancedExpanded}
             onOpenChange={setStackAdvancedExpanded}
