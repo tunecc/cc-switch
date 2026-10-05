@@ -593,9 +593,10 @@ describe("EditProviderDialog", () => {
     const handleSubmit = vi.fn().mockResolvedValue(undefined);
 
     apiMocks.getCurrent.mockResolvedValue(provider.id);
-    apiMocks.getLiveProviderSettings.mockResolvedValue(
-      provider.settingsConfig,
-    );
+    apiMocks.getEditorView.mockResolvedValue({
+      settings: provider.settingsConfig,
+      inactive: [],
+    });
 
     render(
       <EditProviderDialog
@@ -609,6 +610,9 @@ describe("EditProviderDialog", () => {
 
     // initialData 回填 → mock 表单提交 values.websiteUrl2 → 编辑对话框
     // 组装 updatedProvider 一并透传
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "common.save" })).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole("button", { name: "common.save" }));
 
     await waitFor(() => expect(handleSubmit).toHaveBeenCalledTimes(1));
