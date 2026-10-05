@@ -106,7 +106,9 @@ describe("Codex add form: cross-app import", () => {
     });
     renderCodexForm();
 
-    expect(await screen.findByText("预设供应商")).toBeInTheDocument();
+    expect(
+      await screen.findByLabelText("搜索预设供应商"),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /导入/ }),
     ).not.toBeInTheDocument();
@@ -122,7 +124,7 @@ describe("Codex add form: cross-app import", () => {
     await user.click(await screen.findByText("Relay One"));
     await user.click(screen.getByRole("button", { name: "导入" }));
 
-    const name = await screen.findByLabelText("供应商名称");
+    const name = await screen.findByLabelText("名称");
     await waitFor(() => expect(name).toHaveValue("Relay One"));
     expect(screen.getByLabelText("备注")).toHaveValue("主力通道");
     expect(screen.getByLabelText("官网链接")).toHaveValue(
@@ -231,7 +233,7 @@ describe("Codex add form: cross-app import", () => {
     await user.click(await screen.findByText("Relay One"));
     await user.click(screen.getByRole("button", { name: "导入" }));
 
-    const name = await screen.findByLabelText("供应商名称");
+    const name = await screen.findByLabelText("名称");
     await waitFor(() => expect(name).toHaveValue("Relay One"));
 
     await user.click(screen.getByRole("button", { name: "保存" }));
@@ -299,7 +301,7 @@ describe("Codex add form: cross-app import", () => {
 
     // 模型目录与登录态键都不在导入范围内，必须原样存活
     await waitFor(() =>
-      expect(screen.getByLabelText("供应商名称")).toHaveValue("Relay One"),
+      expect(screen.getByLabelText("名称")).toHaveValue("Relay One"),
     );
     await user.click(screen.getByRole("button", { name: "保存" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
@@ -336,10 +338,9 @@ describe("Codex add form: cross-app import", () => {
 
     // 预设按钮的可访问名称里混了图标的 <title>，按按钮文字点更稳
     await user.click(await screen.findByText("Kimi", { selector: "span" }));
+    // v4 起预设生效以名称被预填体现（请求地址在 TOML 编辑器里，不再有独立输入框）
     await waitFor(() =>
-      expect(screen.getByLabelText("API 请求地址")).toHaveValue(
-        "https://api.moonshot.cn/v1",
-      ),
+      expect(screen.getByLabelText("名称")).not.toHaveValue(""),
     );
 
     await user.click(
@@ -349,10 +350,7 @@ describe("Codex add form: cross-app import", () => {
     await user.click(screen.getByRole("button", { name: "导入" }));
 
     await waitFor(() =>
-      expect(screen.getByLabelText("供应商名称")).toHaveValue("Relay One"),
-    );
-    expect(screen.getByLabelText("API 请求地址")).toHaveValue(
-      "https://relay.example.com/api",
+      expect(screen.getByLabelText("名称")).toHaveValue("Relay One"),
     );
 
     await user.click(screen.getByRole("button", { name: "添加" }));
@@ -415,7 +413,7 @@ describe("Codex add form: cross-app import", () => {
     await user.click(await screen.findByText("Kimi", { selector: "span" }));
     // 预设已生效（名称被预填）作为后续导入的前置状态
     await waitFor(() =>
-      expect(screen.getByLabelText("供应商名称")).not.toHaveValue(""),
+      expect(screen.getByLabelText("名称")).not.toHaveValue(""),
     );
 
     await user.click(
@@ -425,10 +423,7 @@ describe("Codex add form: cross-app import", () => {
     await user.click(screen.getByRole("button", { name: "导入" }));
 
     await waitFor(() =>
-      expect(screen.getByLabelText("供应商名称")).toHaveValue("Relay Two"),
-    );
-    expect(screen.getByLabelText("API Key")).toHaveValue(
-      "sk-secret-should-not-leak",
+      expect(screen.getByLabelText("名称")).toHaveValue("Relay Two"),
     );
 
     await user.click(screen.getByRole("button", { name: "添加" }));
@@ -471,7 +466,7 @@ describe("Codex add form: cross-app import", () => {
     await user.click(screen.getByRole("button", { name: "导入" }));
 
     await waitFor(() =>
-      expect(screen.getByLabelText("供应商名称")).toHaveValue("Relay One"),
+      expect(screen.getByLabelText("名称")).toHaveValue("Relay One"),
     );
     await user.click(screen.getByRole("button", { name: "添加" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
