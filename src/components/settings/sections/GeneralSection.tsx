@@ -256,7 +256,9 @@ function SidebarPanelButton({
       variant={active ? "default" : "ghost"}
       className={cn(
         "min-w-[90px] w-auto gap-1.5 px-3",
-        active ? "shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted",
+        active
+          ? "shadow-sm"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted",
       )}
     >
       {icon}
