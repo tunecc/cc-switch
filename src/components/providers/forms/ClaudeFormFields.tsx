@@ -1087,8 +1087,6 @@ export function ClaudeFormFields({
           />
         )}
 
-      {fallbackQuickAccessSection}
-
       {shouldShowModelSelector && (
         <Collapsible
           open={stackAdvancedExpanded}
