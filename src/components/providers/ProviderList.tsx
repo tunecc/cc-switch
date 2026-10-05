@@ -445,6 +445,7 @@ export function ProviderList({
           provider.name,
           provider.notes,
           provider.websiteUrl,
+          provider.websiteUrl2,
           extractProviderBaseUrl(provider.settingsConfig),
         ]
           .filter(Boolean)
