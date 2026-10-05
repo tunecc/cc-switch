@@ -95,14 +95,21 @@ vi.mock("@/components/UsageFooter", () => ({
   default: () => <div data-testid="usage-footer" />,
 }));
 
-vi.mock("@/lib/api/providers", () => ({
-  providersApi: {
-    updateSortOrder: (...args: unknown[]) => updateSortOrderMock(...args),
-    updateTrayMenu: (...args: unknown[]) => updateTrayMenuMock(...args),
-  },
-}));
+vi.mock("@/lib/api/providers", async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import("@/lib/api/providers")
+  >();
+  return {
+    providersApi: {
+      ...actual.providersApi,
+      // 右键快捷排序测试只截获排序/托盘刷新，其余 API 走真实实现（msw 拦截）
+      updateSortOrder: (...args: unknown[]) => updateSortOrderMock(...args),
+      updateTrayMenu: (...args: unknown[]) => updateTrayMenuMock(...args),
+    },
+  };
+});
 
-vi.mock("sonner", () => ({
+vi.mock("@/lib/toast", () => ({
   toast: {
     success: (...args: unknown[]) => toastMock.success(...args),
     error: (...args: unknown[]) => toastMock.error(...args),
