@@ -741,7 +741,11 @@ export function ProviderList({
           : onOpenTerminal
       }
       onTest={
-        shouldShowTestEntry(appId, provider.category, provider.meta?.providerType)
+        shouldShowTestEntry(
+          appId,
+          provider.category,
+          provider.meta?.providerType,
+        )
           ? handleTest
           : undefined
       }
