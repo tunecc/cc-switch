@@ -191,6 +191,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/config/*ProviderPresets.ts` ×8 | 预设接口的 `hidden?: boolean` 字段与官方预设过滤接线 |
 | `src/lib/schemas/provider.ts` | `websiteUrl2` 第二官网链接字段 |
 | `src-tauri/src/commands/misc.rs` 等后端共享文件 | 连通性测试命令注册、`connectivityTest` sanitize 隔离 |
+| `tests/components/AddProviderDialog.test.tsx` | fork：两个 claude 用例的「common.add」按钮由同步 `getByRole` 改为 `await findByRole`（live 底到位后 step 从 pick 切 form 是第二次提交，CI 慢机器上 footer 晚一拍渲染，同步查找偶发 flaky，2026-10-06 CI 实测踩中）；上游改动为基础叠加此修复 |
 
 说明：
 
