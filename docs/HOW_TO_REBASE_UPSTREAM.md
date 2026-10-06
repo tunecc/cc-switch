@@ -118,6 +118,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `tauri.conf.json` | `productName`（`CC Switch`，与上游一致；fork 仅靠版本号后缀区分）、`version` 等 fork 标识字段 |
 | `package.json` | `version`（fork 版本号） |
 | `src-tauri/Cargo.toml` | `version`（与 `package.json` 对齐的 fork 版本号） |
+| `src-tauri/Cargo.lock` | `cc-switch` 包的 `version` 与 `Cargo.toml` 联动（改 `Cargo.toml` 后跑一次 `cargo check` 自动更新） |
 | `vite.config.ts` | `define` 中的 `__CCS_FORK_BUILD__` 等 fork 编译期常量 |
 | `vitest.config.ts` | `define` 中的 `__CCS_FORK_BUILD__` 与 `testTimeout`（jsdom 组件测试超时 30s，整文件保留） |
 | `src/config/forkBuild.ts` | fork 构建配置（整文件保留） |
@@ -168,8 +169,11 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 
 | 文件 | fork 专属语义 |
 | --- | --- |
-| `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` + `TrayIconEvent::Click` 左键 Up 分支调 `tray::toggle_main_window`） |
-| `src/components/settings/AboutSection.tsx` | 「检查更新」/发行说明指向 fork GitHub Releases（tunecc/cc-switch），禁用应用内更新器；v4.0.1 上游已删 RoutingActivationBrand（左上角品牌链接组件不再存在，无需叠加） |
+| `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` + `TrayIconEvent::Click` 左键 Up 分支调 `tray::toggle_main_window`）；移除 Updater 插件注册段（fork 关闭自动更新的后端部分，v4.0.2 起随 8217f0b3 重放保留） |
+| `src-tauri/src/settings.rs` | fork：`VisibleSidebarPanels` 结构 + `AppSettings.visible_sidebar_panels`（上游 v4.0.2 新增 `whats_new_seen_version` 与之共存，合并两段） |
+| `src-tauri/src/database/schema.rs` | fork：`website_url_2` 列（providers 建表 + `migrate_v18_to_v19` + `add_column_if_missing` 兜底）。v4.0.2 起上游 SCHEMA_VERSION=20（v19→v20 为 `mcp_servers.enabled_pi`）：合并时 v18→v19 同时保留上游 mcode 迁移与 fork website_url_2，v19→v20 取上游，`SCHEMA_VERSION` 取上游值 |
+| `src-tauri/src/database/mod.rs` | fork：移除 `cleanup_old_stream_check_logs` 启动清理调用（旧 stream_check 链路已删）；`SCHEMA_VERSION` 常量随上游演进（当前 20） |
+| `src/components/settings/AboutSection.tsx` | 「检查更新」/发行说明指向 fork GitHub Releases（tunecc/cc-switch），禁用应用内更新器；v4.0.1 上游已删 RoutingActivationBrand（左上角品牌链接组件不再存在，无需叠加）。v4.0.2 起该文件含上游 whats-new 摘要入口（WhatsNewDialog + recentEntries + Sparkles 按钮），按共享文件处理：保留 whats-new 区块，只叠加 fork 的更新器改动（移除 isDownloading/installUpdateAndRestart/checkUpdate/resetDismiss，链接改 tunecc） |
 | `src/components/shell/Sidebar.tsx` | fork：全局面板项（MCP/Skills/会话/Prompts）按 `visibleSidebarPanels` 过滤 |
 | `src/components/settings/sections/GeneralSection.tsx` | fork：侧边面板可见性 pill 开关行（skills/sessions/mcp/prompts/batchTest） |
 | `src/App.tsx` | fork：批量连通性探针状态提升（useConnectivityProbe）、页头「批量检测」按钮按 `visibleSidebarPanels.batchTest` 与 `shouldShowTestEntry` 门控、托盘同款 window-title 守卫 |
