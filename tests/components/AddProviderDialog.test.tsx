@@ -124,6 +124,8 @@ describe("AddProviderDialog", () => {
 
     // Claude 的表单要等 live 底读回来才渲染。
     await screen.findByRole("button", { name: "manage-auth" });
+    // live 底到位后 step 才从 pick 切到 form，footer 的提交按钮是第二次提交才
+    // 渲染出来的；慢机器上两步之间有窗口，用 findBy 等按钮出现而不是同步查找。
     fireEvent.click(
       await screen.findByRole("button", {
         name: "common.add",
@@ -163,6 +165,7 @@ describe("AddProviderDialog", () => {
     );
 
     await screen.findByRole("button", { name: "manage-auth" });
+    // 同上：step 切换是第二次提交，慢机器上 footer 晚一拍才渲染。
     fireEvent.click(
       await screen.findByRole("button", {
         name: "common.add",
