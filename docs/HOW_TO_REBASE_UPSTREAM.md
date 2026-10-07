@@ -171,8 +171,8 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | --- | --- |
 | `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` + `TrayIconEvent::Click` 左键 Up 分支调 `tray::toggle_main_window`）；移除 Updater 插件注册段（fork 关闭自动更新的后端部分，v4.0.2 起随 8217f0b3 重放保留） |
 | `src-tauri/src/settings.rs` | fork：`VisibleSidebarPanels` 结构 + `AppSettings.visible_sidebar_panels`（上游 v4.0.2 新增 `whats_new_seen_version` 与之共存，合并两段） |
-| `src-tauri/src/database/schema.rs` | fork：`website_url_2` 列（providers 建表 + `migrate_v18_to_v19` + `add_column_if_missing` 兜底）。v4.0.2 起上游 SCHEMA_VERSION=20（v19→v20 为 `mcp_servers.enabled_pi`）：合并时 v18→v19 同时保留上游 mcode 迁移与 fork website_url_2，v19→v20 取上游，`SCHEMA_VERSION` 取上游值 |
-| `src-tauri/src/database/mod.rs` | fork：移除 `cleanup_old_stream_check_logs` 启动清理调用（旧 stream_check 链路已删）；`SCHEMA_VERSION` 常量随上游演进（当前 20） |
+| `src-tauri/src/database/schema.rs` | fork：`website_url_2` 列（providers 建表 + `migrate_v18_to_v19` + `add_column_if_missing` 兜底）。v4.0.2 起上游 SCHEMA_VERSION=20（v19→v20 为 `mcp_servers.enabled_pi`）：合并时 v18→v19 同时保留上游 mcode 迁移与 fork website_url_2，v19→v20 取上游，`SCHEMA_VERSION` 取上游值。v4.0.2 同步的 v19 双语义合并留下历史缺口（旧 fork 构建已升到 v19 的库跳过捆绑步骤、缺 `enabled_mcode`），fork 已加 v20→v21 修复迁移幂等补齐 `mcp_servers.enabled_mcode/enabled_pi` 与 `skills.enabled_mcode`（当前 SCHEMA_VERSION=21）：后续上游若再推进 schema，fork 的 v21 步骤必须原样保留，新步骤接在 v21 之后 |
+| `src-tauri/src/database/mod.rs` | fork：移除 `cleanup_old_stream_check_logs` 启动清理调用（旧 stream_check 链路已删）；`SCHEMA_VERSION` 常量随 fork 修复迁移演进（当前 21，含 fork 专属 v20→v21 修复步骤；上游再推进时取「上游新版本与 fork v21 的较大者」并叠加双方迁移步骤） |
 | `src/components/settings/AboutSection.tsx` | 「检查更新」/发行说明指向 fork GitHub Releases（tunecc/cc-switch），禁用应用内更新器；v4.0.1 上游已删 RoutingActivationBrand（左上角品牌链接组件不再存在，无需叠加）。v4.0.2 起该文件含上游 whats-new 摘要入口（WhatsNewDialog + recentEntries + Sparkles 按钮），按共享文件处理：保留 whats-new 区块，只叠加 fork 的更新器改动（移除 isDownloading/installUpdateAndRestart/checkUpdate/resetDismiss，链接改 tunecc） |
 | `src/components/shell/Sidebar.tsx` | fork：全局面板项（MCP/Skills/会话/Prompts）按 `visibleSidebarPanels` 过滤 |
 | `src/components/settings/sections/GeneralSection.tsx` | fork：侧边面板可见性 pill 开关行（skills/sessions/mcp/prompts/batchTest） |
