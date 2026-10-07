@@ -1,0 +1,131 @@
+schema: comet.native.v4
+name: sync-upstream-v403
+language: zh-CN
+phase: build
+status: active
+state_version: 3
+brief: brief.md
+document_constraints_version: 2
+shape_confirmation_hash: 52e1f2eb365eb172e2cd0d3e4f6c13b7d691a1d95c47b0bab4f311dcdaf3ecc3
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: building
+  goal_cycle: 1
+  iteration: 1
+  attempt: 0
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: submit-builder-candidate
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main upstream/main` 等于 8596a233…（v4.0.3 tag
+      指向的提交），`git log v4.0.3..main` 只包含 fork 提交，且 d35726e2 不在 main 历史中。"
+    result: pending
+    reason: null
+  - id: A2
+    source: brief.md
+    text: "A2: `git log v4.0.3..main` 的提交与 rebase 前改动语义一一对应：115 个原始 fork
+      提交按原顺序重放（若出现 git 自动判定的冗余跳过或需合并的提交，按 spec 记录的映射处理并核对语义），外加本次同步提交；全部 fork
+      功能语义保留。"
+    result: pending
+    reason: null
+  - id: A3
+    source: brief.md
+    text: "A3: 冲突解决符合 docs/HOW_TO_REBASE_UPSTREAM.md §3：白名单文件保留 fork
+      侧；共享文件以上游版本为基础叠加回 fork 必要改动（lib.rs 移除 Updater 插件注册 + 托盘左键切换 +
+      connectivity_test 命令注册并叠加上游新命令注册；provider.rs website_url_2
+      字段族；forwarder.rs 上游 SSE/身份/effort 改动为基础叠加 fork UA 口径注释；services/mod.rs 上游
+      backup_storage 与 fork connectivity_test 的 mod 声明并存；live.rs/provider mod.rs
+      fork 连通性测试获取模型接线；tray.rs fork toggle_main_window 函数族；App.tsx
+      批量探针状态提升与批量检测门控与 setTitle 守卫并叠加上游全页编辑器路由；Add/EditProviderDialog fork
+      接线；ProviderForm.tsx 跨应用导入与预设过滤与 websiteUrl2；UniversalProviderFormModal
+      websiteUrl2；settings.ts fork 移除更新 API 叠加上游新增设置；types.ts websiteUrl2 与
+      VisibleSidebarPanels；预设文件 fork hidden 语义；locales 保留 fork
+      devpanel/connectivityTest 键段；AddProviderDialog.test.tsx 上游 findByRole 修复 +
+      fork 注释）。"
+    result: pending
+    reason: null
+  - id: A4
+    source: brief.md
+    text: "A4:
+      package.json、src-tauri/tauri.conf.json、src-tauri/Cargo.toml、src-tauri/Car\
+      go.lock 的版本号均为 4.0.3-1。"
+    result: pending
+    reason: null
+  - id: A5
+    source: brief.md
+    text: "A5: fork 魔改保留清单（specs/upstream-sync/spec.md）中的每一项在同步后仍然存在且可用：产品名 CC
+      Switch 与 DevPanel、侧边栏面板可见性、模型徽章与快捷切换、Claude
+      兜底模型直达区、右键置顶/置底与插入第二位、官方预设过滤、逐模型连通性测试、双官网链接、托盘左键切换、跨应用导入、禁用应用内更新器、上游 tag
+      发版跳过、README fork 说明、fork CI。"
+    result: pending
+    reason: null
+  - id: A6
+    source: brief.md
+    text: "A6: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（default_workflow:
+      native，workflows 含 native 与 classic），未被历史重放改写。"
+    result: pending
+    reason: null
+  - id: A7
+    source: brief.md
+    text: "A7: docs/HOW_TO_REBASE_UPSTREAM.md §4 已补充本次同步后新增的 fork 专属文件（如有）。"
+    result: pending
+    reason: null
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm typecheck` 通过。"
+    result: pending
+    reason: null
+  - id: A9
+    source: brief.md
+    text: "A9: `pnpm test:unit` 通过。"
+    result: pending
+    reason: null
+  - id: A10
+    source: brief.md
+    text: "A10: `cargo check` 通过。"
+    result: pending
+    reason: null
+  - id: A11
+    source: brief.md
+    text: "A11: `cargo test -- --skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active` 通过（该用例在本机 cc-switch 运行时因代理端口 15721
+      被占用而失败，属上游测试设计，沿用既有例外并显式记录）。"
+    result: pending
+    reason: null
+  - id: A12
+    source: brief.md
+    text: "A12: origin/main 与本地 main 一致（--force-with-lease 推送成功）。以 Q1 的授权结果为准。"
+    result: pending
+    reason: null
+builder_handoff: null
+blockers: []
+verification: null
+history: []
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pending
+verification_report: null
+archived: false
+created_at: 2026-10-07T01:06:55.392Z
