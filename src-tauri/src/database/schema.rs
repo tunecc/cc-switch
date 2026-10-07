@@ -589,7 +589,9 @@ impl Database {
                         // 被合并为同一步，导致旧 fork 构建已升到 v19 的库跳过 mcode
                         // 迁移。此处幂等补齐所有被跳过的列，见
                         // docs/HOW_TO_REBASE_UPSTREAM.md §4。
-                        log::info!("迁移数据库从 v20 到 v21（补齐 fork 升级路径缺失的 mcode/pi 列）");
+                        log::info!(
+                            "迁移数据库从 v20 到 v21（补齐 fork 升级路径缺失的 mcode/pi 列）"
+                        );
                         if Self::table_exists(conn, "mcp_servers")? {
                             Self::add_column_if_missing(
                                 conn,
@@ -3910,10 +3912,11 @@ mod tests {
         )?;
         assert_eq!(values, (1, 0, 0));
         assert!(Database::has_column(&conn, "skills", "enabled_mcode")?);
-        let skill_mcode: i64 =
-            conn.query_row("SELECT enabled_mcode FROM skills WHERE id = 'skill-1'", [], |row| {
-                row.get(0)
-            })?;
+        let skill_mcode: i64 = conn.query_row(
+            "SELECT enabled_mcode FROM skills WHERE id = 'skill-1'",
+            [],
+            |row| row.get(0),
+        )?;
         assert_eq!(skill_mcode, 0);
 
         // 迁移后的库必须能执行 MCP 列表全列查询（用户报错的那条语句）
@@ -3955,10 +3958,11 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )?;
         assert_eq!(values, (1, 0, 1));
-        let skill_mcode: i64 =
-            conn.query_row("SELECT enabled_mcode FROM skills WHERE id = 'skill-1'", [], |row| {
-                row.get(0)
-            })?;
+        let skill_mcode: i64 = conn.query_row(
+            "SELECT enabled_mcode FROM skills WHERE id = 'skill-1'",
+            [],
+            |row| row.get(0),
+        )?;
         assert_eq!(skill_mcode, 1);
         Ok(())
     }
@@ -3989,10 +3993,11 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?)),
         )?;
         assert_eq!(values, (1, 1));
-        let skill_mcode: i64 =
-            conn.query_row("SELECT enabled_mcode FROM skills WHERE id = 'skill-1'", [], |row| {
-                row.get(0)
-            })?;
+        let skill_mcode: i64 = conn.query_row(
+            "SELECT enabled_mcode FROM skills WHERE id = 'skill-1'",
+            [],
+            |row| row.get(0),
+        )?;
         assert_eq!(skill_mcode, 1);
         Ok(())
     }
