@@ -1,0 +1,539 @@
+schema: comet.native.v4
+name: sync-upstream-v403
+language: zh-CN
+phase: archive
+status: done
+state_version: 11
+brief: brief.md
+document_constraints_version: 2
+shape_confirmation_hash: bad897532339f10c6300b35803923792007a8081bd5399310f186d0439fd3cdc
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 2
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main upstream/main` 等于 8596a233…（v4.0.3 tag
+      指向的提交），`git log v4.0.3..main` 只包含 fork 提交，且 d35726e2 不在 main 历史中。"
+    result: passed
+    reason:
+      text: git merge-base main upstream/main =
+        8596a233b2373226a0307d5f80ec0954d5fa162f = git rev-parse
+        v4.0.3^{commit}；git rev-list --count v4.0.3..main = 116（115 个 fork 重放提交
+        + 同步提交 34eaaa94），subject 全为 fork 提交；git branch --contains d35726e2
+        输出为空（main 不含 post-release 提交，upstream/main HEAD = d35726e2 按确认范围排除）。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: `git log v4.0.3..main` 的提交与 rebase 前改动语义一一对应：115 个原始 fork
+      提交按原顺序重放（若出现 git 自动判定的冗余跳过或需合并的提交，按 spec 记录的映射处理并核对语义），外加本次同步提交；全部 fork
+      功能语义保留。"
+    result: passed
+    reason:
+      text: diff <(git log --format=%s bf2fe0d0..670821d8) <(git log --format=%s
+        v4.0.3..34eaaa94^) 完全一致（115=115，逐一对应、原顺序、无跳过无合并无重复），外加同步提交 34eaaa94（git
+        show --stat：仅版本四文件 + HOW_TO_REBASE_UPSTREAM.md 2 行 + change 产物）。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 冲突解决符合 docs/HOW_TO_REBASE_UPSTREAM.md §3：白名单文件保留 fork
+      侧；共享文件以上游版本为基础叠加回 fork 必要改动（lib.rs 移除 Updater 插件注册 + 托盘左键切换 +
+      connectivity_test 命令注册并叠加上游新命令注册；provider.rs website_url_2
+      字段族；forwarder.rs 上游 SSE/身份/effort 改动为基础叠加 fork UA 口径注释；services/mod.rs 上游
+      backup_storage 与 fork connectivity_test 的 mod 声明并存；live.rs/provider mod.rs
+      fork 连通性测试获取模型接线；tray.rs fork toggle_main_window 函数族；App.tsx
+      批量探针状态提升与批量检测门控与 setTitle 守卫并叠加上游全页编辑器路由；Add/EditProviderDialog fork
+      接线；ProviderForm.tsx 跨应用导入与预设过滤与 websiteUrl2；UniversalProviderFormModal
+      websiteUrl2；settings.ts fork 移除更新 API 叠加上游新增设置；types.ts websiteUrl2 与
+      VisibleSidebarPanels；预设文件 fork hidden 语义；locales 保留 fork
+      devpanel/connectivityTest 键段；AddProviderDialog.test.tsx 上游 findByRole 修复 +
+      fork 注释）。"
+    result: passed
+    reason:
+      text: "逐项抽查在位：lib.rs 无 updater（grep 0 处）+ show_menu_on_left_click(false)（L1134）+
+        tray::toggle_main_window（L1106）+
+        connectivity_test_provider_models（L1642）+ 上游
+        list_backup_locations（L1527）并存；provider.rs website_url_2 ×13；schema.rs
+        providers 建表 website_url_2 TEXT（L33）+ migrate_v18_to_v19（L1636-1643）+
+        SCHEMA_VERSION=20（database/mod.rs L53）；services/mod.rs
+        backup_storage（L1）与 connectivity_test（L39）并存、无 stream_check
+        mod；forwarder.rs 相对 v4.0.3 的 fork 增量仅 UA 口径注释修正 + website_url_2
+        测试夹具；tray.rs show/hide/toggle_main_window 函数族；App.tsx
+        useConnectivityProbe（L46/345）+ batchTest 门控（L352）+ setTitle
+        守卫（L200-208）；Add/EditProviderDialog websiteUrl2 接线；ProviderForm
+        filterForkPresets/ProviderImportEntry/websiteUrl2；UniversalProviderForm\
+        Modal websiteUrl2；settings.ts = 上游版本仅移除 installUpdateAndRestart；types.ts
+        websiteUrl2 + VisibleSidebarPanels；7 个预设文件 hidden?: boolean；4 个 locales
+        的 connectivityTest/connectivityCheck 键段在位且 devpanel 键段与 rebase
+        前（670821d8）逐文件完全一致；AddProviderDialog.test.tsx 13 处 await
+        screen.findByRole + L128/L168 两段 fork 注释；git grep 冲突标记（<<<<<<< / >>>>>>>
+        / ^=======$）零残留。"
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4:
+      package.json、src-tauri/tauri.conf.json、src-tauri/Cargo.toml、src-tauri/Car\
+      go.lock 的版本号均为 4.0.3-1。"
+    result: passed
+    reason:
+      text: package.json L3、src-tauri/tauri.conf.json L4、src-tauri/Cargo.toml L3 均为
+        4.0.3-1；src-tauri/Cargo.lock cc-switch 包（L760-761）version =
+        4.0.3-1；cargo check 日志亦显示 Compiling cc-switch v4.0.3-1。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: fork 魔改保留清单（specs/upstream-sync/spec.md）中的每一项在同步后仍然存在且可用：产品名 CC
+      Switch 与 DevPanel、侧边栏面板可见性、模型徽章与快捷切换、Claude
+      兜底模型直达区、右键置顶/置底与插入第二位、官方预设过滤、逐模型连通性测试、双官网链接、托盘左键切换、跨应用导入、禁用应用内更新器、上游 tag
+      发版跳过、README fork 说明、fork CI。"
+    result: passed
+    reason:
+      text: 清单逐项抽查在位：forkBuild.ts（IS_FORK_BUILD/DEV_PANEL_ENABLED）+ DevPanel.tsx +
+        App.tsx setTitle('CC Switch')；GeneralSection.tsx 侧边面板 pill 开关（L259-277
+        visibleSidebarPanels）；ModelQuickSwitchDialog +
+        providerModelUtils（Opus/Sonnet/Haiku 三角色）+
+        providerModelIds；ClaudeFormFields 兜底模型直达区（fallbackModel
+        L251-260/871/972）；ProviderList 右键置顶 + mutations.ts
+        新建插入第二位（L118）；forkOfficialAllowlist/forkPresetFilter + 预设 hidden 字段 +
+        表单接线；连通性测试前后端齐全（services/connectivity_test/、commands/connectivity_test.rs、ConnectivityTestDialog、useConnectivityProbe/useConnectivityTest、src/lib/connectivityTestSettings.ts，stream_check
+        仅剩建表语句）；双官网链接（website_url_2 字段族 + v18→v19 迁移 +
+        表单双字段）；托盘左键切换；跨应用导入（ProviderImportEntry/useProviderImportSources/Apply）；AboutSection
+        品牌链接与 NewLayoutDialog RELEASES_URL 指向 farion1231/cc-switch（与 rebase
+        前同一文件集）；release.yml 仅 tunecc 仓库且 tag 含 '-' 才构建（跳过上游 tag）+
+        windows-2022/macos-14 + aarch64-apple-darwin；README 'CC Switch (Fork)'
+        fork 差异说明。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（default_workflow:
+      native，workflows 含 native 与 classic），未被历史重放改写。"
+    result: passed
+    reason:
+      text: ".comet/config.yaml 当前内容：schema comet.project.v1、default_workflow:
+        native、workflows 列出 native 与 classic（另含 ambient_resume 与 classic/native
+        各自配置），未被历史重放改写。"
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: docs/HOW_TO_REBASE_UPSTREAM.md §4 已补充本次同步后新增的 fork 专属文件（如有）。"
+    result: passed
+    reason:
+      text: 本次同步无新增 fork 专属文件（同步提交 34eaaa94 文件清单仅版本四文件 + change 产物 +
+        HOW_TO_REBASE_UPSTREAM.md），§4 白名单无需新增行；该文档唯一改动即
+        AddProviderDialog.test.tsx 条目修订（注明上游 v4.0.3 a4d07f31 已内置等价 findByRole
+        修复，此后取上游版本仅叠加 fork 注释），已核对 diff 原文。
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm typecheck` 通过。"
+    result: passed
+    reason:
+      text: Runtime 检查 typecheck：passed，exit 0，日志为 cc-switch@4.0.3-1 tsc --noEmit
+        无错误；检查于 2026-10-07T01:36:33-43Z 在 projectRoot 执行，晚于 HEAD 提交
+        34eaaa94（01:30:39Z），此后无新提交、代码文件无未提交改动，绑定当前候选。
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `pnpm test:unit` 通过。"
+    result: passed
+    reason:
+      text: Runtime 检查 test-unit：passed，exit 0，日志 Test Files 207 passed (207)、Tests
+        2444 passed (2444)，绑定候选 34eaaa94。
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: `cargo check` 通过。"
+    result: passed
+    reason:
+      text: Runtime 检查 cargo-check（--manifest-path src-tauri/Cargo.toml）：passed，exit
+        0，日志 Checking cc-switch v4.0.3-1 / Finished dev profile，绑定候选 34eaaa94。
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: "A11: `cargo test -- --skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active` 通过（该用例在本机 cc-switch 运行时因代理端口 15721
+      被占用而失败，属上游测试设计，沿用既有例外并显式记录）。"
+    result: passed
+    reason:
+      text: Runtime 检查 cargo-test（--skip
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active）：passed，exit
+        0，日志 17 个 test result 行全部 0 failed（首行 1 filtered out
+        即被显式跳过的环境例外用例，该用例名在日志中出现 0 次）；skip 口径与 brief/spec 的既有环境例外（本机代理端口 15721
+        占用、上游测试设计）一致。
+      truncated: false
+  - id: A12
+    source: brief.md
+    text: "A12: origin/main 与本地 main 一致（--force-with-lease 推送成功）。以 Q1 的授权结果为准。"
+    result: passed
+    reason:
+      text: git rev-parse origin/main main 均为
+        34eaaa94e479cdab97f5a32c0fa4d93ac787a579，两端一致；Builder handoff 记录
+        --force-with-lease 推送成功（670821d8...34eaaa94 forced update），与 Q1 授权一致。
+      truncated: false
+builder_handoff:
+  candidate_id: 193b6b96-8613-459a-9532-97dddd199d4f
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:e24c9204-ccb0-403e-8248-1cfcbfe5e202
+  iteration: 1
+  summary:
+    text: "同步 fork main 至上游 v4.0.3（8596a233，tag v4.0.3 指向的提交，31 个新提交）。115 个原始 fork
+      提交（bf2fe0d0..670821d8）全部逐一重放（无冗余跳过、无合并、无重复，rev-list --count v4.0.3..main
+      验证 == 115），外加 1 个同步提交 34eaaa94（版本 4.0.3-1 四文件、白名单文档
+      AddProviderDialog.test.tsx 条目修订、change 产物）。rebase 一次通过：仅两处版本号冲突按白名单保 fork
+      侧（780400d4 的 package.json/Cargo.toml/tauri.conf.json、096d6ba9 的 Cargo.lock
+      cc-switch 版本段），其余 113 个提交全部自动合并（fork 与上游 v4.0.3 改动区域不重叠）；本次无 git 段错误、无
+      Shape recovery 事件、.comet/config.yaml 未被历史重放改写（default_workflow: native +
+      native/classic 双启用均在位）。schema 无变化：上游 v4.0.3 未改 schema.rs，SCHEMA_VERSION 维持
+      20，fork v18→v19 website_url_2 合并结果原样保留。上游新预设（OpenCode Zen、MoArk）在 fork
+      构建下由 forkOfficialAllowlist 自动过滤，维持仅官方预设语义。AddProviderDialog.test.tsx 最终形态
+      = 上游 a4d07f31 等价 findByRole 竞态修复 + fork 两段 explanatory
+      注释（重放无冲突自动保留）。共享文件叠加语义逐项抽查在位：lib.rs 无 Updater 注册 + 托盘左键 toggle_main_window
+      + connectivity_test 命令 + 上游新命令（list_backup_locations 等）并存；services/mod.rs
+      backup_storage 与 connectivity_test mod 并存；provider.rs website_url_2 字段族 13
+      处；App.tsx useConnectivityProbe/batchTest 门控/setTitle 守卫；预设 hidden?:
+      boolean 接口；四语言 devpanel/connectivityTest 键段；fork CI（仅 aarch64
+      macOS）；forkBuild/forkOfficialAllowlist/forkPresetFilter/devpanel
+      文件齐全。开发期检查：pnpm typecheck 通过（exit 0）；pnpm test:unit 207 文件 2444/2444
+      通过；cargo check 通过（cc-switch v4.0.3-1，Cargo.lock 已联动）；cargo test -- --skip
+      <环境例外> 全部套件 0 failed（17 个 test result 行全部 0 failed）。A12 已按 Q1
+      授权（2026-10-07，授权推送）执行：git push --force-with-lease origin main
+      成功（670821d8...34eaaa94 forced update），origin/main == 本地 main == 34eaaa94；因
+      Runtime 要求全部验收项就绪才能进入 Verify，与 v4.0.2 同步做法一致在 handoff 前完成推送。"
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+  acceptance_review:
+    - id: A1
+      status: implemented-with-evidence
+      evidence:
+        - git merge-base main upstream/main ==
+          8596a233b2373226a0307d5f80ec0954d5fa162f == git rev-parse
+          v4.0.3^{commit}
+        - git rev-list --count v4.0.3..main == 115，全部为 fork 提交（115 个原始提交逐一重放 +
+          同步提交 34eaaa94 之前计数为 115）
+        - git branch --contains d35726e2 不含 main（post-release 提交不在 main 历史）
+      note: 基线锁定 tag v4.0.3（8596a233）；upstream/main HEAD d35726e2 为 post-release
+        提交，按已确认范围排除，留待下次同步
+    - id: A2
+      status: implemented-with-evidence
+      evidence:
+        - rebase 前 bf2fe0d0..main = 115 个提交，rebase 后 v4.0.3..main 重放计数一致（115），无
+          git 自动跳过、无额外修复提交、无段错误重复提交
+        - subject 顺序核对：git log --oneline v4.0.3..main 与 rebase 前 bf2fe0d0..main
+          逐一同序对应（91a26bbc ← 670821d8、402ba6f3 ← dcf0aef4、cfbc2e2d ← b027ff18 等）
+        - 重放映射已记录于 specs/upstream-sync/spec.md 重放映射节
+      note: 全部 fork 功能语义保留（详见 A5 抽查清单）
+    - id: A3
+      status: implemented-with-evidence
+      evidence:
+        - 白名单文件保 fork 侧：版本文件冲突两处（780400d4 三文件 + 096d6ba9 Cargo.lock）均 --theirs 取
+          fork 侧
+        - lib.rs：grep updater 0 处；show_menu_on_left_click(false)（L1134）+
+          tray::toggle_main_window（L1106）+
+          commands::connectivity_test_provider_models（L1642）+ 上游
+          commands::list_backup_locations（L1527）并存
+        - services/mod.rs：pub mod backup_storage（上游）与 pub mod
+          connectivity_test（L39，fork）并存
+        - provider.rs：website_url_2 13 处（Provider/UniversalProvider 字段 + 构造 + 透传
+          + 测试）
+        - schema.rs：providers 建表含 website_url_2 TEXT（L33）+ add_column_if_missing
+          v19 兜底（L427）；SCHEMA_VERSION=20（database/mod.rs L53）
+        - App.tsx：useConnectivityProbe（L345）+ batchTest 门控（L352）+ setTitle
+          守卫（L204-208）
+        - AddProviderDialog.test.tsx：13 处 await screen.findByRole + fork
+          慢机器注释（L128、L168）
+        - 全树冲突标记扫描（<<<<<<< / ^=======$ / >>>>>>>）零残留
+      note: 其余 113 个提交自动合并即「上游版本 + fork 叠加」语义（改动区域不重叠），关键文件逐项抽查在位
+    - id: A4
+      status: implemented-with-evidence
+      evidence:
+        - package.json L3 / tauri.conf.json L4 / Cargo.toml L3 均为 4.0.3-1
+        - cargo check 输出 Compiling cc-switch v4.0.3-1；Cargo.lock cc-switch 包
+          version = "4.0.3-1"
+      note: Cargo.lock 经 cargo check 自动联动，四处一致
+    - id: A5
+      status: implemented-with-evidence
+      evidence:
+        - 产品名与 DevPanel：src/config/forkBuild.ts 存在；App.tsx setTitle('CC
+          Switch')；devpanel 目录与四语言 devpanel 键段在位
+        - 侧边栏可见性：App.tsx visibleSidebarPanels.batchTest 门控；GeneralSection pill
+          开关随历史重放保留
+        - 模型徽章与快捷切换：src/utils/providerModelUtils.ts、src/components/providers/ModelQuickSwitch/、src/lib/providerModelIds.ts
+          在位
+        - "官方预设过滤：forkOfficialAllowlist.ts（claude: Claude Official 等）+
+          forkPresetFilter.ts + 预设接口 hidden?: boolean（claudeProviderPresets.ts
+          L70、codexProviderPresets.ts L53、claudeDesktopProviderPresets.ts L68
+          等）"
+        - 连通性测试：src-tauri/src/services/connectivity_test/、commands/connectivity_test.rs、ConnectivityTestDialog.tsx、useConnectivityProbe/useConnectivityTest
+          hooks、connectivityTestSettings.ts、四语言
+          connectivityTest/connectivityCheck 键段在位；lib.rs 无 stream_check 注册
+        - 双官网链接：provider.rs website_url_2 字段族 + schema v18→v19 迁移 +
+          BasicFormFields 双字段横排随历史重放保留
+        - 托盘左键切换：tray.rs toggle_main_window + lib.rs Click 左键 Up 分支
+        - 跨应用导入：ProviderImportEntry.tsx、useProviderImportApply/useProviderImportSources、providerImport.ts
+          等随历史重放保留
+        - 禁用应用内更新器：lib.rs 无 Updater 插件注册（grep updater = 0）；上游 tag 发版跳过 + fork
+          CI：release.yml 仅 aarch64-apple-darwin（L45/L80/L112）；README/CHANGELOG
+          fork 版随历史重放保留
+      note: fork 魔改保留清单逐项抽查在位，全部随 rebase 历史重放保留
+    - id: A6
+      status: implemented-with-evidence
+      evidence:
+        - "rebase 后 .comet/config.yaml：schema comet.project.v1、default_workflow:
+          native、workflows 列出 native 与 classic，与 rebase 前一致"
+        - 重放全程该文件未被改写（本次未触发 ORIG_HEAD 恢复流程）
+      note: Native 工作流配置完好
+    - id: A7
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md §4 共享文件表 AddProviderDialog.test.tsx
+          条目已修订：注明上游 v4.0.3（a4d07f31）已内置等价 findByRole 修复，此后冲突取上游版本仅叠加 fork 注释
+      note: 本次同步无新增 fork 专属文件（纯同步 change，无新 fork 功能），白名单无需新增行；已按需修订过时条目
+    - id: A8
+      status: implemented-with-evidence
+      evidence:
+        - 开发期 pnpm typecheck（tsc --noEmit）exit 0，无错误输出（cc-switch@4.0.3-1）
+      note: 已列入 verification_checks 由 Runtime 在冻结候选上复跑
+    - id: A9
+      status: implemented-with-evidence
+      evidence:
+        - 开发期 pnpm test:unit：Test Files 207 passed (207)，Tests 2444 passed
+          (2444)，Duration 45.16s
+      note: 已列入 verification_checks 由 Runtime 在冻结候选上复跑
+    - id: A10
+      status: implemented-with-evidence
+      evidence:
+        - 开发期 cargo check：Compiling cc-switch v4.0.3-1，Finished dev profile in
+          21.95s，无错误
+      note: 已列入 verification_checks 由 Runtime 在冻结候选上复跑
+    - id: A11
+      status: implemented-with-evidence
+      evidence:
+        - 开发期 cargo test -- --skip
+          update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active：全部测试二进制
+          test result 均 0 failed（17 个 result 行全部通过），跳过用例为本机 cc-switch 运行时代理端口
+          15721 占用的既有环境例外（上游测试设计）
+      note: 已列入 verification_checks 由 Runtime 在冻结候选上复跑，沿用 v4.0.1/v4.0.2 同步的显式 skip 口径
+    - id: A12
+      status: implemented-with-evidence
+      evidence:
+        - git push --force-with-lease origin main 成功（670821d8...34eaaa94 forced
+          update，lease 对端为 fetch 后的 670821d8）
+        - git rev-parse origin/main main 均为
+          34eaaa94e479cdab97f5a32c0fa4d93ac787a579，两端一致
+      note: 按 Q1 授权（2026-10-07，授权推送）执行；因 Runtime 要求全部验收项就绪才能进入 Verify，与 v4.0.2 同步做法一致在
+        handoff 前完成推送，候选冻结后本地不再产生新提交
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit exit 0（cc-switch@4.0.3-1）
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 207 文件 / 2444 用例全部通过
+        truncated: false
+    - name:
+        text: cargo check
+        truncated: false
+      result: passed
+      note:
+        text: cc-switch v4.0.3-1 finished，Cargo.lock 版本联动完成
+        truncated: false
+    - name:
+        text: cargo test (skip known env exception)
+        truncated: false
+      result: passed
+      note:
+        text: 17 个 test result 行全部 0 failed；环境例外用例按验收口径显式 skip
+        truncated: false
+    - name:
+        text: git 同步结果核对
+        truncated: false
+      result: passed
+      note:
+        text: merge-base=8596a233=v4.0.3^{commit}；v4.0.3..main 计数 115；d35726e2 不在
+          main；冲突标记零残留；.comet/config.yaml 未变
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: upstream/main HEAD d35726e2（hermes scan-limit 测试批处理，post-release）按已确认范围锁定在
+        v4.0.3 tag 基线之外，留待下次同步
+      truncated: false
+    - text: cargo test 跳过的
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+        为本机 cc-switch 运行时代理端口占用的既有环境例外（上游测试设计），非本次同步引入
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-10-07T01:36:32.784Z
+blockers: []
+verification:
+  candidate_id: 193b6b96-8613-459a-9532-97dddd199d4f
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:e3f948c6-17f5-4b01-8792-bf16448eb089
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: typecheck
+      name:
+        text: pnpm typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 10165
+    - id: test-unit
+      name:
+        text: pnpm test:unit
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 29647
+    - id: cargo-check
+      name:
+        text: cargo check
+        truncated: false
+      argv_display:
+        - text: check
+          truncated: false
+        - text: --manifest-path
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4531
+    - id: cargo-test
+      name:
+        text: cargo test (skip known env exception)
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+        - text: --manifest-path
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+        - text: --
+          truncated: false
+        - text: --skip
+          truncated: false
+        - text: update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 31113
+  summary:
+    text: 独立验收 12/12 通过。Git 取证：merge-base main/upstream = 8596a233 =
+      v4.0.3^{commit}，v4.0.3..main = 116 提交（115 个 fork 提交与 rebase 前
+      bf2fe0d0..670821d8 的 subject 序列逐一全等 + 同步提交 34eaaa94），d35726e2 不在
+      main；origin/main == main ==
+      34eaaa94。冲突叠加语义逐文件抽查在位（lib.rs/provider.rs/schema.rs/services/mod.rs/forwarder.rs/tray.rs/App.tsx/表单/settings.ts/types.ts/预设/locales/测试），全树无冲突标记，版本四文件均
+      4.0.3-1，fork 魔改清单逐项存在，.comet/config.yaml 保持
+      native+classic，白名单文档已按需修订。Runtime 四项检查（typecheck/test:unit/cargo
+      check/cargo test --skip 环境例外）均 passed 且经日志与时间线核对绑定候选 34eaaa94，无需追加检查。
+    truncated: false
+  risks:
+    - text: devpanel i18n 键段仅 en/zh 两个 locale 存在（ja/zh-TW 依赖 fallback），与 rebase 前
+        670821d8 状态完全一致，非本次同步引入的回退；Builder handoff 中「四语言 devpanel
+        键段」措辞略有夸大，不影响验收语义（A3 要求为保留 fork 键段）。
+      truncated: false
+    - text: upstream/main HEAD d35726e2（post-release hermes 测试提交）按确认范围排除，留待下次同步；届时
+        merge-base 将前移。
+      truncated: false
+    - text: cargo test 显式跳过
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+        为本机环境既有例外（上游测试设计需绑定真实端口），非本次同步引入。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-10-07T01:47:55.502Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native Shape artifacts changed
+      truncated: false
+    completed_at: 2026-10-07T01:34:28.611Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 独立验收 12/12 通过。Git 取证：merge-base main/upstream = 8596a233 =
+        v4.0.3^{commit}，v4.0.3..main = 116 提交（115 个 fork 提交与 rebase 前
+        bf2fe0d0..670821d8 的 subject 序列逐一全等 + 同步提交 34eaaa94），d35726e2 不在
+        main；origin/main == main ==
+        34eaaa94。冲突叠加语义逐文件抽查在位（lib.rs/provider.rs/schema.rs/services/mod.rs/forwarder.rs/tray.rs/App.tsx/表单/settings.ts/types.ts/预设/locales/测试），全树无冲突标记，版本四文件均
+        4.0.3-1，fork 魔改清单逐项存在，.comet/config.yaml 保持
+        native+classic，白名单文档已按需修订。Runtime 四项检查（typecheck/test:unit/cargo
+        check/cargo test --skip 环境例外）均 passed 且经日志与时间线核对绑定候选 34eaaa94，无需追加检查。
+      truncated: false
+    completed_at: 2026-10-07T01:47:55.502Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-10-07T01:06:55.392Z
