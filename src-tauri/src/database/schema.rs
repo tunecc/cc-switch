@@ -583,6 +583,37 @@ impl Database {
                         }
                         Self::set_user_version(conn, 20)?;
                     }
+                    20 => {
+                        // 修复 fork v19 双语义遗留：v4.0.2 同步 rebase 时，fork 的
+                        // v18→v19（website_url_2）与上游的 v18→v19（enabled_mcode）
+                        // 被合并为同一步，导致旧 fork 构建已升到 v19 的库跳过 mcode
+                        // 迁移。此处幂等补齐所有被跳过的列，见
+                        // docs/HOW_TO_REBASE_UPSTREAM.md §4。
+                        log::info!("迁移数据库从 v20 到 v21（补齐 fork 升级路径缺失的 mcode/pi 列）");
+                        if Self::table_exists(conn, "mcp_servers")? {
+                            Self::add_column_if_missing(
+                                conn,
+                                "mcp_servers",
+                                "enabled_mcode",
+                                "BOOLEAN NOT NULL DEFAULT 0",
+                            )?;
+                            Self::add_column_if_missing(
+                                conn,
+                                "mcp_servers",
+                                "enabled_pi",
+                                "BOOLEAN NOT NULL DEFAULT 0",
+                            )?;
+                        }
+                        if Self::table_exists(conn, "skills")? {
+                            Self::add_column_if_missing(
+                                conn,
+                                "skills",
+                                "enabled_mcode",
+                                "BOOLEAN NOT NULL DEFAULT 0",
+                            )?;
+                        }
+                        Self::set_user_version(conn, 21)?;
+                    }
                     _ => {
                         return Err(AppError::Database(format!(
                             "未知的数据库版本 {version}，无法迁移到 {SCHEMA_VERSION}"
@@ -3833,6 +3864,136 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )?;
         assert_eq!(values, (1, 1, 0));
+        Ok(())
+    }
+
+    #[test]
+    fn migrate_v19_fork_legacy_database_gains_mcode_and_pi_columns() -> Result<(), AppError> {
+        // 复现用户现场：旧 fork 构建（website-links 时代）把库升到 v19 后，
+        // v4.0.2+ 代码下 mcp_servers 缺 enabled_mcode/enabled_pi，
+        // MCP 列表查询报 no such column。
+        let conn = Connection::open_in_memory()?;
+        conn.execute_batch(
+            "CREATE TABLE mcp_servers (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                server_config TEXT NOT NULL,
+                description TEXT,
+                homepage TEXT,
+                docs TEXT,
+                tags TEXT NOT NULL DEFAULT '[]',
+                enabled_claude BOOLEAN NOT NULL DEFAULT 0,
+                enabled_codex BOOLEAN NOT NULL DEFAULT 0,
+                enabled_gemini BOOLEAN NOT NULL DEFAULT 0,
+                enabled_grokbuild BOOLEAN NOT NULL DEFAULT 0,
+                enabled_opencode BOOLEAN NOT NULL DEFAULT 0,
+                enabled_hermes BOOLEAN NOT NULL DEFAULT 0
+            );
+            CREATE TABLE skills (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                enabled_hermes BOOLEAN NOT NULL DEFAULT 0
+            );
+            INSERT INTO mcp_servers (id, name, server_config, enabled_codex)
+                VALUES ('mcp-1', 'server-1', '{}', 1);
+            INSERT INTO skills (id, name, enabled_hermes) VALUES ('skill-1', 'skill-1', 1);",
+        )?;
+        Database::set_user_version(&conn, 19)?;
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+
+        assert_eq!(Database::get_user_version(&conn)?, SCHEMA_VERSION);
+        let values: (i64, i64, i64) = conn.query_row(
+            "SELECT enabled_codex, enabled_mcode, enabled_pi FROM mcp_servers WHERE id = 'mcp-1'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+        assert_eq!(values, (1, 0, 0));
+        assert!(Database::has_column(&conn, "skills", "enabled_mcode")?);
+        let skill_mcode: i64 =
+            conn.query_row("SELECT enabled_mcode FROM skills WHERE id = 'skill-1'", [], |row| {
+                row.get(0)
+            })?;
+        assert_eq!(skill_mcode, 0);
+
+        // 迁移后的库必须能执行 MCP 列表全列查询（用户报错的那条语句）
+        let mut stmt = conn.prepare(crate::database::dao::mcp::MCP_SERVER_SELECT)?;
+        let ids: Vec<String> = stmt
+            .query_map([], |row| row.get::<_, String>(0))?
+            .collect::<Result<Vec<_>, _>>()?;
+        assert_eq!(ids, vec!["mcp-1".to_string()]);
+        Ok(())
+    }
+
+    #[test]
+    fn migrate_v20_to_v21_repairs_missing_mcode_column_idempotently() -> Result<(), AppError> {
+        // v4.0.2+ 已迁到 v20 但缺 enabled_mcode 的库（如从旧备份恢复）：
+        // v21 修复迁移补齐 mcode，且不破坏既有 pi 值。
+        let conn = Connection::open_in_memory()?;
+        conn.execute_batch(
+            "CREATE TABLE mcp_servers (
+                id TEXT PRIMARY KEY,
+                enabled_codex BOOLEAN NOT NULL DEFAULT 0,
+                enabled_pi BOOLEAN NOT NULL DEFAULT 0
+            );
+            CREATE TABLE skills (
+                id TEXT PRIMARY KEY,
+                enabled_codex BOOLEAN NOT NULL DEFAULT 0,
+                enabled_mcode BOOLEAN NOT NULL DEFAULT 0
+            );
+            INSERT INTO mcp_servers (id, enabled_codex, enabled_pi) VALUES ('mcp-1', 1, 1);
+            INSERT INTO skills (id, enabled_codex, enabled_mcode) VALUES ('skill-1', 1, 1);",
+        )?;
+        Database::set_user_version(&conn, 20)?;
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+
+        assert_eq!(Database::get_user_version(&conn)?, SCHEMA_VERSION);
+        let values: (i64, i64, i64) = conn.query_row(
+            "SELECT enabled_codex, enabled_mcode, enabled_pi FROM mcp_servers WHERE id = 'mcp-1'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+        assert_eq!(values, (1, 0, 1));
+        let skill_mcode: i64 =
+            conn.query_row("SELECT enabled_mcode FROM skills WHERE id = 'skill-1'", [], |row| {
+                row.get(0)
+            })?;
+        assert_eq!(skill_mcode, 1);
+        Ok(())
+    }
+
+    #[test]
+    fn migrate_v20_to_v21_is_noop_when_all_target_columns_exist() -> Result<(), AppError> {
+        // 全新建库已含全部目标列：v21 修复迁移必须无错误完成且不改动数据。
+        let conn = Connection::open_in_memory()?;
+        Database::create_tables_on_conn(&conn)?;
+        conn.execute(
+            "INSERT INTO mcp_servers (id, name, server_config, enabled_mcode, enabled_pi)
+                VALUES ('mcp-1', 'server-1', '{}', 1, 1)",
+            [],
+        )?;
+        conn.execute(
+            "INSERT INTO skills (id, name, directory, enabled_mcode)
+                VALUES ('skill-1', 'skill-1', '/skills/skill-1', 1)",
+            [],
+        )?;
+        Database::set_user_version(&conn, 20)?;
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+
+        assert_eq!(Database::get_user_version(&conn)?, SCHEMA_VERSION);
+        let values: (i64, i64) = conn.query_row(
+            "SELECT enabled_mcode, enabled_pi FROM mcp_servers WHERE id = 'mcp-1'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        assert_eq!(values, (1, 1));
+        let skill_mcode: i64 =
+            conn.query_row("SELECT enabled_mcode FROM skills WHERE id = 'skill-1'", [], |row| {
+                row.get(0)
+            })?;
+        assert_eq!(skill_mcode, 1);
         Ok(())
     }
 
