@@ -4120,10 +4120,11 @@ mod tests {
         )?;
         assert_eq!(values, (1, 0, 0));
         assert!(Database::has_column(&conn, "skills", "enabled_mcode")?);
-        let skill_mcode: i64 =
-            conn.query_row("SELECT enabled_mcode FROM skills WHERE id = 'skill-1'", [], |row| {
-                row.get(0)
-            })?;
+        let skill_mcode: i64 = conn.query_row(
+            "SELECT enabled_mcode FROM skills WHERE id = 'skill-1'",
+            [],
+            |row| row.get(0),
+        )?;
         assert_eq!(skill_mcode, 0);
 
         // 迁移后的库必须能执行 MCP 列表全列查询（用户报错的那条语句）
@@ -4165,10 +4166,11 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )?;
         assert_eq!(values, (1, 0, 1));
-        let skill_mcode: i64 =
-            conn.query_row("SELECT enabled_mcode FROM skills WHERE id = 'skill-1'", [], |row| {
-                row.get(0)
-            })?;
+        let skill_mcode: i64 = conn.query_row(
+            "SELECT enabled_mcode FROM skills WHERE id = 'skill-1'",
+            [],
+            |row| row.get(0),
+        )?;
         assert_eq!(skill_mcode, 1);
         Ok(())
     }
@@ -4199,10 +4201,11 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?)),
         )?;
         assert_eq!(values, (1, 1));
-        let skill_mcode: i64 =
-            conn.query_row("SELECT enabled_mcode FROM skills WHERE id = 'skill-1'", [], |row| {
-                row.get(0)
-            })?;
+        let skill_mcode: i64 = conn.query_row(
+            "SELECT enabled_mcode FROM skills WHERE id = 'skill-1'",
+            [],
+            |row| row.get(0),
+        )?;
         assert_eq!(skill_mcode, 1);
         Ok(())
     }
