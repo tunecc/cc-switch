@@ -1,0 +1,492 @@
+schema: comet.native.v4
+name: fix-mcp-enabled-mcode-sync
+language: zh-CN
+phase: archive
+status: done
+state_version: 8
+brief: brief.md
+document_constraints_version: 2
+shape_confirmation_hash: c5b28d1e8901bbf5a92691a7e295c98e6f89c048d349ad56561e5332cd40087f
+spec_changes:
+  - capability: database-schema-migrations
+    operation: create
+    source: specs/database-schema-migrations/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: 新增单测证明 v19 起点修复路径：构造 `user_version=19`、`mcp_servers` 缺
+      `enabled_mcode` 的库（模拟旧 fork 构建升过的库），`apply_schema_migrations` 后
+      `user_version == SCHEMA_VERSION(21)`，`enabled_mcode`、`enabled_pi`
+      列存在，迁移前插入的行数据保留，且 `dao/mcp.rs` 的 MCP 列表 SELECT 能在该库上执行成功。"
+    result: passed
+    reason:
+      text: schema.rs:3871
+        migrate_v19_fork_legacy_database_gains_mcode_and_pi_columns：构造
+        user_version=19、mcp_servers 缺 enabled_mcode/enabled_pi 且含数据行的库，迁移后断言
+        user_version==SCHEMA_VERSION，SELECT (codex,mcode,pi)==(1,0,0)
+        证明旧行保留且新列默认 0，skills.enabled_mcode 存在，并以 dao::mcp::MCP_SERVER_SELECT
+        全列查询成功返回 ["mcp-1"]
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: 新增单测证明 v20 起点路径：`user_version=20`、缺 `enabled_mcode` 的库迁移到 21
+      后列补齐；`skills` 表缺 `enabled_mcode` 时同样补齐。"
+    result: passed
+    reason:
+      text: schema.rs:3929 v20 起点缺 enabled_mcode 的库迁移到 21 后列补齐（mcp
+        mcode=0、pi=1/codex=1 既有值保留）；skills 缺 enabled_mcode 时补齐由 schema.rs:3871
+        测试经同一 `20 =>` 迁移步骤（add_column_if_missing）验证并断言存在
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 既有迁移与备份单测不回归：`cargo test` 通过（沿用既有例外：`--skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active`）。"
+    result: passed
+    reason:
+      text: Runtime 检查回执 cargo-test status=passed exit_code=0（沿用既有例外 --skip
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active）
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4: `cargo check` 通过。"
+    result: passed
+    reason:
+      text: Runtime 检查回执 cargo-check status=passed exit_code=0
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: `pnpm typecheck` 通过。"
+    result: passed
+    reason:
+      text: Runtime 检查回执 typecheck (pnpm typecheck) status=passed exit_code=0
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: `pnpm test:unit` 通过。"
+    result: passed
+    reason:
+      text: Runtime 检查回执 test-unit (pnpm test:unit) status=passed exit_code=0
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: rebase 后 `git merge-base main upstream/main` 等于 upstream/main
+      HEAD（d35726e2），`git branch --contains d35726e2` 包含 main；`git log
+      upstream/main..main` 仅含 fork 提交，与 rebase 前 fork 提交一一对应（原顺序重放，允许 git
+      判定的等价去重），另加本次修复提交。"
+    result: passed
+    reason:
+      text: git merge-base main upstream/main == git rev-parse upstream/main ==
+        d35726e28695844deaf0098450b34911f5be7b78；git branch --contains d35726e2
+        含 main；8596a233..475da0de 的 117 个 fork 提交 subject 与 d35726e2..main
+        一一对应且顺序一致（diff 仅多出第 1 行=修复提交 43af413e 即 main tip），upstream/main..main 共
+        118 = 117 fork + 1 修复，与验收原文「另加本次修复提交」一致
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（`default_workflow:
+      native`，`workflows` 含 native 与 classic），未被历史重放改写。"
+    result: passed
+    reason:
+      text: ".comet/config.yaml 实读：default_workflow: native，workflows 含 native 与
+        classic，未被重放改写"
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `docs/HOW_TO_REBASE_UPSTREAM.md` §4 的 `schema.rs` 行已补记 v21
+      修复迁移语义；fork
+      专属文件抽查（`src/config/forkBuild.ts`、`src/config/forkOfficialAllowlist.ts`、`s\
+      rc/components/devpanel/`）在 rebase 后仍存在。"
+    result: passed
+    reason:
+      text: docs/HOW_TO_REBASE_UPSTREAM.md §4 第 174 行 schema.rs 行含 v20→v21
+        修复迁移（mcp_servers.enabled_mcode/enabled_pi、skills.enabled_mcode）及 v19
+        双语义历史缺口说明，第 175 行 mod.rs 行含 SCHEMA_VERSION
+        21；src/config/forkBuild.ts、src/config/forkOfficialAllowlist.ts、src/components/devpanel/DevPanel.tsx
+        均存在
+      truncated: false
+  - id: A10
+    source: specs/database-schema-migrations/spec.md
+    text: 旧 fork v19 库补齐 mcode 列 - **WHEN** `user_version=19` 且 `mcp_servers` 缺
+      `enabled_mcode` 列、缺 `enabled_pi` 列（模拟老 fork 构建升级过的库），表中已有数据行 - **THEN**
+      迁移完成后 `user_version` 等于 `SCHEMA_VERSION`（21），两列存在且旧行保留（默认值 0），MCP 列表
+      SELECT（含全部 enabled_* 列）在该库上执行成功
+    result: passed
+    reason:
+      text: schema.rs:3871 测试完整覆盖该场景：v19 起点→21、两列存在、旧行保留（默认 0）、MCP 全列 SELECT 执行成功
+      truncated: false
+  - id: A11
+    source: specs/database-schema-migrations/spec.md
+    text: v20 库补齐 mcode 列 - **WHEN** `user_version=20` 且 `mcp_servers` / `skills` 缺
+      `enabled_mcode` 列（v4.0.2+ 已迁移但缺列的库） - **THEN** 迁移完成后 `user_version` 等于
+      21，两个表的 `enabled_mcode` 均存在，既有数据不变
+    result: passed
+    reason:
+      text: schema.rs:3929 测试：v20 起点→21，mcp_servers.enabled_mcode
+        补齐、skills.enabled_mcode 存在且值保留，既有数据不变（pi=1、codex=1、skill mcode=1）
+      truncated: false
+  - id: A12
+    source: specs/database-schema-migrations/spec.md
+    text: 列已存在时迁移幂等 - **WHEN** 库已含全部目标列（如全新建库）执行 v20→v21 迁移 - **THEN**
+      迁移无错误完成，列定义与数据不受影响
+    result: passed
+    reason:
+      text: schema.rs:3967
+        migrate_v20_to_v21_is_noop_when_all_target_columns_exist：全新建库（含全部目标列）v20→21
+        无错误完成，mcode/pi=1、skill mcode=1
+        数据不受影响；add_column_if_missing（schema.rs:3748）对已存在列跳过
+      truncated: false
+  - id: A13
+    source: specs/database-schema-migrations/spec.md
+    text: v19 起点全链路迁移 - **WHEN** `user_version=19` 的任意合法 schema（fork 或上游形态）执行迁移 -
+      **THEN** 依次经过 v20、v21 步骤，最终 `user_version` 等于
+      `SCHEMA_VERSION`，过程中不因列已存在/不存在而失败
+    result: passed
+    reason:
+      text: v19 起点全链路：fork 形态（缺 mcode/pi）由 schema.rs:3871 新测试覆盖，上游形态（已含 mcode）由既有
+        migrate_v19_to_v20_adds_pi_mcp_flag_and_keeps_existing_flags（schema.rs:3846）覆盖，均依次经
+        19→20→21 到达 SCHEMA_VERSION 且不因列存在/缺失失败
+      truncated: false
+  - id: A14
+    source: specs/database-schema-migrations/spec.md
+    text: 手册含修复迁移条目 - **WHEN** 查看 `docs/HOW_TO_REBASE_UPSTREAM.md` §4 共享文件语义表 -
+      **THEN** `schema.rs` 行包含 v21
+      修复迁移（mcp_servers.enabled_mcode/enabled_pi、skills.enabled_mcode）及 v19
+      双语义背景说明
+    result: passed
+    reason:
+      text: docs/HOW_TO_REBASE_UPSTREAM.md §4 schema.rs 行含 v21
+        修复迁移列清单（mcp_servers.enabled_mcode/enabled_pi、skills.enabled_mcode）与 v19
+        双语义背景（同 A9 依据）
+      truncated: false
+builder_handoff:
+  candidate_id: fff7563e-7b3d-46c9-83a0-106b63bab935
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:b9ce6ca1-9338-4fe1-a8a7-dcb08aa5e0d4
+  iteration: 1
+  summary:
+    text: 两阶段完成：(1) 上游同步——main 已 rebase 到 upstream/main（d35726e2，唯一 post-release
+      提交，test-only：hermes scan-limit fixture 单事务化），fork 117
+      个提交原序零冲突重放，提交主题逐一比对一致，.comet/config.yaml 与 fork 专属文件未受影响，版本号维持
+      4.0.3-1（上游无新发布）；(2) 修复实现——根因为 v4.0.2 同步 rebase 将上游 mcode 的 v18→v19 与 fork
+      website_url_2 的 v18→v19 合并为一步，旧 fork 构建已升到 v19 的库跳过该步骤缺 enabled_mcode。新增
+      v20→v21 幂等修复迁移（mcp_servers 补 enabled_mcode/enabled_pi、skills 补
+      enabled_mcode），SCHEMA_VERSION 20→21，新增 3 个迁移单测（v19 旧 fork 库修复路径含全列 MCP
+      SELECT 可执行、v20 已迁库补列、全列已存在时幂等 no-op），HOW_TO_REBASE_UPSTREAM.md §4 补记 v21
+      语义。实现提交 43af413e。已知限制：GUI 启动冒烟未做（验收用 MCP_SERVER_SELECT 全列查询单测覆盖用户报错语句）；推送
+      origin/main 不在本 change 范围，待用户授权。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+    - A13
+    - A14
+  acceptance_review:
+    - id: A1
+      status: implemented-with-evidence
+      evidence:
+        - 单测
+          database::schema::tests::migrate_v19_fork_legacy_database_gains_mcode_and_pi_columns
+          通过：user_version=19、mcp_servers 缺 enabled_mcode/enabled_pi（建表含其余全部 MCP
+          列并插入 mcp-1 行），迁移后 get_user_version==SCHEMA_VERSION(21)，(enabled_codex,
+          enabled_mcode, enabled_pi)==(1,0,0) 旧行保留，skills.enabled_mcode 列存在
+        - 同测试内以 dao::mcp::MCP_SERVER_SELECT 全列查询 prepare+query 成功且返回
+          ['mcp-1']（用户报错的那条语句在迁移后的库上可执行）
+      note: 单测文件 src-tauri/src/database/schema.rs（实现提交 43af413e）
+    - id: A2
+      status: implemented-with-evidence
+      evidence:
+        - 单测
+          database::schema::tests::migrate_v20_to_v21_repairs_missing_mcode_column_idempotently
+          通过：user_version=20、mcp_servers 缺 enabled_mcode（有 enabled_pi=1），迁移到 21
+          后 (enabled_codex, enabled_mcode, enabled_pi)==(1,0,1)，pi 既有值不破坏
+        - 同测试 skills 表已有 enabled_mcode=1 迁移后保持 1；skills 缺列补齐路径由 A1 的 v19
+          测试覆盖（skills 建表无 enabled_mcode，迁移后 has_column(skills, enabled_mcode)
+          为真且行保留）
+      note: 单测文件 src-tauri/src/database/schema.rs
+    - id: A3
+      status: implemented-with-evidence
+      evidence:
+        - cargo test -- --skip
+          update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active：聚合
+          12 个 test result 行，3631 passed / 0 failed，跳过用例为本机 cc-switch 运行时代理端口
+          15721 占用的既有环境例外（沿用 v4.0.1/v4.0.2/v4.0.3 同步口径）
+      note: 已列入 verification_checks 由 Runtime 在冻结候选上复跑
+    - id: A4
+      status: implemented-with-evidence
+      evidence:
+        - cargo check：Compiling cc-switch v4.0.3-1，Finished dev profile in
+          6.21s，无错误无警告
+      note: 已列入 verification_checks 由 Runtime 在冻结候选上复跑
+    - id: A5
+      status: implemented-with-evidence
+      evidence:
+        - pnpm typecheck：tsc --noEmit 退出码 0，无输出（cc-switch@4.0.3-1）
+      note: 已列入 verification_checks 由 Runtime 在冻结候选上复跑
+    - id: A6
+      status: implemented-with-evidence
+      evidence:
+        - pnpm test:unit：Test Files 207 passed (207)，Tests 2444 passed
+          (2444)，Duration 31.27s
+      note: 已列入 verification_checks 由 Runtime 在冻结候选上复跑
+    - id: A7
+      status: implemented-with-evidence
+      evidence:
+        - git merge-base main upstream/main == git rev-parse upstream/main ==
+          d35726e28695844deaf0098450b34911f5be7b78
+        - git branch --contains d35726e2 输出包含 main
+        - git log --oneline upstream/main..main | wc -l == 117，与 rebase 前一致
+        - diff <(git log --format=%s 8596a233..475da0de) <(git log --format=%s
+          d35726e2..main) 为空：117 个 fork 提交主题逐一对应，原顺序重放无丢失无去重
+        - rebase 全程零冲突（Rebasing 117/117 Successfully rebased），无中途解决痕迹
+      note: rebase 前 HEAD 475da0de 已记录（/tmp/ccs-rebase-start-head.txt），回滚路径 git rebase
+        --abort 未动用
+    - id: A8
+      status: implemented-with-evidence
+      evidence:
+        - "rebase 后 grep .comet/config.yaml：default_workflow: native，workflows 含
+          native 与 classic 两项，未被历史重放改写"
+      note: 本次 rebase 零冲突，未出现记忆坑位中的配置改写；已事后核对
+    - id: A9
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md §4 共享文件表 schema.rs 行已补记：v19 双语义历史缺口背景 +
+          fork v20→v21
+          修复迁移（mcp_servers.enabled_mcode/enabled_pi、skills.enabled_mcode，SCHEMA_VERSION=21）+
+          后续同步须保留 v21 的指引；mod.rs 行同步更新（当前 21，上游再推进时取较大者并叠加双方迁移步骤）
+        - fork
+          专属文件抽查：src/config/forkBuild.ts、src/config/forkOfficialAllowlist.ts
+          存在，src/components/devpanel/ 目录存在
+        - git diff 475da0de main -- src/config/forkBuild.ts
+          src/config/forkOfficialAllowlist.ts .comet/config.yaml
+          docs/HOW_TO_REBASE_UPSTREAM.md 在修复提交前为空（rebase 未改动任何 fork 专属文件）
+      note: 手册更新含在实现提交 43af413e 中
+    - id: A10
+      status: implemented-with-evidence
+      evidence:
+        - Spec 场景『旧 fork v19 库补齐 mcode 列』由单测
+          migrate_v19_fork_legacy_database_gains_mcode_and_pi_columns
+          覆盖：user_version=19 + 两列均缺 + 已有数据行 → 迁移后 user_version==21、两列存在、旧行保留默认
+          0、MCP_SERVER_SELECT 全列查询执行成功
+      note: "对应 specs/database-schema-migrations/spec.md Requirement: v21 修复迁移补齐 fork
+        升级路径缺失列"
+    - id: A11
+      status: implemented-with-evidence
+      evidence:
+        - Spec 场景『v20 库补齐 mcode 列』由单测
+          migrate_v20_to_v21_repairs_missing_mcode_column_idempotently
+          覆盖：user_version=20 → 迁移后 user_version==21，mcp_servers 与 skills 两表
+          enabled_mcode 均存在，既有数据（pi=1、skills mcode=1）不变
+      note: 对应 specs/database-schema-migrations/spec.md 同 Requirement
+    - id: A12
+      status: implemented-with-evidence
+      evidence:
+        - Spec 场景『列已存在时迁移幂等』由单测
+          migrate_v20_to_v21_is_noop_when_all_target_columns_exist
+          覆盖：create_tables_on_conn 全新建库（已含全部目标列）+ 插入数据 + user_version=20 →
+          迁移无错误完成，(enabled_mcode, enabled_pi)==(1,1)、skills mcode==1 数据不受影响
+      note: 首版夹具缺 skills.directory 非空列已修复（补 directory 值）
+    - id: A13
+      status: implemented-with-evidence
+      evidence:
+        - Spec 场景『v19 起点全链路迁移』fork 形态由 A1 单测覆盖（user_version=19 依次过 v20、v21 步骤到
+          21，不因列缺失/已存在失败）
+        - 上游形态（v19 已含 enabled_mcode）由既有单测
+          migrate_v19_to_v20_adds_pi_mcp_flag_and_keeps_existing_flags
+          覆盖（同一运行通过：加 pi 到 20，v21 对 mcp_servers 两列幂等 no-op）
+      note: 两种合法 v19 形态均可达 SCHEMA_VERSION
+    - id: A14
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md §4 schema.rs 行现包含：v21
+          修复迁移（mcp_servers.enabled_mcode/enabled_pi、skills.enabled_mcode）、v19
+          双语义背景（v4.0.2 同步合并致旧库跳过）、SCHEMA_VERSION=21、后续同步保留指引
+      note: "对应 specs/database-schema-migrations/spec.md Requirement: fork 迁移合并语义文档化"
+  checks:
+    - name:
+        text: cargo check
+        truncated: false
+      result: passed
+      note:
+        text: Finished dev profile 6.21s 无错误
+        truncated: false
+    - name:
+        text: cargo test（skip 既有例外）
+        truncated: false
+      result: passed
+      note:
+        text: 3631 passed / 0 failed（12 个 result 行聚合）
+        truncated: false
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit 退出码 0
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 207 文件 / 2444 用例全过
+        truncated: false
+    - name:
+        text: 迁移单测定向
+        truncated: false
+      result: passed
+      note:
+        text: database::schema::tests::migrate* 10 个全过，含新增 3 个
+        truncated: false
+    - name:
+        text: rebase git 核对
+        truncated: false
+      result: passed
+      note:
+        text: merge-base==d35726e2、117 提交主题逐一对应、.comet/config.yaml 与 fork 文件未变
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: GUI 启动冒烟未执行：用户报错语句由 A1 单测以 MCP_SERVER_SELECT 全列 prepare+query 在迁移后的库上直接覆盖
+      truncated: false
+    - text: origin/main 推送不在本 change 范围（rebase 改写历史需 --force-with-lease，待用户另行授权）
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-10-07T09:09:57.773Z
+blockers: []
+verification:
+  candidate_id: fff7563e-7b3d-46c9-83a0-106b63bab935
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:4c8f58ff-734e-4958-a242-ed03565ea4e8
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: typecheck
+      name:
+        text: pnpm typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 10922
+    - id: test-unit
+      name:
+        text: pnpm test:unit
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 33419
+    - id: cargo-check
+      name:
+        text: cargo check
+        truncated: false
+      argv_display:
+        - text: check
+          truncated: false
+        - text: --manifest-path
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 5265
+    - id: cargo-test
+      name:
+        text: cargo test
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+        - text: --manifest-path
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+        - text: --
+          truncated: false
+        - text: --skip
+          truncated: false
+        - text: update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 32052
+  summary:
+    text: 修复提交 43af413e（v20→v21 幂等修复迁移 + 3 个新单测 + 手册补记）在已 rebase 到 upstream/main
+      d35726e2 的 main 上完整落地，117 个 fork 提交原序保留，4 项 Runtime 检查回执全部 passed，14/14
+      验收项通过。
+    truncated: false
+  risks:
+    - text: 低风险备注：v20 起点单测中 skills 表已含 enabled_mcode（验证保留分支），「v20 起点 + skills 缺
+        enabled_mcode」的单一组合未直接构造，但该行为已由 v19 起点测试经同一 `20 =>` 步骤的
+        add_column_if_missing(skills, enabled_mcode) 代码路径验证
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-10-07T09:30:30.330Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 修复提交 43af413e（v20→v21 幂等修复迁移 + 3 个新单测 + 手册补记）在已 rebase 到 upstream/main
+        d35726e2 的 main 上完整落地，117 个 fork 提交原序保留，4 项 Runtime 检查回执全部 passed，14/14
+        验收项通过。
+      truncated: false
+    completed_at: 2026-10-07T09:30:30.330Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-10-07T08:27:34.520Z
