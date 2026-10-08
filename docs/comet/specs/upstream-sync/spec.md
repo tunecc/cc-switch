@@ -4,7 +4,7 @@
 
 fork（tunecc/cc-switch）维持"始终可干净 rebase 到上游 farion1231/cc-switch main 之上"的同步状态。每次同步执行后，fork main = 上游发布内容 + fork 全部魔改提交（顺序重放），无丢失、无行为回归。
 
-本轮同步后，fork main 基线为上游 v4.0.4 发布头（tag v4.0.4 = a29a4f38），fork 版本号为 4.0.4-1，origin/main 与本地一致，并存在指向归档提交的 annotated tag `v4.0.4-1`。
+本轮同步后，fork main 基线为上游 v4.0.4 发布头（tag v4.0.4 = a29a4f38），fork 版本号为 4.0.4-1；origin/main 与本地一致、归档提交上存在 annotated tag `v4.0.4-1` 这两项属于交付步骤的结果，交付在验收通过并归档之后执行（不是验收当时的状态）。
 
 ## 同步后状态（完整行为描述）
 
@@ -17,7 +17,7 @@ fork（tunecc/cc-switch）维持"始终可干净 rebase 到上游 farion1231/cc-
 
 #### 重放映射
 
-- rebase 一趟完成：同步前 `d35726e2..main` 的 121 个 fork 提交中，120 个按原顺序逐一重放（`git rev-list --count v4.0.4..main` == 120，顺序与旧历史逐条一致，已用「两侧 `%s` 序列去掉一个已知冗余提交后逐位相等」核对）。
+- rebase 一趟完成：同步前 `d35726e2..main` 的 121 个 fork 提交中，120 个按原顺序逐一重放（rebase 结束、尚未叠加本轮流程提交时 `git rev-list --count v4.0.4..main` == 120；顺序与旧历史逐条一致，已用「两侧 `%s` 序列去掉一个已知冗余提交后逐位相等」核对。同步提交、流程产物提交与归档提交会在其后依次叠加，因此该计数随本轮提交增长，不再是 120）。
 - 唯一被丢弃的提交：原 `c8c8461c`（`feat: disable in-app updater, point users to GitHub releases`，历史第 112 个）重放后成为空提交被 git 丢弃。该提交的原意是「上游 v4.0.2 删掉 fork 的 updater 后，把上游 whats-new 摘要入口重新加回 AboutSection」；在新基线（上游 v4.0.4 已含 whats-new，且前一提交 `2ad67850` 的冲突解法已保留 whats-new 与 star 条）下其内容全部已存在，属预期冗余，不算 fork 改动丢失。同名提交的早期版本（原 `2ad67850`，历史第 42 个）仍正常重放。
 - 冲突共 4 处，全部按下述解法处理并被 rerere 记录：
   1. 原 `812c0a7f`（fork 首个版本号提交）：`package.json` / `src-tauri/Cargo.toml` / `src-tauri/tauri.conf.json` 三处版本号冲突（HEAD 侧 4.0.4 vs fork 侧 3.20.2-fork.1）→ 只取 fork 侧版本号值，保留 git 已合并的上游其余内容（不对整文件 `--theirs`，避免把上游依赖/脚本改动回退）。
