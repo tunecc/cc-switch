@@ -158,7 +158,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `.github/workflows/ci.yml` / `release.yml` | fork 裁剪版 CI：仅构建 Windows x64 与 macOS arm64 unsigned（整文件保留） |
 | `src-tauri/capabilities/default.json` | fork 移除 `updater:default` 权限（保留 fork 版） |
 | `README.md` | fork 重写版（记录 fork 差异与构建说明，整文件保留；README_ZH/DE/JA 为共享文件按 §3.2 处理） |
-| `CHANGELOG.md` | fork 更新日志（整文件保留） |
+| `CHANGELOG.md` | fork 更新日志（仅在 fork 侧确有改动时整文件保留；v4.0.4 同步实测 fork 在同步区间未改过该文件，直接取上游版本落地） |
 | `.comet/config.yaml` | Comet 工作流配置（整文件保留） |
 | `docs/superpowers/` | Superpowers 计划/报告产物（整目录保留） |
 | `docs/openspec/` | OpenSpec change 产物目录（整目录保留，由协调者管理） |
@@ -169,14 +169,15 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 
 | 文件 | fork 专属语义 |
 | --- | --- |
-| `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` + `TrayIconEvent::Click` 左键 Up 分支调 `tray::toggle_main_window`）；移除 Updater 插件注册段（fork 关闭自动更新的后端部分，v4.0.2 起随 8217f0b3 重放保留） |
-| `src-tauri/src/settings.rs` | fork：`VisibleSidebarPanels` 结构 + `AppSettings.visible_sidebar_panels`（上游 v4.0.2 新增 `whats_new_seen_version` 与之共存，合并两段） |
+| `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` + `TrayIconEvent::Click` 左键 Up 分支调 `tray::toggle_main_window`）；移除 Updater 插件注册段（fork 关闭自动更新的后端部分，v4.0.2 起随 8217f0b3 重放保留）。v4.0.4 起上游新增 macOS 重启链路（`restart_process` / `relaunch_macos_bundle`，经 LaunchServices `open -n` 回到前台）：以上游为基础，fork 的更新器移除段保持不存在即可，勿因重放复活 |
+| `src-tauri/src/commands/settings.rs` | fork：`restart_app` 的注释口径（保留代理状态、旧实例同步恢复 Live）随上游改动保留；v4.0.4 起该文件重启改走 `crate::restart_process(&app)`（替代 `app.restart()`），fork 无额外语义，按上游落地 |
+| `src-tauri/src/settings.rs` | fork：`VisibleSidebarPanels` 结构 + `AppSettings.visible_sidebar_panels`（上游 v4.0.2 新增 `whats_new_seen_version` 与之共存，合并两段）。v4.0.4 起上游把 `show_profile_switcher` 改为 `#[serde(default)]` 且默认 `false`（`default_show_profile_switcher` 已删）：取上游默认值，fork 的 `visible_sidebar_panels` 字段段保持不动 |
 | `src-tauri/src/database/schema.rs` | fork：`website_url_2` 列（providers 建表 + `migrate_v18_to_v19` + `add_column_if_missing` 兜底）。v4.0.2 起上游 SCHEMA_VERSION=20（v19→v20 为 `mcp_servers.enabled_pi`）：合并时 v18→v19 同时保留上游 mcode 迁移与 fork website_url_2，v19→v20 取上游，`SCHEMA_VERSION` 取上游值。v4.0.2 同步的 v19 双语义合并留下历史缺口（旧 fork 构建已升到 v19 的库跳过捆绑步骤、缺 `enabled_mcode`），fork 已加 v20→v21 修复迁移幂等补齐 `mcp_servers.enabled_mcode/enabled_pi` 与 `skills.enabled_mcode`（当前 SCHEMA_VERSION=21）：后续上游若再推进 schema，fork 的 v21 步骤必须原样保留，新步骤接在 v21 之后 |
 | `src-tauri/src/database/mod.rs` | fork：移除 `cleanup_old_stream_check_logs` 启动清理调用（旧 stream_check 链路已删）；`SCHEMA_VERSION` 常量随 fork 修复迁移演进（当前 21，含 fork 专属 v20→v21 修复步骤；上游再推进时取「上游新版本与 fork v21 的较大者」并叠加双方迁移步骤） |
-| `src/components/settings/AboutSection.tsx` | 「检查更新」/发行说明指向 fork GitHub Releases（tunecc/cc-switch），禁用应用内更新器；v4.0.1 上游已删 RoutingActivationBrand（左上角品牌链接组件不再存在，无需叠加）。v4.0.2 起该文件含上游 whats-new 摘要入口（WhatsNewDialog + recentEntries + Sparkles 按钮），按共享文件处理：保留 whats-new 区块，只叠加 fork 的更新器改动（移除 isDownloading/installUpdateAndRestart/checkUpdate/resetDismiss，链接改 tunecc） |
+| `src/components/settings/AboutSection.tsx` | 「检查更新」/发行说明指向 fork GitHub Releases（tunecc/cc-switch），禁用应用内更新器；v4.0.1 上游已删 RoutingActivationBrand（左上角品牌链接组件不再存在，无需叠加）。v4.0.2 起该文件含上游 whats-new 摘要入口（WhatsNewDialog + recentEntries + Sparkles 按钮），v4.0.4 起上游又把邀 Star 从行内 `<a>` 改为独立可关闭条（`Star`/`X` 图标 + `settings.starOnGithub` 键 + localStorage `ccswitch:about:starPromptDismissed`）：两者都按共享文件保留，只叠加 fork 的更新器改动（移除 isDownloading/installUpdateAndRestart/checkUpdate/resetDismiss，链接改 tunecc）。v4.0.4 同步实测：重放 fork 的 `feat: disable in-app updater` 提交时该文件必冲突，解法是保留 HEAD 侧 whats-new 与 star 条、只删 `isDownloading`，并补回被 fork 侧抹掉的 `useMemo` 导入与 `WhatsNewDialog`、`WHATS_NEW_ENTRIES/entriesUpTo` 导入，同时删除因此不再使用的 `extractErrorMessage` 导入；其后重新加回 whats-new 的 fork 提交（原 c8c8461c）在新基线下成为空提交并被 git 丢弃，属预期，不算 fork 改动丢失 |
 | `src/components/shell/Sidebar.tsx` | fork：全局面板项（MCP/Skills/会话/Prompts）按 `visibleSidebarPanels` 过滤 |
-| `src/components/settings/sections/GeneralSection.tsx` | fork：侧边面板可见性 pill 开关行（skills/sessions/mcp/prompts/batchTest） |
-| `src/App.tsx` | fork：批量连通性探针状态提升（useConnectivityProbe）、页头「批量检测」按钮按 `visibleSidebarPanels.batchTest` 与 `shouldShowTestEntry` 门控、托盘同款 window-title 守卫 |
+| `src/components/settings/sections/GeneralSection.tsx` | fork：侧边面板可见性 pill 开关行（skills/sessions/mcp/prompts/batchTest）。v4.0.4 起上游把「显示项目切换器」开关默认值改为 `settings.showProfileSwitcher ?? false`：取上游，fork pill 行保留 |
+| `src/App.tsx` | fork：批量连通性探针状态提升（useConnectivityProbe）、页头「批量检测」按钮按 `visibleSidebarPanels.batchTest` 与 `shouldShowTestEntry` 门控、托盘同款 window-title 守卫。v4.0.4 起上游把主页面 ProfileSwitcher 门控改为 `settingsData?.showProfileSwitcher ?? false`：取上游默认值，fork 三段语义不动 |
 | `src/components/providers/ProviderCardActions.tsx` | fork：右键菜单「模型」快捷切换入口（上游 v4 删除 ProviderActions 后的移植位置） |
 | `src/components/providers/ProviderCard.tsx` | fork：模型徽章（extractModelBadgeForProvider）、ConnectivityBadge 探针徽标、双官网链接横排、右键菜单挂载 |
 | `src/components/providers/ProviderList.tsx` | fork：右键一键置顶/置底（applyQuickSort + updateTrayMenu 刷新）、ConnectivityTestDialog、批量探针徽标接线、websiteUrl2 搜索 |
