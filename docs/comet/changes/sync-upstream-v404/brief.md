@@ -47,8 +47,6 @@ fork（tunecc/cc-switch）的 main 同步到上游 farion1231/cc-switch 的 v4.0
 - A9: `pnpm test:unit` 通过。
 - A10: `cargo check` 通过。
 - A11: `cargo test -- --skip update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active` 通过（该用例在本机 cc-switch 运行时因代理端口 15721 被占用而失败，属上游测试设计，沿用既有例外并显式记录）。
-- A12: `git push --force-with-lease origin main` 成功，`git rev-parse main origin/main` 一致，且 origin/main 上的 fork 提交数与本地相同（无 fork 提交在远端丢失）。
-- A13: annotated tag `v4.0.4-1` 已创建并指向本次归档提交，`git push origin v4.0.4-1` 成功；fork Release CI 因 tag 推送而开始运行（以 `gh run list` 或 Actions 状态为准）。
 
 # Constraints and invariants
 
@@ -70,7 +68,8 @@ fork（tunecc/cc-switch）的 main 同步到上游 farion1231/cc-switch 的 v4.0
 - 版本号：4.0.3-2 → 4.0.4-1；`-1` 表示上游 4.0.4 上的第一代 fork 构建，四处版本文件一致。- 数据库 schema：上游 v4.0.4 未推进 schema（仍为 20），fork 21 与 v20→v21 修复迁移原样保留，不新增迁移步骤。
 - CHANGELOG.md：fork 在本轮区间未改过该文件，取上游 v4.0.4 版本落地；白名单中「整文件保留 fork 侧」只在 fork 侧确有改动时生效。
 - 冲突方向：`git rebase <基线>` 重放 fork 提交时，`--ours` 是新基线侧、`--theirs` 是正在重放的 fork 提交（文档 §3.1 已修正）；不确定时先看文件内容再选侧。
-- 交付时机：全部验收项通过、用户接受验收结果后，先归档提交，再推送 main，最后在归档提交上打 tag 并推送 tag。
+- 交付时机（2026-10-08 用户决定）：推送 main 与 tag 不作为本轮验收项，而是验收通过 → 归档提交之后的交付步骤：先 `git push --force-with-lease origin main`，再在归档提交上创建 annotated tag `v4.0.4-1` 并 `git push origin v4.0.4-1`；执行后把 `main`/`origin/main` 一致性、tag 指向和 fork Release CI 运行结果回报给用户。理由：tag 必须指向归档提交，而归档提交在验收之后才存在，交付类断言无法在 Verify 时取证。
+- 交付授权来源：Q2（2026-10-08 确认）已授权「推 main + 推 tag」，无需在执行前重复询问；但只授权这两项动作，不含 merge、PR 或其他远端。
 
 # Open questions
 
@@ -84,4 +83,4 @@ fork（tunecc/cc-switch）的 main 同步到上游 farion1231/cc-switch 的 v4.0
 - `cargo test -- --skip update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active`
 - Git 核对：`git merge-base main upstream/main`、`git rev-parse v4.0.4^{commit}`、`git log --oneline v4.0.4..main`、`git rev-list --count d35726e2..main`（重放前后）、`git branch --contains 5ae6ad38`（应无 main）、四处版本文件内容、`.comet/config.yaml` 内容、`src-tauri/src/database/mod.rs` 的 `SCHEMA_VERSION` 与 v20→v21 迁移段
 - fork 保留清单符号核对：`toggle_main_window`、`connectivity_test`、`forkOfficialAllowlist`、`website_url_2`、`VisibleSidebarPanels`、`IS_FORK_BUILD`
-- 交付核对：`git rev-parse main origin/main`（推送后一致）、`git tag --points-at <归档提交>`、`gh run list --limit 5`（tag 推送后 Release CI 是否排队/运行）
+- 交付核对（验收通过并归档之后执行，不属于本轮验收项，结果回报给用户）：`git push --force-with-lease origin main`、`git rev-parse main origin/main`（应一致）、在归档提交上创建 annotated tag `v4.0.4-1` 并 `git push origin v4.0.4-1`、`gh run list --limit 5`（tag 推送后 fork Release CI 是否排队/运行）。
