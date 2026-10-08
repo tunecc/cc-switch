@@ -82,6 +82,7 @@ fork（tunecc/cc-switch）维持"始终可干净 rebase 到上游 farion1231/cc-
 
 ### 交付（上传）
 
+- 交付不是本轮验收项，而是验收通过并生成归档提交之后执行的步骤（原因：tag 必须指向归档提交，Verify 时该提交尚不存在）。推送 main 与推送 tag 的动作由用户在 Shape 的 Q2 明确授权，执行后把实际结果回报给用户。
 - 全部验收项通过且用户接受验收结果后：`git push --force-with-lease origin main`（不使用 `--force`；远端被他人更新时拒绝推送并报告）。
 - 随后在归档提交上创建 annotated tag `v4.0.4-1` 并 `git push origin v4.0.4-1`；tag 推送触发 fork Release CI（windows-2022 + macos-14，unsigned）构建并发布 GitHub Release 安装包。
 - 不创建 PR，不同步其他分支或远端。
