@@ -3,10 +3,10 @@ name: sync-upstream-v404
 language: zh-CN
 phase: build
 status: active
-state_version: 4
+state_version: 7
 brief: brief.md
 document_constraints_version: 2
-shape_confirmation_hash: 7c77d1a393cab5a0f177331844a5987f967277b322f5ef99ed5d4fc701442302
+shape_confirmation_hash: 99c19f35904428e6ee2680d680a0b609252886d0580ee08ed2d981612672a6c7
 spec_changes:
   - capability: upstream-sync
     operation: modify
@@ -18,7 +18,7 @@ workspace:
   finish: null
 loop:
   stage: building
-  goal_cycle: 2
+  goal_cycle: 3
   iteration: 1
   attempt: 0
   retry_epoch: 0
@@ -109,18 +109,6 @@ acceptance:
       被占用而失败，属上游测试设计，沿用既有例外并显式记录）。"
     result: pending
     reason: null
-  - id: A12
-    source: brief.md
-    text: "A12: `git push --force-with-lease origin main` 成功，`git rev-parse main
-      origin/main` 一致，且 origin/main 上的 fork 提交数与本地相同（无 fork 提交在远端丢失）。"
-    result: pending
-    reason: null
-  - id: A13
-    source: brief.md
-    text: "A13: annotated tag `v4.0.4-1` 已创建并指向本次归档提交，`git push origin v4.0.4-1`
-      成功；fork Release CI 因 tag 推送而开始运行（以 `gh run list` 或 Actions 状态为准）。"
-    result: pending
-    reason: null
 builder_handoff: null
 blockers: []
 verification: null
@@ -134,6 +122,15 @@ history:
       text: Capability association revoked through comet native spec disassociate
       truncated: false
     completed_at: 2026-10-08T11:03:54.854Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native confirmed acceptance criteria changed
+      truncated: false
+    completed_at: 2026-10-08T11:49:41.375Z
 history_overflow:
   dropped_entries: 0
   first_dropped_at: null
