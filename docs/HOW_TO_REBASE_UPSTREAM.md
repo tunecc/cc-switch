@@ -169,7 +169,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 
 | 文件 | fork 专属语义 |
 | --- | --- |
-| `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` + `TrayIconEvent::Click` 左键 Up 分支调 `tray::toggle_main_window`）；移除 Updater 插件注册段（fork 关闭自动更新的后端部分，v4.0.2 起随 8217f0b3 重放保留）。v4.0.4 起上游新增 macOS 重启链路（`restart_process` / `relaunch_macos_bundle`，经 LaunchServices `open -n` 回到前台）：以上游为基础，fork 的更新器移除段保持不存在即可，勿因重放复活 |
+| `src-tauri/src/lib.rs` | 托盘左键单击切换主窗口显示/隐藏（`show_menu_on_left_click(false)` + `TrayIconEvent::Click` 左键 Up 分支调 `tray::toggle_main_window`）；移除 Updater 插件注册段（fork 关闭自动更新的后端部分，v4.0.2 起随 8217f0b3 重放保留）。v4.0.4 起上游新增 macOS 重启链路（`restart_process` / `relaunch_macos_bundle`，经 LaunchServices `open -n` 回到前台）：以上游为基础，fork 的更新器移除段保持不存在即可，勿因重放复活。v4.0.5 起上游又在本文件加了 all-time 热力图命令注册、Wayland 标题栏/托盘重显链路与 WSL 夜间测试标记：以上游为准，fork 的「无 updater 插件注册 + 左键切换 + connectivity_test 命令注册」三段语义照常叠加，任何一次重放都要确认 `tauri_plugin_updater` 没有被带回 |
 | `src-tauri/src/commands/settings.rs` | fork：`restart_app` 的注释口径（保留代理状态、旧实例同步恢复 Live）随上游改动保留；v4.0.4 起该文件重启改走 `crate::restart_process(&app)`（替代 `app.restart()`），fork 无额外语义，按上游落地 |
 | `src-tauri/src/settings.rs` | fork：`VisibleSidebarPanels` 结构 + `AppSettings.visible_sidebar_panels`（上游 v4.0.2 新增 `whats_new_seen_version` 与之共存，合并两段）。v4.0.4 起上游把 `show_profile_switcher` 改为 `#[serde(default)]` 且默认 `false`（`default_show_profile_switcher` 已删）：取上游默认值，fork 的 `visible_sidebar_panels` 字段段保持不动 |
 | `src-tauri/src/database/schema.rs` | fork：`website_url_2` 列（providers 建表 + `migrate_v18_to_v19` + `add_column_if_missing` 兜底）。v4.0.2 起上游 SCHEMA_VERSION=20（v19→v20 为 `mcp_servers.enabled_pi`）：合并时 v18→v19 同时保留上游 mcode 迁移与 fork website_url_2，v19→v20 取上游，`SCHEMA_VERSION` 取上游值。v4.0.2 同步的 v19 双语义合并留下历史缺口（旧 fork 构建已升到 v19 的库跳过捆绑步骤、缺 `enabled_mcode`），fork 已加 v20→v21 修复迁移幂等补齐 `mcp_servers.enabled_mcode/enabled_pi` 与 `skills.enabled_mcode`（当前 SCHEMA_VERSION=21）：后续上游若再推进 schema，fork 的 v21 步骤必须原样保留，新步骤接在 v21 之后 |
@@ -191,7 +191,15 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/lib/updater.ts` | 恒返回 up-to-date（fork 关闭自动更新） |
 | `src/config/*ProviderPresets.ts` ×8 | 预设接口的 `hidden?: boolean` 字段与官方预设过滤接线 |
 | `src/lib/schemas/provider.ts` | `websiteUrl2` 第二官网链接字段 |
-| `src-tauri/src/commands/misc.rs` 等后端共享文件 | 连通性测试命令注册、`connectivityTest` sanitize 隔离 |
+| `src-tauri/src/commands/misc.rs` 等后端共享文件 | 连通性测试命令注册、`connectivityTest` sanitize 隔离。v4.0.5 起上游在本文件加入 Claude Code npm 安装的 native setup（c5233fe7，#7929）：取上游改动，fork 的命令注册与 sanitize 由 git 自动合并，无额外取舍 |
+| `src-tauri/src/tray.rs` | fork：`toggle_main_window` 与左键单击切换分支（约 32 行）。v4.0.5 起上游在本文件改了 Wayland 重显相关的托盘构建（36c8b87e，#7947）：两侧必须并存，此文件是本轮最容易整文件取一侧而丢语义的点，解完冲突后逐行复核 |
+| `src-tauri/src/provider.rs`、`src-tauri/src/services/provider/mod.rs` | fork：`website_url_2` 字段（serde `websiteUrl2`、`UniversalProvider` 随行透传）与连通性测试相关接线。v4.0.5 起上游为 Copilot 托管账户扩展了 provider 字段与路由判定（f9db9f70，#7157）：以上游为基础，fork 的 `website_url_2` 字段与接线一行不能丢 |
+| `src-tauri/src/proxy/forwarder.rs`、`src-tauri/src/proxy/providers/{claude,codex,mod}.rs` | fork：`connectivityTest` sanitize 隔离、按供应商 API 格式对齐真实转发链路的转换接线，以及测试里 Provider 字面量的 `website_url_2: None`。v4.0.5 起上游把 `forwarder.rs` 近乎重写（f9db9f70，单文件 +1166 行）并删掉了自带的 `copilot_detection_via_*` / `copilot_detection_for_enterprise_endpoint` 测试，改用 `is_managed_copilot_request()` + 新的 `test_provider_with_type()` 构造助手：这类测试区冲突一律取上游侧（fork 在这些文件里从来只加 `website_url_2` 字段，没有自建测试），取完上游侧后要确认 `test_provider_with_type()` 里仍带 `website_url_2: None`，否则 `cargo test` 编译失败 |
+| `src/types.ts` | fork：`websiteUrl2`、`VisibleSidebarPanels` 等类型段。v4.0.5 起上游新增 Copilot/用量相关类型：两段并存 |
+| `src/components/providers/EditProviderDialog.tsx` 与 `tests/components/EditProviderDialog.test.tsx` | fork：编辑弹窗的 fork 接线与 47 行 fork 用例。v4.0.5 起上游为 Copilot 能力新增 props 与用例：取上游结构，fork 用例与改动叠加回 |
+| `src/config/codexProviderPresets.ts` | fork：预设接口的 `hidden?: boolean` 与官方预设过滤接线。v4.0.5 起上游给 MoArk 预设补了模型目录与原生 Responses 格式（3af55c39，#7940）：取上游预设内容，fork 的 `hidden` 字段与过滤判定照常生效（上游新增预设是否可见由 fork 白名单决定，不要手工放开） |
+| `src/components/providers/forms/ProviderForm.tsx` | fork：跨应用导入接线（ProviderImportEntry + useProviderImportApply，编辑/新建两条同步路径）。v4.0.5 起上游在本文件接入 Copilot 托管账户表单路由（+87 行）：取上游骨架，fork 的导入接线与 `ProviderPresetSelector.extraActions` 插槽保留 |
+| `pnpm-lock.yaml`、`src-tauri/Cargo.lock` | 锁文件冲突只针对 fork 专属条目取 fork 侧（`@tauri-apps/plugin-updater` 的 specifier / resolution / snapshot 三段，`cc-switch` 包版本号），其余上游依赖变动一律接收，不要整文件取一侧。收尾用 `pnpm install` 与 `cargo check` 复验：两者都报告锁文件未被改写，才算与 `package.json` / `Cargo.toml` 一致 |
 | `tests/components/AddProviderDialog.test.tsx` | fork：两个 claude 用例的「common.add」按钮由同步 `getByRole` 改为 `await findByRole`（live 底到位后 step 从 pick 切 form 是第二次提交，CI 慢机器上 footer 晚一拍渲染，同步查找偶发 flaky，2026-10-06 CI 实测踩中）。上游 v4.0.3（a4d07f31）已内置等价 `findByRole` 修复：此后该文件冲突取上游版本，仅叠加回 fork 的两段 explanatory 注释 |
 
 说明：
