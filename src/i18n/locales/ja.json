@@ -1835,7 +1835,8 @@
     "applyFailed": "モデルの適用に失敗しました",
     "noCredentials": "先に編集フォームで API Key とエンドポイントを設定してください",
     "oneMBadge": "1M",
-    "oneMEnabledHint": "1M が有効"
+    "oneMEnabledHint": "1M が有効",
+    "notSet": "モデル未設定"
   },
   "copilot": {
     "authSection": "GitHub Copilot 認証",
@@ -4343,7 +4344,8 @@
       "edit": "{{name}} を編集",
       "more": "{{name}} のその他の操作",
       "moveUp": "{{name}} を上へ",
-      "moveDown": "{{name}} を下へ"
+      "moveDown": "{{name}} を下へ",
+      "quickModel": "{{name}} のモデルクイック切替"
     },
     "chip": {
       "official": "公式",

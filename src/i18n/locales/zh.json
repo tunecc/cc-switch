@@ -1847,7 +1847,8 @@
     "applyFailed": "应用模型失败",
     "noCredentials": "请先在编辑表单配置 API Key 与请求地址",
     "oneMBadge": "1M",
-    "oneMEnabledHint": "1M 已开启"
+    "oneMEnabledHint": "1M 已开启",
+    "notSet": "未设置模型"
   },
   "copilot": {
     "authSection": "GitHub Copilot 认证",
@@ -4355,7 +4356,8 @@
       "edit": "编辑 {{name}}",
       "more": "{{name}} 的更多操作",
       "moveUp": "{{name}} 上移一位",
-      "moveDown": "{{name}} 下移一位"
+      "moveDown": "{{name}} 下移一位",
+      "quickModel": "{{name}} 的模型快捷切换"
     },
     "chip": {
       "official": "官方",
