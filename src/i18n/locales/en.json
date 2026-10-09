@@ -1994,7 +1994,8 @@
     "applyFailed": "Failed to apply model",
     "noCredentials": "Please configure the API Key and endpoint in the edit form first",
     "oneMBadge": "1M",
-    "oneMEnabledHint": "1M enabled"
+    "oneMEnabledHint": "1M enabled",
+    "notSet": "No model set"
   },
   "copilot": {
     "automaticFormat": "Selected automatically by routing",
@@ -4638,7 +4639,8 @@
       "more": "More actions for {{name}}",
       "moveUp": "Move {{name}} up",
       "moveDown": "Move {{name}} down",
-      "openTerminal": "Open a terminal with {{name}}"
+      "openTerminal": "Open a terminal with {{name}}",
+      "quickModel": "Quick model switch for {{name}}"
     },
     "chip": {
       "official": "Official",
