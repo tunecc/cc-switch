@@ -1975,7 +1975,8 @@
     "applyFailed": "应用模型失败",
     "noCredentials": "请先在编辑表单配置 API Key 与请求地址",
     "oneMBadge": "1M",
-    "oneMEnabledHint": "1M 已开启"
+    "oneMEnabledHint": "1M 已开启",
+    "notSet": "未设置模型"
   },
   "copilot": {
     "automaticFormat": "由路由按模型自动选择",
@@ -4616,7 +4617,8 @@
       "more": "{{name}} 的更多操作",
       "moveUp": "{{name}} 上移一位",
       "moveDown": "{{name}} 下移一位",
-      "openTerminal": "用 {{name}} 打开终端"
+      "openTerminal": "用 {{name}} 打开终端",
+      "quickModel": "{{name}} 的模型快捷切换"
     },
     "chip": {
       "official": "官方",
