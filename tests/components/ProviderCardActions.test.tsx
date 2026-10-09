@@ -75,4 +75,38 @@ describe("ProviderCardActions — mode items in the more menu", () => {
         .map((item) => item.textContent),
     ).toEqual(["provider.duplicate", "common.delete"]);
   });
+
+  it("never offers the model quick switch entry", async () => {
+    const user = userEvent.setup();
+    render(
+      <ProviderCardActions
+        providerName="Kimi"
+        presentation={{ buttons: [], chips: [] }}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        onTest={vi.fn()}
+        onConfigureUsage={vi.fn()}
+        onOpenTerminal={vi.fn()}
+      />,
+    );
+    await user.click(
+      screen.getByRole("button", { name: "providerCard.action.more" }),
+    );
+    const menu = await screen.findByRole("menu");
+
+    const labels = within(menu)
+      .getAllByRole("menuitem")
+      .map((item) => item.textContent);
+    expect(labels).toEqual([
+      "provider.duplicate",
+      "provider.connectivityCheck",
+      "provider.configureUsage",
+      "provider.openTerminal",
+      "common.delete",
+    ]);
+    // 模型快捷切换已从更多菜单移除，改由卡片上的模型徽章承担
+    expect(labels).not.toContain("providerModel.title");
+    expect(menu.querySelector("svg.lucide-boxes")).toBeNull();
+  });
 });
