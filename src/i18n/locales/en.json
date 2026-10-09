@@ -1862,7 +1862,8 @@
     "applyFailed": "Failed to apply model",
     "noCredentials": "Please configure the API Key and endpoint in the edit form first",
     "oneMBadge": "1M",
-    "oneMEnabledHint": "1M enabled"
+    "oneMEnabledHint": "1M enabled",
+    "notSet": "No model set"
   },
   "copilot": {
     "authSection": "GitHub Copilot Authentication",
@@ -4372,7 +4373,8 @@
       "edit": "Edit {{name}}",
       "more": "More actions for {{name}}",
       "moveUp": "Move {{name}} up",
-      "moveDown": "Move {{name}} down"
+      "moveDown": "Move {{name}} down",
+      "quickModel": "Quick model switch for {{name}}"
     },
     "chip": {
       "official": "Official",
