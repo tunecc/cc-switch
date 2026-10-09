@@ -309,6 +309,12 @@ export function ProviderCard({
     [appId, provider.settingsConfig],
   );
 
+  // 徽章（无模型时是占位按钮）即可捷切换入口，命名方式与其他图标按钮一致。
+  const quickModelLabel = t("providerCard.action.quickModel", {
+    name: provider.name,
+    defaultValue: "{{name}} 的模型快捷切换",
+  });
+
   useEffect(() => {
     if (hasMultiplePlans) {
       setIsExpanded(true);
@@ -373,17 +379,22 @@ export function ProviderCard({
             >
               {provider.name}
             </h3>
-            {modelBadge && (
-              <span
-                className="inline-flex items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground"
-                title={modelBadge.title}
+            {(modelBadge || isModelCapableApp(appId)) && (
+              <button
+                type="button"
+                onClick={() => setModelDialogOpen(true)}
+                className="inline-flex max-w-[260px] cursor-pointer items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-fg-1 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                title={modelBadge ? modelBadge.title : quickModelLabel}
+                aria-label={quickModelLabel}
               >
                 <span className="truncate max-w-[200px]">
-                  {modelBadge.label}
+                  {modelBadge
+                    ? modelBadge.label
+                    : t("providerModel.notSet", { defaultValue: "未设置模型" })}
                 </span>
-                {modelBadge.oneM && (
+                {modelBadge?.oneM && (
                   <span
-                    className="inline-flex items-center rounded-sm bg-primary/10 px-1 py-0 text-[10px] font-medium text-primary"
+                    className="inline-flex shrink-0 items-center rounded-sm bg-primary/10 px-1 py-0 text-[10px] font-medium text-primary"
                     title={t("providerModel.oneMEnabledHint", {
                       defaultValue: "1M 已开启",
                     })}
@@ -391,7 +402,7 @@ export function ProviderCard({
                     {t("providerModel.oneMBadge", { defaultValue: "1M" })}
                   </span>
                 )}
-              </span>
+              </button>
             )}
             {connectivityProbe && (
               <ConnectivityBadge
@@ -606,11 +617,6 @@ export function ProviderCard({
             onEdit={() => onEdit(provider)}
             onDelete={() => onDelete(provider)}
             onDuplicate={onDuplicate ? () => onDuplicate(provider) : undefined}
-            onQuickModel={
-              isModelCapableApp(appId)
-                ? () => setModelDialogOpen(true)
-                : undefined
-            }
             onTest={
               // 连通检测对第三方/自定义/Copilot/Codex-OAuth 供应商开放。官方供应商一律不给：
               // 它们 base_url 故意留空、走客户端默认/OAuth 端点，没有可靠的探测目标。
