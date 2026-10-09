@@ -1,0 +1,891 @@
+schema: comet.native.v4
+name: model-badge-opens-quick-switch
+language: zh-CN
+phase: archive
+status: done
+state_version: 11
+brief: brief.md
+document_constraints_version: 2
+shape_confirmation_hash: 1a90e250372de7f80e1ac1432f4546f36ef72848fae69e4ac03860ca2ddc28f7
+spec_changes:
+  - capability: provider-model-quick-view-switch
+    operation: modify
+    source: specs/provider-model-quick-view-switch/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 2
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: 打开核心 4 app 任一供应商卡片的 ⋯ 更多菜单，菜单项为模式项 + 复制 + 连通检测 + 配置用量查询 + 打开终端 +
+      删除，不含「模型快捷切换」项，也不含 Boxes 图标。"
+    result: passed
+    reason:
+      text: ProviderCardActions more menu 渲染 模式项/复制/连通检测/配置用量查询/打开终端/删除；onQuickModel
+        项与 Boxes 导入已删除；ProviderCardActions.test 断言 labels 不含 providerModel.title
+        且 menu 无 svg.lucide-boxes。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: claude / codex / gemini / grokbuild
+      供应商卡片名称右侧的当前模型徽章可点击（button、cursor-pointer、有 hover 反馈），点击后打开
+      ModelQuickSwitchDialog。"
+    result: passed
+    reason:
+      text: 徽章为原生 <button type=button>，含 cursor-pointer 与
+        hover:bg-muted/hover:text-fg-1/hover:underline，onClick=setModelDialogOpen(true)；modelBadge
+        测试验证点击后出现 dialog。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 徽章可键盘访问：Tab 可聚焦，Enter / Space 可打开弹窗，且有可访问名称（aria-label）。"
+    result: passed
+    reason:
+      text: 原生 button 可 Tab 聚焦、Enter/Space 触发 onClick，aria-label=quickModelLabel；测试分别以
+        Enter 与 Space 打开弹窗，getBadge 以可访问名 /的模型快捷切换$/ 定位。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4: 徽章的展示语义不变：title 仍显示完整模型说明（claude 三角色聚合 `Opus: x / Sonnet: y / Haiku:
+      z`，其余 app 为模型名），1M 小标记仍按当前主对话模型是否带 `[1M]` 显示，长模型名仍可截断。"
+    result: passed
+    reason:
+      text: "title=modelBadge.title（claude 三角色聚合/其余为模型名），1M 依 modelBadge?.oneM，label
+        外包 truncate max-w-[200px] 保留截断；diff 显示仅 span→button、内部展示逻辑未改；测试验证
+        title=Opus: kimi-opus / Sonnet: kimi-sonnet / Haiku: kimi-haiku。"
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: 点击徽章不触发卡片其他交互：不触发拖拽、不打开网站链接、不影响右键菜单；弹窗的打开/关闭与读写行为与从更多菜单打开时一致。"
+    result: passed
+    reason:
+      text: 徽章为独立 button、onClick 仅 setModelDialogOpen(true)，未复用拖拽 listeners、卡片各级无祖先
+        onClick，不触发拖拽/网站/右键；弹窗为同一组件与状态；测试验证点击不开网站。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: 没有配置模型的核心 4 app 供应商（官方直连，`env` 为空 / `config` 为空）在名称右侧渲染占位按钮，点击后打开同一个
+      ModelQuickSwitchDialog；占位按钮不显示 1M 小标记，样式与模型徽章一致（小字、可截断、有 hover 反馈）。"
+    result: passed
+    reason:
+      text: 条件 (modelBadge || isModelCapableApp(appId)) 使无模型核心 4 app
+        渲染占位按钮，label=providerModel.notSet，className
+        与徽章一致（小字/truncate/hover），modelBadge?.oneM 为 undefined 不显示 1M；测试验证
+        claudeOfficial(env:{}) 与 codex(config:"") 渲染“未设置模型”且点击打开弹窗。
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: 范围外 app（claude-desktop / opencode / openclaw / hermes / pi /
+      mcode）的卡片不渲染模型徽章，也不渲染占位按钮，行为与改动前一致。"
+    result: passed
+    reason:
+      text: 范围外 app 的 modelBadge 为 null 且 isModelCapableApp 为 false，渲染条件为假；测试验证
+        openclaw 无徽章、无占位、无弹窗。
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `ProviderCardActions` 相关测试与全量前端 vitest、typecheck、format:check 通过。"
+    result: passed
+    reason:
+      text: Runtime 四项检查全部 exit 0：vitest-targeted 14/14、vitest-full 211 文件 2519
+        测试、typecheck、format:check；日志 mtime(13:25-13:26) 晚于所有源文件
+        mtime(13:15-13:21)，对应当前实现版本；我独立重跑定向测试亦 14/14 通过。
+      truncated: false
+  - id: A9
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 卡片显示模型 - **WHEN** Claude app 的供应商设置了 ANTHROPIC_DEFAULT_SONNET_MODEL
+      - **THEN** 卡片名称右侧显示该模型名（不含 [1M] 后缀）
+    result: passed
+    reason:
+      text: extractModelBadgeForProvider claude 分支取 SONNET(回退 ANTHROPIC_MODEL) 并 strip
+        [1M] 作 label；ProviderCard 渲染 modelBadge.label；该函数未改动且由既有用例覆盖。
+      truncated: false
+  - id: A10
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 卡片显示 1M 开启标记 - **WHEN** Claude app 的供应商
+      ANTHROPIC_DEFAULT_SONNET_MODEL 原始值为 "model-x[1M]" - **THEN** 卡片名称右侧先显示模型名
+      "model-x"，其后追加显示「1M」小标记
+    result: passed
+    reason:
+      text: oneM=hasClaudeOneMMarker(primaryRaw)，ProviderCard 在 modelBadge?.oneM 时渲染
+        1M 小标记；modelBadge 测试验证 SONNET=kimi-sonnet[1M] 时显示 1M。
+      truncated: false
+  - id: A11
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 未开启 1M 不显示标记 - **WHEN** Claude app 的供应商
+      ANTHROPIC_DEFAULT_SONNET_MODEL 原始值为 "model-x"（无 [1M]） - **THEN**
+      卡片名称右侧只显示模型名 "model-x"，不显示 1M 标记
+    result: passed
+    reason:
+      text: 无 [1M] 时 oneM=false 不渲染 1M；modelBadge 测试 plain 变体验证无 1M。
+      truncated: false
+  - id: A12
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 非 claude app 不显示 1M 标记 - **WHEN** 查看 codex/grokbuild/gemini app 的供应商卡片模型徽章
+      - **THEN** 徽章只显示模型名，不显示 1M 标记
+    result: passed
+    reason:
+      text: extractModelBadgeForProvider 仅 claude 计算 oneM，codex/grokbuild/gemini 不设
+        oneM；测试 codex 变体无 1M。
+      truncated: false
+  - id: A13
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 范围外 app 不显示 - **WHEN** 查看 pi/openclaw 等 app 的供应商卡片 - **THEN** 不显示模型徽章
+    result: passed
+    reason:
+      text: extractModelBadgeForProvider default 分支返回 null；ProviderCard 条件为假；测试
+        openclaw 无徽章。
+      truncated: false
+  - id: A14
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 点击徽章打开弹窗 - **WHEN** 用户点击核心 4 app 供应商卡片名称右侧的当前模型徽章 - **THEN** 打开该供应商的
+      ModelQuickSwitchDialog，弹窗内容、行为与从其他入口打开时一致
+    result: passed
+    reason:
+      text: 徽章 onClick 打开 modelDialogOpen，挂载同一 ModelQuickSwitchDialog；测试点击徽章出现 dialog。
+      truncated: false
+  - id: A15
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 键盘可打开 - **WHEN** 用户用 Tab 聚焦模型徽章后按 Enter 或 Space - **THEN** 打开
+      ModelQuickSwitchDialog
+    result: passed
+    reason:
+      text: 原生 button 支持 Enter/Space；测试 focus+Enter、focus+Space 均打开弹窗。
+      truncated: false
+  - id: A16
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: '徽章信息语义不变 - **WHEN** 查看 claude 供应商（三角色模型不同）的徽章 - **THEN**
+      徽章显示第一个角色模型名，title 为 "Opus: x / Sonnet: y / Haiku: z" 完整说明，长名可截断；开启 1M
+      时仍显示「1M」小标记'
+    result: passed
+    reason:
+      text: "label=roleModels[0].model（首角色），title=Opus: x / Sonnet: y / Haiku:
+        z，truncate 保留，1M 依 primaryRaw；测试验证 title 聚合与 1M 三态。"
+      truncated: false
+  - id: A17
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 点击不触发其他卡片交互 - **WHEN** 用户点击模型徽章 - **THEN** 不触发卡片拖拽、不打开网站链接、不影响卡片右键菜单，仅打开弹窗
+    result: passed
+    reason:
+      text: 徽章独立 button 无拖拽 listeners、无祖先 onClick；测试验证点击不开网站；右键菜单未在本次改动（Non-goal）。
+      truncated: false
+  - id: A18
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 无模型时占位可点击 - **WHEN** Claude Official / Google Official / OpenAI Official
+      等官方直连供应商（模型字段为空）展示在卡片上 - **THEN** 卡片名称右侧显示占位按钮（「未设置模型」类文案），点击后打开
+      ModelQuickSwitchDialog
+    result: passed
+    reason:
+      text: 无模型核心 4 app 渲染占位按钮（providerModel.notSet），点击打开弹窗；测试 claudeOfficial 与
+        codex(config:"") 验证。
+      truncated: false
+  - id: A19
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 占位不显示 1M 标记 - **WHEN** 供应商模型为空，渲染占位按钮 - **THEN** 占位按钮只显示占位文案，不显示「1M」小标记
+    result: passed
+    reason:
+      text: 占位时 modelBadge 为 null，modelBadge?.oneM 为 undefined 不渲染 1M；测试验证占位内无 1M。
+      truncated: false
+  - id: A20
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 范围外 app 无占位 - **WHEN** 查看 pi/openclaw 等范围外 app 的供应商卡片 - **THEN**
+      既不显示模型徽章，也不显示占位按钮
+    result: passed
+    reason:
+      text: 范围外 app 渲染条件为假，既不渲染徽章也不渲染占位；测试 openclaw 验证。
+      truncated: false
+  - id: A21
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 更多菜单不含模型快捷切换 - **WHEN** 用户打开核心 4 app 任一供应商卡片的 ⋯ 更多菜单 - **THEN**
+      菜单中不存在「模型快捷切换」项，也不存在该项的 Boxes 图标
+    result: passed
+    reason:
+      text: ProviderCardActions 已删 onQuickModel 项与 Boxes 图标；测试断言 labels 不含
+        providerModel.title 且 menu.querySelector(svg.lucide-boxes) 为 null。
+      truncated: false
+  - id: A22
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 其余菜单项不受影响 - **WHEN** 用户打开 ⋯ 更多菜单 - **THEN**
+      模式项、复制、连通检测、配置用量查询、打开终端、删除按各自显示条件正常展示，分隔线位置正确
+    result: passed
+    reason:
+      text: 菜单项与两道分隔线逻辑保留（menuItems→sep→复制/检测/用量/终端→sep→删除），仅从第二道分隔线条件移除
+        onQuickModel；测试“shows only the usual items”与“lists them
+        first”验证其余项与顺序正常。
+      truncated: false
+  - id: A23
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 拉取模型 - **WHEN** 用户在弹窗点击拉取模型（供应商已配置 baseURL+apiKey） - **THEN** 调用
+      fetchModelsForConfig 获取列表，成功后显示搜索选择器；失败显示对应错误 toast
+    result: passed
+    reason:
+      text: ModelQuickSwitchDialog git diff 为空（零改动）；handleFetchModels 调
+        fetchModelsForConfig，成功 setModels+展开 picker+toast、失败
+        showFetchModelsError；底层 fetch 由既有用例覆盖。
+      truncated: false
+  - id: A24
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 弹窗盖住顶部 header - **WHEN** 用户打开模型快捷切换弹窗 - **THEN** 顶部 header（含 CC Switch
+      品牌行）被弹窗遮罩与弹窗内容盖住，不再透显在弹窗之上
+    result: passed
+    reason:
+      text: 弹窗零改动；DialogContent 使用 zIndex=alert（高于 header z-50），可盖住顶部 header；经代码审读确认。
+      truncated: false
+  - id: A25
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 当前模型与拉取按钮同行 - **WHEN** 弹窗打开 - **THEN**
+      「当前模型」标签与当前模型值在左侧，「获取模型列表」按钮紧随其右侧，二者位于同一行
+    result: passed
+    reason:
+      text: 弹窗零改动；当前模型标签与值在左、拉取按钮在右，同处 flex items-center justify-between 行；经代码审读确认。
+      truncated: false
+  - id: A26
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 1M 开关反映当前状态 - **WHEN** 供应商当前主对话模型原始值为 "model-x[1M]"，打开弹窗 - **THEN** 「应用 1M
+      标记」开关显示为开；供应商未开 1M 时打开弹窗，开关显示为关
+    result: passed
+    reason:
+      text: 弹窗零改动；currentOneM 由 extractModelBadgeForProvider().oneM 派生（既有测试覆盖），open 时
+        setOneMEnabled(currentOneM) 使开关反映当前状态；经代码审读确认。
+      truncated: false
+  - id: A27
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 选择模型后应用 - **WHEN** 用户选中某模型点击保存 - **THEN** 所选模型写入该供应商全部模型角色字段并保存（见写回
+      Requirement），弹窗关闭，卡片模型徽章与列表数据刷新
+    result: passed
+    reason:
+      text: 弹窗零改动；handleApply→applyModelToSettings→providersApi.update→invalidateQueries→onOpenChange(false)；写回契约由
+        providerModelUtils.test.ts 39 用例覆盖且全量通过。
+      truncated: false
+  - id: A28
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 仅翻转 1M 不换模型 - **WHEN** claude 供应商当前模型非空、用户未选择新模型，把 1M 开关从关切到开后点击保存 -
+      **THEN** 支持 1M 的模型字段原地追加 `[1M]`（见写回 Requirement），各角色模型 base
+      与显示名字段值保持不变，弹窗关闭并刷新；从开切到关时原地剥离 `[1M]`
+    result: passed
+    reason:
+      text: 弹窗零改动；未选模型走 setClaudeOneMInSettings 原地翻转 [1M]；该函数由既有测试覆盖（开追加/关剥离/幂等/HAIKU
+        与显示名不动）。
+      truncated: false
+  - id: A29
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 无可应用变化时保存禁用 - **WHEN** claude 用户未选择模型且 1M 开关状态与供应商当前状态一致 - **THEN** 保存按钮禁用
+    result: passed
+    reason:
+      text: 弹窗零改动；canApply=selectedModel||oneMOnlyApply，保存按钮
+        disabled={!canApply||isSaving}，claude 未选模型且 1M 状态一致时禁用；经代码审读确认。
+      truncated: false
+  - id: A30
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 一键应用含 1M - **WHEN** Claude 供应商选中 model-x 且 1M 开关开启后应用 - **THEN**
+      SONNET/OPUS/FABLE/ANTHROPIC_MODEL/SUBAGENT 字段为 "model-x[1M]"，HAIKU 为
+      "model-x"，四个显示名字段在可覆盖时为 "model-x"
+    result: passed
+    reason:
+      text: 零改动；applyModelToSettings withOneM=true 令
+        SONNET/OPUS/FABLE/ANTHROPIC_MODEL/SUBAGENT 带 [1M]、HAIKU 为 base、显示名写
+        base；providerModelUtils 测试“withOneM=true marks the five main fields but
+        never HAIKU”覆盖。
+      truncated: false
+  - id: A31
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 应用时 Haiku 显示名同步 - **WHEN** 供应商 env 含
+      ANTHROPIC_DEFAULT_HAIKU_MODEL="old-haiku" 与
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME="old-haiku"，用户应用 model-x（1M 关） -
+      **THEN** ANTHROPIC_DEFAULT_HAIKU_MODEL 与
+      ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME 均为 "model-x"
+    result: passed
+    reason:
+      text: 零改动；HAIKU 显示名等于旧 base 时随切换写新 base；测试“withOneM=false syncs the HAIKU
+        display name with the new base”覆盖。
+      truncated: false
+  - id: A32
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 应用时保留自定义 Haiku 显示名 - **WHEN** ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME
+      为用户自定义值（非空且不等于旧 base / 旧 base[1M]） - **THEN** 应用新模型后该显示名保持不变
+    result: passed
+    reason:
+      text: 零改动；自定义 HAIKU 显示名保留；测试“keeps a user-customized HAIKU display name”覆盖。
+      truncated: false
+  - id: A33
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 仅开 1M 保留角色差异 - **WHEN** 供应商 SONNET="model-a"、OPUS="model-b"（无
+      [1M]），用户未选模型把 1M 开关打开后保存 - **THEN**
+      SONNET="model-a[1M]"、OPUS="model-b[1M]"，HAIKU 与显示名字段不变
+    result: passed
+    reason:
+      text: 零改动；setClaudeOneMInSettings enable 原地追加 [1M] 且保留角色差异；测试“enable appends
+        [1M] to the five 1M-capable fields in
+        place”覆盖（SONNET=model-a[1M]、OPUS=model-b[1M]、HAIKU 不变）。
+      truncated: false
+  - id: A34
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Claude 仅关 1M - **WHEN** 供应商 SONNET="model-a[1M]"，用户未选模型把 1M 开关关闭后保存 -
+      **THEN** SONNET="model-a"，HAIKU 与显示名字段不变
+    result: passed
+    reason:
+      text: 零改动；disable 原地剥离 [1M]；测试“disable strips existing [1M] markers in place”覆盖。
+      truncated: false
+  - id: A35
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: Codex 应用 - **WHEN** Codex 供应商选中 model-y 后应用 - **THEN** config TOML 的 model
+      = "model-y"，其余 TOML 字段不变
+    result: passed
+    reason:
+      text: 零改动；applyModelToSettings codex 经 setCodexModelName 写 TOML
+        model、其余行不变；测试“replaces the TOML model while leaving other lines
+        intact”覆盖。
+      truncated: false
+  - id: A36
+    source: specs/provider-model-quick-view-switch/spec.md
+    text: 改动集中 - **WHEN** 检查本 change 改动文件 - **THEN** 新逻辑在 ModelQuickSwitch/ 目录与
+      providerModelUtils 工具；ProviderCard 仅模型徽章渲染（含 1M
+      标记）、徽章/占位按钮入口与弹窗挂载；ProviderCardActions 移除模型菜单项
+    result: passed
+    reason:
+      text: git status/diff 显示改动仅 ProviderCard.tsx（徽章
+        span→button、占位条件、入口）、ProviderCardActions.tsx（移除菜单项）、4 语言 i18n、2
+        测试；ModelQuickSwitch/、providerModelUtils
+        及写回路径(useModelState/providerConfigUtils) 零改动；docs/comet/specs
+        同步属归档步骤，未在本次改动。
+      truncated: false
+builder_handoff:
+  candidate_id: 19846f77-ded5-4d5d-a8c8-d700a9e291f2
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:30e531c4-659d-40e0-abac-efd921cfbe19
+  iteration: 1
+  summary:
+    text: 把「模型快捷切换」入口从 ⋯ 更多菜单迁移到卡片名称右侧的当前模型徽章。ProviderCardActions 删除 onQuickModel
+      prop、Boxes 导入与更多菜单里的「模型快捷切换」项，分隔线条件同步收窄为四项；ProviderCard 把模型徽章由 span 改为原生
+      button（cursor-pointer + hover 浅背景/下划线 + focus-visible ring），title
+      保留完整模型说明、1M 小标记与截断样式不变，onClick 打开已有的 ModelQuickSwitchDialog；模型为空但 app 属于核心
+      4 app
+      时在同一位置渲染占位按钮（providerModel.notSet，四语言补齐），点击打开同一弹窗，避免官方直连供应商失去入口。弹窗组件与
+      providerModelUtils 读写契约零改动。i18n 四语言新增 providerModel.notSet 与
+      providerCard.action.quickModel。测试：ProviderCardActions
+      新增「更多菜单绝不出现模型快捷切换」用例；新增 tests/components/ProviderCard.modelBadge.test.tsx
+      10 项覆盖徽章点击、Enter/Space 键盘、完整 title、1M 三态、占位入口（claude env 为空 与 codex config
+      为空串）、范围外 app 零渲染、点击不开网站。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+    - A13
+    - A14
+    - A15
+    - A16
+    - A17
+    - A18
+    - A19
+    - A20
+    - A21
+    - A22
+    - A23
+    - A24
+    - A25
+    - A26
+    - A27
+    - A28
+    - A29
+    - A30
+    - A31
+    - A32
+    - A33
+    - A34
+    - A35
+    - A36
+  acceptance_review:
+    - id: A1
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCardActions.tsx：onQuickModel
+          prop、Boxes 导入与对应 DropdownMenuItem 已整段删除，分隔线条件改为 (onDuplicate || onTest
+          || onConfigureUsage || onOpenTerminal)
+        - tests/components/ProviderCardActions.test.tsx 新增用例 'never offers the
+          model quick switch entry' 断言菜单项恰为 [provider.duplicate,
+          provider.connectivityCheck, provider.configureUsage,
+          provider.openTerminal, common.delete]、不含 providerModel.title、menu 内无
+          svg.lucide-boxes
+      note: 更多菜单不再提供模型快捷切换入口，其余次要操作与分隔线不受影响。
+    - id: A2
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx:418-442 徽章由 span 改为 button
+          type=button，className 含
+          cursor-pointer、hover:bg-muted、hover:text-fg-1、hover:underline，onClick
+          调 setModelDialogOpen(true)
+        - tests/components/ProviderCard.modelBadge.test.tsx 'renders the current
+          model as a clickable button' 断言 type=button 且点击后
+          data-testid=model-quick-switch-dialog 出现
+      note: 4 个核心 app 的当前模型徽章成为可点击入口，hover 有可见反馈。
+    - id: A3
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx 使用原生 button 并挂
+          aria-label={quickModelLabel}（providerCard.action.quickModel，四语言补齐）
+        - tests/components/ProviderCard.modelBadge.test.tsx 'opens the dialog
+          from the keyboard'（Enter）与 'opens the dialog with the space key
+          too'（Space）均断言弹窗打开
+      note: 键盘可达，Enter/Space 均可打开，读屏可读到「<供应商名> 的模型快捷切换」。
+    - id: A4
+      status: implemented-with-evidence
+      evidence:
+        - "src/components/providers/ProviderCard.tsx title={modelBadge ?
+          modelBadge.title : quickModelLabel}；内层 span 的 truncate max-w-[200px] 与
+          1M 小标记渲染逻辑原样保留"
+        - "tests/components/ProviderCard.modelBadge.test.tsx 'keeps the full
+          model explanation as the hover title' 断言 title = 'Opus: kimi-opus /
+          Sonnet: kimi-sonnet / Haiku: kimi-haiku'；'shows the 1M marker for
+          claude only when the primary model carries [1M]' 覆盖 [1M]/无 [1M]/codex
+          三种情形"
+      note: 徽章信息展示语义（title 全名、1M 标记、截断）与改动前一致。
+    - id: A5
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx 徽章按钮只挂
+          onClick；ModelQuickSwitchDialog 挂载点与 open 绑定保持原样（卡片底部
+          isModelCapableApp(appId) && provider && <ModelQuickSwitchDialog
+          provider appId open={modelDialogOpen}
+          onOpenChange={setModelDialogOpen} />）
+        - tests/components/ProviderCard.modelBadge.test.tsx 'does not open the
+          provider website when the badge is clicked' 断言 onOpenWebsite 未被调用且弹窗打开
+        - 代码审读：dnd-kit 拖拽监听仍只挂在 dragHandleProps.attributes/listeners
+          的独立手柄按钮上，徽章按钮不参与拖拽
+      note: 点击徽章不触发网站链接、不触发拖拽、不影响右键菜单；弹窗读写行为与从更多菜单打开时一致。
+    - id: A6
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx 渲染条件为 (modelBadge ||
+          isModelCapableApp(appId))，同一 button 内在无徽章时 label 取
+          t('providerModel.notSet')，1M 小标记仅在 modelBadge?.oneM
+          时渲染；src/i18n/locales/{zh,en,zh-TW,ja}.json 新增 providerModel.notSet
+        - tests/components/ProviderCard.modelBadge.test.tsx 'renders a
+          placeholder entry for model-capable apps with no model'（Claude
+          Official，settingsConfig.env 为空）与 'renders a placeholder for codex
+          providers with an empty TOML config'（config
+          为空串）断言占位文案、title=aria-label、无 1M 标记、点击后弹窗打开
+      note: 官方直连等无模型供应商保留同一快捷切换入口，占位按钮不显示 1M 标记，样式与徽章一致。
+    - id: A7
+      status: implemented-with-evidence
+      evidence:
+        - src/utils/providerModelUtils.ts extractModelBadgeForProvider 对范围外 app
+          返回 null、isModelCapableApp 返回 false，两个条件均不满足即不渲染（该文件本轮零改动，git diff 证实）
+        - tests/components/ProviderCard.modelBadge.test.tsx 'does not render a
+          badge or placeholder for out-of-scope
+          apps'（appId=openclaw）断言无「的模型快捷切换」结尾的 button、无「未设置模型」文案、无弹窗
+      note: claude-desktop/opencode/openclaw/hermes/pi/mcode 行为与改动前完全一致。
+    - id: A8
+      status: implemented-with-evidence
+      evidence:
+        - pnpm vitest run：211 个测试文件 / 2519 个用例全部通过（本轮新增 10 + 1 项）
+        - pnpm typecheck：tsc --noEmit 无任何输出
+        - pnpm format:check：All matched files use Prettier code style!
+        - 以上四项同时列入 verification_checks，由 Runtime 在冻结候选上复跑
+      note: 开发期与正式检查计划一致，无跳过项。
+    - id: A9
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx 徽章 label 取
+          modelBadge.label（extractModelBadgeForProvider 已 strip [1M]，该工具本轮零改动）
+        - tests/components/ProviderCard.modelBadge.test.tsx 'renders the current
+          model as a clickable button' 断言徽章文本为 kimi-opus（不含 [1M] 后缀）
+      note: Claude 卡片显示当前模型名。
+    - id: A10
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx 保留 modelBadge?.oneM 条件下的 1M
+          小标记（title 取 providerModel.oneMEnabledHint）
+        - tests/components/ProviderCard.modelBadge.test.tsx 'shows the 1M
+          marker...' 的 claudeProviderWithOneM()
+          分支（ANTHROPIC_DEFAULT_SONNET_MODEL=kimi-sonnet[1M]）断言
+          within(badge).getByTitle('1M 已开启') 文本为 1M
+      note: 主对话模型带 [1M] 时徽章追加 1M 小标记。
+    - id: A11
+      status: implemented-with-evidence
+      evidence:
+        - tests/components/ProviderCard.modelBadge.test.tsx 'shows the 1M
+          marker...' 的 claudeProviderWithoutOneM() 分支断言
+          within(badge).queryByTitle('1M 已开启') 为 null
+      note: 未开启 1M 时不显示标记。
+    - id: A12
+      status: implemented-with-evidence
+      evidence:
+        - src/utils/providerModelUtils.ts 仅 claude 分支设置 oneM，其余 app 不设（本轮零改动）
+        - tests/components/ProviderCard.modelBadge.test.tsx 'shows the 1M
+          marker...' 的 codexProvider 分支断言 queryByTitle('1M 已开启') 为 null；'keeps
+          the gemini model readable and clickable' 覆盖 gemini
+      note: codex/grokbuild/gemini 徽章只显示模型名。
+    - id: A13
+      status: implemented-with-evidence
+      evidence:
+        - tests/components/ProviderCard.modelBadge.test.tsx 'does not render a
+          badge or placeholder for out-of-scope apps'（appId=openclaw）
+      note: 范围外 app 不显示模型徽章。
+    - id: A14
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx:418-442 徽章 button onClick 调
+          setModelDialogOpen(true)
+        - tests/components/ProviderCard.modelBadge.test.tsx 'renders the current
+          model as a clickable button' 与 'keeps the gemini model readable and
+          clickable' 均断言点击后弹窗出现
+      note: 点击徽章打开该供应商的 ModelQuickSwitchDialog。
+    - id: A15
+      status: implemented-with-evidence
+      evidence:
+        - tests/components/ProviderCard.modelBadge.test.tsx 'opens the dialog
+          from the keyboard'（focus + Enter）与 'opens the dialog with the space
+          key too'（focus + 空格）
+      note: Tab 聚焦后 Enter 与 Space 均可打开弹窗。
+    - id: A16
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx
+          label=modelBadge.label（第一个角色模型）、title=modelBadge.title（Opus/Sonnet/Haiku
+          聚合）、内层 truncate max-w-[200px] 保留、1M 小标记保留
+        - tests/components/ProviderCard.modelBadge.test.tsx 'keeps the full
+          model explanation as the hover title' 与 'shows the 1M marker...'
+      note: 徽章显示第一个角色模型名，title 为完整三角色说明，长名可截断，1M 仍显示。
+    - id: A17
+      status: implemented-with-evidence
+      evidence:
+        - tests/components/ProviderCard.modelBadge.test.tsx 'does not open the
+          provider website when the badge is clicked' 断言 onOpenWebsite 未调用
+        - 代码审读：徽章 button 仅挂 onClick；dnd-kit 监听只位于 dragHandleProps；ProviderList 的
+          onContextMenu 挂在卡片外层 div，右键行为未改
+      note: 点击徽章不触发拖拽、不开网站链接、不影响右键菜单。
+    - id: A18
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx (modelBadge ||
+          isModelCapableApp(appId)) 条件 + providerModel.notSet 文案
+        - tests/components/ProviderCard.modelBadge.test.tsx 'renders a
+          placeholder entry for model-capable apps with no model'（Claude
+          Official）与 'renders a placeholder for codex providers with an empty
+          TOML config'（OpenAI Official）
+      note: 官方直连供应商在徽章位置显示占位按钮，点击打开弹窗。
+    - id: A19
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCard.tsx 1M 小标记条件为
+          modelBadge?.oneM，无徽章时 modelBadge 为 null 故不渲染
+        - tests/components/ProviderCard.modelBadge.test.tsx 'renders a
+          placeholder entry for model-capable apps with no model' 断言
+          within(badge).queryByTitle('1M 已开启') 为 null
+      note: 占位按钮只显示占位文案。
+    - id: A20
+      status: implemented-with-evidence
+      evidence:
+        - tests/components/ProviderCard.modelBadge.test.tsx 'does not render a
+          badge or placeholder for out-of-scope apps' 同时断言无徽章 button、无占位文案
+      note: 范围外 app 两者都不渲染。
+    - id: A21
+      status: implemented-with-evidence
+      evidence:
+        - src/components/providers/ProviderCardActions.tsx 已删除该菜单项与 Boxes 图标导入
+        - tests/components/ProviderCardActions.test.tsx 'never offers the model
+          quick switch entry' 断言 labels 不含 providerModel.title 且
+          menu.querySelector('svg.lucide-boxes') 为 null
+      note: 更多菜单既无该项也无 Boxes 图标。
+    - id: A22
+      status: implemented-with-evidence
+      evidence:
+        - tests/components/ProviderCardActions.test.tsx 'never offers the model
+          quick switch entry' 在同时提供
+          onDuplicate/onTest/onConfigureUsage/onOpenTerminal 时断言菜单项顺序为
+          [provider.duplicate, provider.connectivityCheck,
+          provider.configureUsage, provider.openTerminal, common.delete]
+        - src/components/providers/ProviderCardActions.tsx
+          分隔线条件已从五项收窄为四项，删除项后不再出现多余分隔线
+      note: 其余菜单项按各自显示条件正常展示，分隔线位置正确。
+    - id: A23
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实
+          src/components/providers/ModelQuickSwitch/ModelQuickSwitchDialog.tsx
+          本轮零改动，拉取/搜索选择/toast 逻辑原样；src/utils/providerModelUtils.test.ts 39
+          项全通过，覆盖弹窗依赖的读写纯函数
+      note: 弹窗拉取模型行为与改动前一致（本次只改入口位置）。
+    - id: A24
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 ModelQuickSwitchDialog.tsx 的 DialogContent
+          className=max-w-sm zIndex=alert 本轮零改动；src/App.tsx header 为 fixed
+          z-50，alert=z-[60] 高于 header 的关系未改
+      note: 弹窗仍盖住顶部 header。
+    - id: A25
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 ModelQuickSwitchDialog.tsx 「当前模型」行（flex items-center
+          justify-between，左侧当前模型、右侧拉取按钮）本轮零改动
+      note: 当前模型与拉取按钮仍同行。
+    - id: A26
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 ModelQuickSwitchDialog.tsx 打开时
+          setOneMEnabled(currentOneM)（currentOneM 由
+          extractModelBadgeForProvider(...).oneM
+          得出）本轮零改动；src/utils/providerModelUtils.test.ts 覆盖 oneM 判定
+      note: 1M 开关打开弹窗时反映供应商当前状态。
+    - id: A27
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 ModelQuickSwitchDialog.tsx
+          handleApply（applyModelToSettings / setClaudeOneMInSettings +
+          providersApi.update + invalidateQueries(['providers', appId]) + toast
+          + onOpenChange(false)）本轮零改动；src/utils/providerModelUtils.test.ts 39
+          项覆盖写回语义
+      note: 选择模型后应用的写回、toast、关闭与刷新行为不变。
+    - id: A28
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 ModelQuickSwitchDialog.tsx oneMOnlyApply 判定与
+          setClaudeOneMInSettings 调用本轮零改动；src/utils/providerModelUtils.test.ts
+          覆盖原地翻转 [1M] 的开/关/幂等/保留角色差异用例
+      note: claude 仅翻转 1M 不换模型的行为不变。
+    - id: A29
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 ModelQuickSwitchDialog.tsx canApply =
+          Boolean(selectedModel.trim()) || oneMOnlyApply 与保存按钮
+          disabled={!canApply || isSaving} 本轮零改动
+      note: 无可应用变化时保存按钮仍禁用。
+    - id: A30
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 src/utils/providerModelUtils.ts applyModelToSettings 的
+          claude 分支本轮零改动；src/utils/providerModelUtils.test.ts 覆盖
+          SONNET/OPUS/FABLE/ANTHROPIC_MODEL/SUBAGENT 带 [1M]、HAIKU 为 base、四个
+          *_MODEL_NAME 可覆盖时为 base 的断言
+      note: Claude 一键应用含 1M 的写回契约不变。
+    - id: A31
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 CLAUDE_MODEL_TO_DISPLAY_NAME_FIELD（含 HAIKU
+          条目）与显示名覆盖裁决本轮零改动；src/utils/providerModelUtils.test.ts 覆盖 HAIKU 显示名同步用例
+      note: Haiku 显示名随切换同步。
+    - id: A32
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 shouldReplace = !oldName || oldName === oldBase || oldName
+          === `${oldBase}[1M]` 本轮零改动；src/utils/providerModelUtils.test.ts
+          覆盖自定义显示名保留用例
+      note: 用户自定义 Haiku 显示名保留不变。
+    - id: A33
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 setClaudeOneMInSettings 的 CLAUDE_ONE_M_TOGGLE_FIELDS 原地
+          set/strip 本轮零改动；src/utils/providerModelUtils.test.ts 覆盖 SONNET/OPUS 不同
+          base 时仅开 1M 保留差异的用例
+      note: 仅开 1M 保留各角色模型差异。
+    - id: A34
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 setClaudeOneMInSettings
+          剥离分支本轮零改动；src/utils/providerModelUtils.test.ts 覆盖仅关 1M 用例
+      note: 仅关 1M 原地剥离 [1M]。
+    - id: A35
+      status: implemented-with-evidence
+      evidence:
+        - git diff 证实 setCodexModelName
+          写回分支本轮零改动；src/utils/providerModelUtils.test.ts 覆盖 codex TOML model
+          写回、其余字段不变的用例
+      note: Codex 应用写回契约不变。
+    - id: A36
+      status: implemented-with-evidence
+      evidence:
+        - git diff --stat 本轮仅改
+          src/components/providers/ProviderCard.tsx、src/components/providers/ProviderCardActions.tsx、src/i18n/locales/{zh,en,zh-TW,ja}.json、tests/components/ProviderCardActions.test.tsx，并新增
+          tests/components/ProviderCard.modelBadge.test.tsx
+        - src/components/providers/ModelQuickSwitch/ 与
+          src/utils/providerModelUtils.ts 本轮零改动
+      note: 改动集中在徽章渲染、入口与弹窗挂载；读写工具与弹窗目录未动。
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit 无输出
+        truncated: false
+    - name:
+        text: pnpm format:check
+        truncated: false
+      result: passed
+      note:
+        text: All matched files use Prettier code style!
+        truncated: false
+    - name:
+        text: pnpm vitest run tests/components/ProviderCard.modelBadge.test.tsx
+          tests/components/ProviderCardActions.test.tsx
+        truncated: false
+      result: passed
+      note:
+        text: 10 + 4 项新增/调整用例全部通过
+        truncated: false
+    - name:
+        text: pnpm vitest run
+        truncated: false
+      result: passed
+      note:
+        text: 211 个测试文件 / 2519 个用例全部通过，无回归
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 徽章/占位按钮的可点击性只覆盖核心 4 app（claude/codex/gemini/grokbuild）；范围外 app
+        行为零变化，与已确认规格一致。
+      truncated: false
+    - text: 「点击徽章不触发拖拽」由代码审读确认（dnd-kit 监听只挂在独立拖拽手柄上），测试环境未传 dragHandleProps，无对应自动化用例。
+      truncated: false
+    - text: 本轮为纯前端改动，未运行 Tauri 桌面端实机验证；UI 观感（hover 背景/下划线）以代码与单测为准。
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-10-09T05:25:18.411Z
+blockers: []
+verification:
+  candidate_id: 19846f77-ded5-4d5d-a8c8-d700a9e291f2
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:84715170-6272-4e01-a201-fd0df18bb2a6
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: vitest-targeted
+      name:
+        text: vitest targeted (model badge + card actions)
+        truncated: false
+      argv_display:
+        - text: vitest
+          truncated: false
+        - text: run
+          truncated: false
+        - text: tests/components/ProviderCard.modelBadge.test.tsx
+          truncated: false
+        - text: tests/components/ProviderCardActions.test.tsx
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 1770
+    - id: vitest-full
+      name:
+        text: vitest full suite
+        truncated: false
+      argv_display:
+        - text: vitest
+          truncated: false
+        - text: run
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 30363
+    - id: typecheck
+      name:
+        text: typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 10134
+    - id: format-check
+      name:
+        text: format check
+        truncated: false
+      argv_display:
+        - text: format:check
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 3659
+  summary:
+    text: 36/36 项通过。快捷切换入口已从 ⋯ 更多菜单迁移到卡片模型徽章/占位按钮：ProviderCardActions 移除「模型快捷切换」项与
+      Boxes 图标且第二道分隔线条件收窄为四项；ProviderCard 徽章由 span 改为可键盘访问的原生
+      button（cursor-pointer、hover 浅背景/下划线、focus-visible ring、aria-label），title
+      完整模型说明、1M 小标记与截断语义不变，无模型的核心 4 app 渲染占位按钮（四语言 notSet/quickModel 已补），范围外 app
+      零渲染；ModelQuickSwitchDialog 与 providerModelUtils 读写契约经 git diff 确认零改动，写回/1M
+      由 providerModelUtils.test.ts 39 用例覆盖。Runtime
+      四项检查（vitest-targeted/vitest-full/typecheck/format:check）与我的定向重跑均通过，日志
+      mtime 晚于所有源文件、对应当前实现版本。风险：弹窗无专属 UI 测试，A23-A26/A29 靠零改动+审读确认。
+    truncated: false
+  risks:
+    - text: ModelQuickSwitchDialog 无专属组件级 UI 测试：A23-A26/A29
+        的弹窗内联行为（拉取接线、z-index、同行布局、1M 开关初始化、保存禁用）依靠“组件零改动(git diff) + 代码审读 +
+        底层库/providerModelUtils 既有测试”确认，而非针对该弹窗的自动化场景测试。此为既有状况，非本次改动引入，且写回/1M
+        数据层已由 providerModelUtils.test.ts 覆盖。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-10-09T05:33:17.677Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native Shape artifacts changed
+      truncated: false
+    completed_at: 2026-10-09T05:19:41.251Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 36/36 项通过。快捷切换入口已从 ⋯ 更多菜单迁移到卡片模型徽章/占位按钮：ProviderCardActions 移除「模型快捷切换」项与
+        Boxes 图标且第二道分隔线条件收窄为四项；ProviderCard 徽章由 span 改为可键盘访问的原生
+        button（cursor-pointer、hover 浅背景/下划线、focus-visible ring、aria-label），title
+        完整模型说明、1M 小标记与截断语义不变，无模型的核心 4 app 渲染占位按钮（四语言 notSet/quickModel 已补），范围外
+        app 零渲染；ModelQuickSwitchDialog 与 providerModelUtils 读写契约经 git diff
+        确认零改动，写回/1M 由 providerModelUtils.test.ts 39 用例覆盖。Runtime
+        四项检查（vitest-targeted/vitest-full/typecheck/format:check）与我的定向重跑均通过，日志
+        mtime 晚于所有源文件、对应当前实现版本。风险：弹窗无专属 UI 测试，A23-A26/A29 靠零改动+审读确认。
+      truncated: false
+    completed_at: 2026-10-09T05:33:17.677Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-10-09T05:06:50.602Z
