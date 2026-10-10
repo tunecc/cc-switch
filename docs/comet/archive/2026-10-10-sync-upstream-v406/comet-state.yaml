@@ -1,0 +1,535 @@
+schema: comet.native.v4
+name: sync-upstream-v406
+language: zh-CN
+phase: archive
+status: done
+state_version: 11
+brief: brief.md
+document_constraints_version: 2
+shape_confirmation_hash: 85ea12e8a8bf267658c0f952eb66cec7a6646caa71da5ef36d3b6ec3ddd11731
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 2
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main upstream/main` 等于 c2611266（tag v4.0.6
+      指向的提交），`git log v4.0.6..main` 只包含 fork 提交。"
+    result: passed
+    reason:
+      text: git merge-base main upstream/main =
+        c261126630b3416e67b407da018cc614bbbe84cd，与 git rev-parse v4.0.6^{commit}
+        一致；git rev-list --count v4.0.6..main = 129，git log --format=%an
+        v4.0.6..main | sort -u 仅 Tune（128 个重放提交 + 同步提交 0e4805ec），无上游提交落入区间。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: rebase 前 2db86e94..main 的 128 个 fork 提交按原顺序逐一重放；被 git
+      判定为空而丢弃的提交（如有）与冗余提交（如有）在完整目标规格「重放映射」中逐条记录并说明原因，全部 fork 功能语义保留。"
+    result: passed
+    reason:
+      text: 重放前 2db86e94..e574d8ae = 128 提交，重放后 v4.0.6..main 前 128 条主题序列逐行 diff
+        为空（无丢弃/重复/乱序，第 129 条为同步提交）；独立 patch-id 对照 113 相同 / 15 不同，15 个位置逐一对应规格登记的
+        12 处冲突解决点与上下文位移；387 个 fork 改动文件中 384 个与同步前逐字节相同，2 个为 fork 主动删除的
+        stream_check 文件（main 中同样不存在、表结构保留），1 个为计划内更新的 HOW_TO 文档。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 28 个重叠文件的冲突解决符合 docs/HOW_TO_REBASE_UPSTREAM.md §3
+      与完整目标规格的逐文件叠加要求：白名单/裁剪类文件（`README.md`、`.github/workflows/release.yml`、`sr\
+      c-tauri/tauri.conf.json` 等 fork
+      字段、`package.json`/`Cargo.toml`/`Cargo.lock`/`pnpm-lock.yaml` 的 fork
+      版本号与依赖）保留 fork 侧语义；共享代码以上游 v4.0.6 为基础叠加回 fork 必要语义，且上游供应商页搜索、Skills
+      一键全部更新、额度三色与 20% 阈值、托盘全档位标题、聚合模式经典子 agent 开关、托管账号解绑、Anthropic SSE
+      收尾修复、第三方目录自带模板、更新点改绿等改动全部落地。"
+    result: passed
+    reason:
+      text: 独立双向差集脚本复算 28 个重叠文件：20 个四向差集全 0；8 个差异全部为规格登记的刻意取舍（4 个版本文件取 fork
+        4.0.6-1；release.yml 未引入上游 22 增/24 删且与 fork 侧逐字节相同；README.md 未引入上游 2 增/1
+        删且与 fork 侧逐字节相同；App.tsx 仅 lucide 导入排版差异，7 个图标全部导入且各使用 1 次、两个按钮 JSX
+        块结构完整；ProviderList.tsx extraAdd 为 fork 的 provider.websiteUrl2）。上游 9
+        项功能改动（供应商页搜索、Skills 全部更新、额度三色与 20% 阈值、托盘全档位标题、经典子 agent
+        开关、托管账号解绑、Anthropic SSE 收尾、第三方目录自带模板、更新点改绿）全部 grep 命中；61 个上游独有文件与 v4.0.6
+        逐字节相同。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4:
+      `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-ta\
+      uri/Cargo.lock` 的版本号均为 4.0.6-1，且 `src-tauri/src/database/mod.rs` 的
+      `SCHEMA_VERSION` 仍为 21、v20→v21 幂等修复迁移完整保留。"
+    result: passed
+    reason:
+      text: package.json、src-tauri/tauri.conf.json、src-tauri/Cargo.toml、src-tauri/Cargo.lock
+        的 cc-switch 包版本号均为 4.0.6-1；src-tauri/src/database/mod.rs SCHEMA_VERSION
+        = 21；schema.rs 20 => 分支的 v20→v21
+        幂等修复迁移（mcp_servers.enabled_mcode/enabled_pi、skills.enabled_mcode、set_user_version(21)）完整保留；database
+        目录相对同步前仅 dao/providers.rs +86（上游 unbind_codex_managed_accounts）。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: 完整目标规格「fork 魔改保留清单」每一项在同步后仍然存在且可用：产品名 CC Switch 与
+      DevPanel、侧边面板可见性、模型徽章与快捷切换、Claude
+      兜底模型直达区、右键置顶/置底与新建插入第二位、官方预设过滤、逐模型连通性测试、双官网链接、托盘左键切换、跨应用导入、禁用应用内更新器、上游 tag
+      发版跳过、README fork 说明、fork CI。"
+    result: passed
+    reason:
+      text: 14 项逐一 grep 取证全部命中：productName CC Switch + IS_FORK_BUILD +
+        DevPanel（DEV_PANEL_ENABLED 门控）；VisibleSidebarPanels 前后端 +
+        SidebarPanelPillRow；extractModelBadgeForProvider +
+        ModelQuickSwitchDialog；ClaudeFormFields
+        fallbackQuickAccessSection；applyQuickSort/quickMoveTop/Bottom +
+        sortIndex 插入第二位；forkOfficialAllowlist + forkPresetFilter +
+        hidden；connectivity_test_provider_models 命令注册 + ConnectivityTestDialog +
+        services/connectivity_test 直连执行器；website_url_2 列/索引/v18→v19
+        迁移；toggle_main_window 左键分支 +
+        show_menu_on_left_click(false)；ProviderImportEntry +
+        useProviderImportApply；无 tauri_plugin_updater、capabilities 无
+        updater、updater.ts 恒 up-to-date、install_update_and_restart
+        空壳、AboutSection 指向 tunecc releases；release.yml fork 裁剪（windows-2022 +
+        macos-14，跳过上游 tag）；README fork 差异说明；ci.yml/release.yml fork CI。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（`default_workflow:
+      native`，`workflows` 含 native 与 classic），未被历史重放改写。"
+    result: passed
+    reason:
+      text: "main:.comet/config.yaml、pre-sync-v406:.comet/config.yaml、e574d8ae:.comet\
+        /config.yaml blob 同为 cebdcda66dbdcfde8b8de9331650753fb138b223；内容为
+        default_workflow: native + workflows [native, classic]；该文件未出现在同步 delta
+        中，工作树与 HEAD 一致。"
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: docs/HOW_TO_REBASE_UPSTREAM.md 已按本次同步结果修订（相关叠加语义条目、本次新增的 fork
+      专属文件如有），完整目标规格已重写为同步后的完整状态。"
+    result: passed
+    reason:
+      text: 同步提交 0e4805ec 中 docs/HOW_TO_REBASE_UPSTREAM.md +17/-15，含 17 处 v4.0.6
+        叠加语义条目与 2
+        个新共享文件行（src-tauri/src/database/dao/providers.rs、src/lib/api/settings.ts）；specs/upstream-sync/spec.md
+        已重写为同步后完整状态（基线 c2611266、128 重放、28 重叠文件、4.0.6-1、SCHEMA_VERSION 21、12
+        处冲突逐条、App.tsx 合并教训）；本轮无新增 fork 专属代码文件。
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm typecheck` 通过。"
+    result: passed
+    reason:
+      text: 独立复跑 pnpm typecheck（tsc --noEmit）exit 0，无任何报错；运行版本 cc-switch@4.0.6-1
+        与候选一致。
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `pnpm test:unit` 通过。"
+    result: passed
+    reason:
+      text: 独立复跑 pnpm test:unit（vitest run）exit 0：Test Files 213 passed (213)，Tests
+        2541 passed (2541)，耗时 27.97s；运行于本地 11:09，不在 00:00-00:30 零点窗口内。
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: `cargo check` 通过。"
+    result: passed
+    reason:
+      text: 独立复跑 cargo check --manifest-path src-tauri/Cargo.toml exit 0（Finished dev
+        profile，Checking cc-switch v4.0.6-1）。
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: "A11: `cargo test -- --skip
+      update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_\
+      is_active` 通过（该用例在本机 cc-switch 运行时因代理端口 15721
+      被占用而失败，属上游测试设计，沿用既有例外并显式记录）。"
+    result: passed
+    reason:
+      text: "独立复跑 cargo test --manifest-path src-tauri/Cargo.toml -- --skip
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeove\
+        r_is_active exit 0：主测试二进制 3532 passed / 0 failed / 9 ignored / 1
+        filtered out，其余测试二进制全部 test result: ok，无 FAILED/panicked；lsof -nP
+        -iTCP:15721 -sTCP:LISTEN 复核端口仍被 cc-switch PID 14998 占用，例外成立。"
+      truncated: false
+  - id: A12
+    source: brief.md
+    text: "A12: 落地保真核对通过：对每个上游与 fork 同时改动的重叠文件，比较「上游 2db86e94→c2611266」与「同步前
+      main→同步后 main」两份 diff 的增删行集合，上游新增一行不缺、fork 新增一行不丢（双向差集为
+      0）；确有意图取舍时按完整目标规格记录并说明。"
+    result: passed
+    reason:
+      text: 独立编写双向多重集合差集脚本复算：重叠文件集由 comm -12 <(git diff --name-only 2db86e94 e574d8ae)
+        <(git diff --name-only 2db86e94 c2611266) 独立算得 28 个（与规格数一致）；-U0 增删行做
+        Counter 差集，20 个文件 upAddMiss=extraAdd=upDelMiss=extraDel=0；8
+        个差异文件逐条对应规格『落地保真核对』登记的刻意取舍，无未登记差异；另验证 61 个上游独有文件与 v4.0.6 逐字节相同、fork 独有文件
+        384/387 逐字节保留（2 个为 fork 主动删除、1 个为计划内文档更新）；最终态全树 git grep 冲突标记 0 命中。
+      truncated: false
+builder_handoff:
+  candidate_id: 6e57950b-df2d-4116-93ae-30b63cdc15d3
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:9633e0a9-e822-4a15-82dd-fc5c5fb4fcb9
+  iteration: 1
+  summary:
+    text: 把 fork main rebase 到上游 v4.0.6 发布头（tag v4.0.6 = c2611266），128 个 fork
+      提交按原顺序全部重放（rebase 一趟完成，12 处冲突全部按 HOW_TO_REBASE_UPSTREAM.md §3 解决）。版本号
+      4.0.5-1 → 4.0.6-1（四处版本文件一致，Cargo.lock 由 cargo check 联动）。上游 v4.0.5..v4.0.6
+      的 24 个提交全部落地：供应商页搜索按钮与按请求地址查找、Skills 一键全部更新、额度三色与 20% 阈值、托盘全档位标题、聚合模式经典子
+      agent 开关、托管账号解绑、npm 升级允许安装脚本、Anthropic SSE 收尾修复、第三方目录自带模板、官方模型可见性、更新点改绿、开关
+      action 色。28 个重叠文件中 20 个增删行双向差集完全对称，8 个差异全部为既定取舍（4 个版本文件取 fork
+      4.0.6-1、release.yml 与 README.md 保留 fork 侧、App.tsx 仅 lucide
+      导入排版差异、ProviderList.tsx 加回 fork websiteUrl2）。fork 30 项魔改逐项 grep 命中，updater
+      三项反向检查确认已移除。SCHEMA_VERSION 仍为 21、v20→v21 修复迁移完整。.comet/config.yaml blob
+      未被重放改写。docs/HOW_TO_REBASE_UPSTREAM.md 增加 17 处 v4.0.6 叠加语义与 2
+      个新共享文件行，完整目标规格已重写为同步后状态（含逐条重放映射与 App.tsx 合并教训）。同步提交 0e4805ec。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+  acceptance_review:
+    - id: A1
+      status: implemented-with-evidence
+      evidence:
+        - git merge-base main upstream/main =
+          c261126630b3416e67b407da018cc614bbbe84cd
+        - git rev-parse 'v4.0.6^{commit}' =
+          c261126630b3416e67b407da018cc614bbbe84cd（一致）
+        - git merge-base --is-ancestor c2611266 main → exit 0
+        - git log --format=%an v4.0.6..main | sort -u → 仅 Tune
+      note: merge-base 等于 tag v4.0.6 指向提交，v4.0.6..main 区间作者全为 fork 作者，无上游提交落入。同步提交后
+        rev-list --count v4.0.6..main = 129（128 重放 + 1 同步提交），merge-base 仍为
+        c2611266。
+    - id: A2
+      status: implemented-with-evidence
+      evidence:
+        - /tmp/pre_replay_v406.txt 与 git log --format=%s --reverse v4.0.6..main
+          前 128 条逐行 diff 为空
+        - patch-id 对照：113/128 完全相同，15 个不同全部对应冲突解决点或上下文位移
+        - rebase 输出 'Successfully rebased and updated
+          refs/heads/main'，无空提交丢弃、无重复落地、无 signal 11
+      note: 128 个提交主题序列完全一致；15 个 patch-id 差异逐条登记在规格「重放映射」：前 8 个对应 12
+        处冲突中的解决点（版本号、GeneralSection×2、release.yml、README、ProviderList.test×2），后
+        7 个是同一文件被冲突解决改写过后的 diff 上下文位移，语义未变。
+    - id: A3
+      status: implemented-with-evidence
+      evidence:
+        - 双向差集：20/28 文件
+          SYMMETRIC（upstreamAddMissing=extraAdd=upstreamDelMissing=extraDel=0）
+        - 白名单侧：git diff --quiet pre-sync-v406 main --
+          .github/workflows/release.yml 为空；README.md 取 fork 版
+        - 上游专属新文件与 v4.0.6
+          逐字节相同：streaming.rs、opaque_state_rectifier.rs、mode/controller.rs、mode/stack.rs、commands/auth.rs、resources/gpt5_5_template.json、whats-new/4.0.6.json、utils/providerConfigUtils.ts、types/proxy.ts
+        - 上游功能抽查 17 项 grep 命中（搜索、Skills 更新、额度三色、托盘全档位、子 agent 开关、解绑、npm
+          脚本、dotTone、switch action 色等）
+      note: 8 个差异全部为刻意取舍并已在规格逐条记录：4 个版本文件取 fork 4.0.6-1；release.yml 不引入上游 deb/rpm 与
+        Linux 包自动更新（与 fork 逐字节相同）；README.md 保留 fork 重写版；App.tsx 差异仅为 lucide
+        导入块排版（7 个图标全部导入且各用 1 次，两个按钮 JSX 块已与各自原始版本逐字节比对一致）；ProviderList.tsx
+        extraAdd 为 fork 的 provider.websiteUrl2（加回上游 searchIndex）。
+    - id: A4
+      status: implemented-with-evidence
+      evidence:
+        - package.json:3 / src-tauri/tauri.conf.json:4 / src-tauri/Cargo.toml:3
+          / src-tauri/Cargo.lock cc-switch 包 version 均为 4.0.6-1
+        - src-tauri/src/database/mod.rs:53 SCHEMA_VERSION = 21
+        - src-tauri/src/database/schema.rs:586 存在 20 => 分支（fork 专属 v20→v21
+          幂等修复迁移）
+      note: Cargo.lock 版本由 cargo check 自动联动，diff 仅版本一行；上游 v4.0.6 未推进
+        schema（发行说明明确数据库结构无变化，上游仍为 20）。
+    - id: A5
+      status: implemented-with-evidence
+      evidence:
+        - 30 项保留清单检查全部 passed（27 项正向 grep + 3 项反向确认已移除）
+        - 反向检查：src-tauri/src/lib.rs 无
+          tauri_plugin_updater；capabilities/default.json 无
+          updater:default；commands/settings.rs 无 updater_builder
+      note: 逐项实测：产品名 CC
+        Switch、IS_FORK_BUILD、DevPanel、visible_sidebar_panels、VisibleSidebarPanels、extractModelBadgeForProvider、ModelQuickSwitch、fallbackQuickAccessSection、quickMoveTop/applyQuickSort、sortIndex、forkOfficialAllowlist、hidden、connectivity_test
+        命令与注册、ConnectivityTestDialog、websiteUrl2/schema/迁移、toggle_main_window
+        及调用点、ProviderImportEntry、README fork
+        说明、SidebarPanelPillRow、useConnectivityProbe、extractModelBadge 全部命中。
+    - id: A6
+      status: implemented-with-evidence
+      evidence:
+        - git rev-parse main:.comet/config.yaml =
+          cebdcda66dbdcfde8b8de9331650753fb138b223
+        - git rev-parse pre-sync-v406:.comet/config.yaml =
+          cebdcda66dbdcfde8b8de9331650753fb138b223（两侧 blob 相同）
+        - "文件内容 default_workflow: native，workflows 含 native 与 classic"
+      note: 历史重放未改写 .comet/config.yaml，Native 工作流持续可用。
+    - id: A7
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md 含 17 处 v4.0.6 叠加语义条目
+        - 新增 2
+          行共享文件条目：src-tauri/src/database/dao/providers.rs、src/lib/api/settings.ts
+        - 同步提交 0e4805ec 的 numstat：docs/HOW_TO_REBASE_UPSTREAM.md +17 行、本 change
+          三件产物入库
+        - 规格已重写为同步后状态：基线 c2611266、128 重放、28 重叠文件、版本 4.0.6-1、SCHEMA_VERSION 21、12
+          处冲突逐条、App.tsx 合并教训
+      note: 本轮无新增 fork 专属代码文件，未虚构条目。
+    - id: A8
+      status: implemented-with-evidence
+      evidence:
+        - pnpm typecheck exit 0（> cc-switch@4.0.6-1 typecheck / tsc
+          --noEmit，无任何报错）
+      note: 开发期与最终态各跑一次，均 exit 0。中途曾因 App.tsx 合并方式破坏 JSX 结构报错，改为整块拼接后通过。
+    - id: A9
+      status: implemented-with-evidence
+      evidence:
+        - pnpm test:unit exit 0：Test Files 213 passed (213)，Tests 2541 passed
+          (2541)
+      note: 同步前为 210 文件 / 2508 用例，上游 v4.0.6 新增用例已全部纳入并通过。运行于本地 10:47，不在 00:00-00:30
+        零点窗口内，SessionManagerPage 时间分桶用例正常通过。
+    - id: A10
+      status: implemented-with-evidence
+      evidence:
+        - cargo check --manifest-path src-tauri/Cargo.toml exit 0：Finished `dev`
+          profile ... in 4.28s，Checking cc-switch v4.0.6-1
+      note: 退出码 0，版本号与候选一致。
+    - id: A11
+      status: implemented-with-evidence
+      evidence:
+        - cargo test -- --skip
+          update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+          exit 0
+        - "主测试二进制 test result: ok. 3532 passed; 0 failed; 9 ignored; 1 filtered
+          out"
+        - lsof -nP -iTCP:15721 -sTCP:LISTEN → cc-switch PID 14998 LISTEN
+      note: "被跳过的用例在 src-tauri/src/services/provider/mod.rs:2286 确有对应且调用
+        state.proxy_service.start() 绑定默认端口 15721；本机 CC Switch.app
+        正在运行并占用该端口，端口占用已由 lsof 复核，跳过属既有例外而非放宽。其余全部测试二进制 test result: ok，日志内无
+        FAILED/failures:/panicked。"
+    - id: A12
+      status: implemented-with-evidence
+      evidence:
+        - 28 个重叠文件逐一取 -U0 增删行做多重集合双向差集
+        - 20 个文件四向差集全为 0
+        - 8 个差异文件逐条对应规格记录的刻意取舍，无未登记差异
+      note: 重叠集合用 comm -12 <(git diff --name-only v4.0.5 v4.0.6) <(git diff
+        --name-only 2db86e94 main) 预先算得 28 个，与规格列举一致。另核对：同步区间相对上游区间多出的删除为 0，fork
+        专属文件全部仍在，全树 git grep 冲突标记为 0。
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: exit 0，最终态复跑
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: exit 0，213 文件 / 2541 用例全绿，10:47 本地运行
+        truncated: false
+    - name:
+        text: cargo check
+        truncated: false
+      result: passed
+      note:
+        text: exit 0，cc-switch v4.0.6-1
+        truncated: false
+    - name:
+        text: cargo test (documented port skip)
+        truncated: false
+      result: passed
+      note:
+        text: exit 0，3532 passed / 0 failed，端口 15721 占用已由 lsof 复核
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 交付（git push --force-with-lease origin main + 在归档提交上创建并推送 annotated tag
+        v4.0.6-1）按 Q2 授权在验收通过并归档之后执行，不在本轮验收断言内；tag 必须指向归档提交，Verify 时该提交尚不存在。
+      truncated: false
+    - text: cargo test 沿用既有例外跳过
+        update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active（本机
+        CC Switch.app 运行占用代理端口 15721，已由 lsof 复核）。
+      truncated: false
+    - text: fork 历史提交 4b437070 的 src-tauri/src/database/tests.rs 与
+        src-tauri/src/services/provider/gemini_auth.rs blob 自带未清理冲突标记，由后续 fork
+        提交 24febbfb / c3d2f317 清除；重放中途 git diff --cached --check 会报 leftover
+        conflict marker，属 fork 历史既有事实。最终态全树 grep 冲突标记为 0。
+      truncated: false
+    - text: fork 历史提交 9ee6f1f7 曾把 tests/components/ProviderList.test.tsx 误截断成 224
+        行片段（无 import/describe），由下一个 fork 提交 1f2565e6 补回；本轮按其真实语义增量（5 个右键用例 +
+        mock）叠加到上游 v4.0.6 版本上，避免丢掉上游新增用例。
+      truncated: false
+    - text: fork 历史遗留死代码 src/hooks/useStreamCheck.ts 仍调用已不存在的后端命令（同步前的 lib.rs
+        同样未注册），本次同步未触碰该文件；保留清单里「旧 stream_check 链路已移除」仅对后端成立。
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-10-10T03:00:17.547Z
+blockers: []
+verification:
+  candidate_id: 6e57950b-df2d-4116-93ae-30b63cdc15d3
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:c084c327-4404-4896-b00f-c1f9d9c5be27
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: typecheck
+      name:
+        text: pnpm typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 10180
+    - id: test-unit
+      name:
+        text: pnpm test:unit
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 29826
+    - id: cargo-check
+      name:
+        text: cargo check
+        truncated: false
+      argv_display:
+        - text: check
+          truncated: false
+        - text: --manifest-path
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 373
+    - id: cargo-test
+      name:
+        text: cargo test with documented port skip
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+        - text: --manifest-path
+          truncated: false
+        - text: src-tauri/Cargo.toml
+          truncated: false
+        - text: --
+          truncated: false
+        - text: --skip
+          truncated: false
+        - text: update_current_claude_desktop_provider_syncs_profile_when_proxy_takeover_is_active
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 32280
+    - id: baseline-ancestor
+      name:
+        text: baseline is ancestor of main
+        truncated: false
+      argv_display:
+        - text: merge-base
+          truncated: false
+        - text: --is-ancestor
+          truncated: false
+        - text: c261126630b3416e67b407da018cc614bbbe84cd
+          truncated: false
+        - text: main
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 62
+  summary:
+    text: 12/12 全部通过。独立复算了 git 结构、重放保真（主题序列逐行 diff + patch-id 对照 + 文件级 blob 对照）、28
+      个重叠文件双向增删行差集、上游 9 项功能与 fork 14 项魔改的逐项 grep 取证，并独立复跑 typecheck / test:unit
+      / cargo check / cargo test 四项检查（均 exit 0）与端口占用复核，未采信 Builder 结论。发现 3
+      处文档口径小瑕疵不影响实现正确性，建议归档前顺手修正。
+    truncated: false
+  risks:
+    - text: 文档口径小瑕疵 1（不阻塞）：specs/upstream-sync/spec.md 把 pnpm-lock.yaml 列入 28
+        个重叠文件，但独立算得的实际重叠集不含它（上游 v4.0.5..v4.0.6 未改该文件，fork
+        侧锁文件改动随重放自动保留，最终与同步前一致且无 plugin-updater 残留）。
+      truncated: false
+    - text: 文档口径小瑕疵 2（不阻塞）：spec.md 与 HOW_TO_REBASE_UPSTREAM.md 的 forwarder.rs 条目提到
+        fork 的 connectivityTest sanitize 隔离，但 forwarder.rs 在同步前后均无 connectivity
+        引用（fork 连通性测试实为 src-tauri/src/services/connectivity_test/ 独立 reqwest+SSE
+        直连执行器，已确认完整保留）。
+      truncated: false
+    - text: 表述不精确（不阻塞）：Builder 交接摘要称『同步区间相对上游区间多出的删除为
+        0』，实际存在计划内的多出删除（如版本号行、ProviderList.tsx 旧 fields 数组），A12 结论本身正确。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-10-10T03:17:42.874Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native Shape artifacts changed
+      truncated: false
+    completed_at: 2026-10-10T02:59:37.053Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 12/12 全部通过。独立复算了 git 结构、重放保真（主题序列逐行 diff + patch-id 对照 + 文件级 blob 对照）、28
+        个重叠文件双向增删行差集、上游 9 项功能与 fork 14 项魔改的逐项 grep 取证，并独立复跑 typecheck /
+        test:unit / cargo check / cargo test 四项检查（均 exit 0）与端口占用复核，未采信 Builder
+        结论。发现 3 处文档口径小瑕疵不影响实现正确性，建议归档前顺手修正。
+      truncated: false
+    completed_at: 2026-10-10T03:17:42.874Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-10-10T02:13:56.920Z
