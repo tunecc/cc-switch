@@ -11,13 +11,13 @@ import { toast } from "@/lib/toast";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Activity,
   ExternalLink,
   KeyRound,
+  Loader2,
   MoreHorizontal,
   Plus,
   Search,
-  Activity,
-  Loader2,
 } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { IS_FORK_BUILD } from "@/config/forkBuild";
@@ -1263,11 +1263,14 @@ function App() {
                   : void probeAll(Object.values(providers))
               }
               title={
+                isProbeRunning
                   ? t("connectivityCheck.stopBatchHint", {
                       defaultValue: "停止批量检测",
                     })
                   : t("connectivityCheck.batchHint", {
                       defaultValue: "对当前应用全部供应商执行单模型探测",
+                    })
+              }
             >
               {isProbeRunning ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
