@@ -31,7 +31,6 @@ import {
   DirectModeFormatWarning,
   EndpointField,
   FullUrlToggle,
-  ModelDropdown,
   ModelInputWithFetch,
   SearchableModelPicker,
   type DirectModeFormatNotice,
@@ -899,6 +898,16 @@ export function ClaudeFormFields({
     </>
   );
 
+  const fallbackModelLabel = t("providerForm.fallbackModelLabel", {
+    defaultValue: "默认兜底模型",
+  });
+  // 只有第三方端点才认不出原始 Claude 模型名：直连看后台任务用的 Haiku 档，路由看兜底模型本身。
+  const usesThirdPartyEndpoint =
+    category !== "official" && category !== "cloud_provider";
+  const fallbackModelMissing =
+    usesThirdPartyEndpoint &&
+    !(directModeFormatNotice ? defaultHaikuModel : claudeModel).trim();
+
   // 默认兜底模型直达区：紧跟请求地址，无需展开高级选项即可编辑。Stack / 经典两种布局共用。
   const fallbackQuickAccessSection = (
     <>
@@ -907,11 +916,23 @@ export function ClaudeFormFields({
         <div className="space-y-2">
           <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_minmax(0,104px)]">
             <div className="flex items-center justify-between">
-              <FormLabel htmlFor="claudeModel">
-                {t("providerForm.fallbackModelLabel", {
-                  defaultValue: "默认兜底模型",
-                })}
-              </FormLabel>
+              <div className="flex items-center gap-0.5">
+                <FormLabel htmlFor="claudeModel">
+                  {fallbackModelLabel}
+                </FormLabel>
+                {/* 直连时它是 Claude Code 的主模型；经过路由时才是各档留空、没匹配到档位的回落。 */}
+                <HelpTip title={fallbackModelLabel}>
+                  {directModeFormatNotice
+                    ? t("providerForm.fallbackModelHelpDirect", {
+                        defaultValue:
+                          "写进 ANTHROPIC_MODEL，是 Claude Code 启动时用的主模型。后台任务另用 Haiku 那一档。",
+                      })
+                    : t("providerForm.fallbackModelHelp", {
+                        defaultValue:
+                          "没落到 Sonnet、Opus、Fable、Haiku 任一档的请求，改用这个模型发给上游。",
+                      })}
+                </HelpTip>
+              </div>
               <div className="flex gap-2">
                 {/* 一键设置按钮：优先取兜底模型，应用到所有角色 */}
                 <Button
@@ -1008,12 +1029,19 @@ export function ClaudeFormFields({
               })}
             </label>
           </div>
-          <p className="text-xs text-muted-foreground">
-            {t("providerForm.fallbackModelHint", {
-              defaultValue:
-                "用于未明确落到 Sonnet、Opus、Fable、Haiku 角色的请求。使用第三方/中转端点时建议填写：否则这些请求（含 Haiku 后台子任务）会以原始 Claude 模型名透传给上游，可能因上游无此模型而报错。官方端点可留空。",
-            })}
-          </p>
+          {fallbackModelMissing && (
+            <p className="text-xs leading-relaxed text-warning-text">
+              {directModeFormatNotice
+                ? t("providerForm.fallbackModelHaikuMissing", {
+                    defaultValue:
+                      "Haiku 一档没填：后台任务会用原始 Claude 模型名请求上游，第三方端点可能报错。",
+                  })
+                : t("providerForm.fallbackModelMissing", {
+                    defaultValue:
+                      "没填：没落到任何一档的请求会用原始 Claude 模型名发给上游，可能报错。",
+                  })}
+            </p>
+          )}
         </div>
       )}
     </>
@@ -1077,15 +1105,6 @@ export function ClaudeFormFields({
     </div>
   );
 
-  const fallbackModelLabel = t("providerForm.fallbackModelLabel", {
-    defaultValue: "默认兜底模型",
-  });
-  // 只有第三方端点才认不出原始 Claude 模型名：直连看后台任务用的 Haiku 档，路由看兜底模型本身。
-  const usesThirdPartyEndpoint =
-    category !== "official" && category !== "cloud_provider";
-  const fallbackModelMissing =
-    usesThirdPartyEndpoint &&
-    !(directModeFormatNotice ? defaultHaikuModel : claudeModel).trim();
 
   // 完整 URL 跟着地址框：托管账号卡的地址由后端固定，没有这个开关。
   const fullUrlToggle = shouldShowSpeedTest &&
@@ -1166,7 +1185,6 @@ export function ClaudeFormFields({
           />
         )}
 
-        {fallbackQuickAccessSection}
         {/* 高级区只有 UA 和请求覆盖；无模型选择器时整块没有内容，Copilot 的转发也会跳过这两项 */}
         {shouldShowModelSelector && !isCopilotPreset && (
           <Collapsible
