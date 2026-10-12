@@ -861,7 +861,8 @@ export function ClaudeFormFields({
                       </SelectItem>
                       <SelectItem value="gemini_native">
                         {t("providerForm.apiFormatGeminiNative", {
-                          defaultValue: "Gemini Native generateContent (需转换)",
+                          defaultValue:
+                            "Gemini Native generateContent (需转换)",
                         })}
                       </SelectItem>
                     </SelectContent>
@@ -1094,7 +1095,6 @@ export function ClaudeFormFields({
       </Select>
     </div>
   );
-
 
   // 完整 URL 跟着地址框：托管账号卡的地址由后端固定，没有这个开关。
   const fullUrlToggle = shouldShowSpeedTest &&
