@@ -819,79 +819,76 @@ export function ClaudeFormFields({
       {/* Base URL 输入框 + 上游格式选择（仅非云服务商显示） */}
       {shouldShowSpeedTest && !isCodexOauthPreset && !isXaiOauthPreset && (
         <>
-          <div className="flex flex-wrap items-start gap-2">
-            <div className="min-w-0 flex-1">
-              <EndpointField
-                id="baseUrl"
-                label={t("providerForm.apiEndpoint")}
-                value={baseUrl}
-                onChange={onBaseUrlChange}
-                placeholder={t("providerForm.apiEndpointPlaceholder")}
-                help={endpointHint}
-                showManageButton={showEndpointTools}
-                onManageClick={
-                  showEndpointTools
-                    ? () => onEndpointModalToggle(true)
-                    : undefined
-                }
-              />
-            </div>
-            {category !== "cloud_provider" && (
-              <div className="flex items-end gap-1">
-                <Select
-                  value={apiFormat}
-                  onValueChange={onApiFormatChange}
-                  disabled={isCopilotPreset}
-                >
-                  <SelectTrigger
-                    id="apiFormat"
-                    className="w-[280px] shrink-0 mt-[26px]"
-                    aria-label={t("providerForm.apiFormat", {
+          <EndpointField
+            id="baseUrl"
+            label={t("providerForm.apiEndpoint")}
+            value={baseUrl}
+            onChange={onBaseUrlChange}
+            placeholder={t("providerForm.apiEndpointPlaceholder")}
+            help={endpointHint}
+            showManageButton={showEndpointTools}
+            onManageClick={
+              showEndpointTools ? () => onEndpointModalToggle(true) : undefined
+            }
+            rightSlot={
+              category !== "cloud_provider" ? (
+                <div className="flex items-end gap-1">
+                  <Select
+                    value={apiFormat}
+                    onValueChange={onApiFormatChange}
+                    disabled={isCopilotPreset}
+                  >
+                    <SelectTrigger
+                      id="apiFormat"
+                      className="w-[280px] shrink-0"
+                      aria-label={t("providerForm.apiFormat", {
+                        defaultValue: "上游格式",
+                      })}
+                    >
+                      <SelectValue>
+                        {isCopilotPreset
+                          ? t("copilot.automaticFormat")
+                          : undefined}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="anthropic">
+                        {t("providerForm.apiFormatAnthropic", {
+                          defaultValue: "Anthropic Messages (原生)",
+                        })}
+                      </SelectItem>
+                      <SelectItem value="openai_chat">
+                        {t("providerForm.apiFormatOpenAIChat", {
+                          defaultValue: "OpenAI Chat Completions (需转换)",
+                        })}
+                      </SelectItem>
+                      <SelectItem value="openai_responses">
+                        {t("providerForm.apiFormatOpenAIResponses", {
+                          defaultValue: "OpenAI Responses API (需转换)",
+                        })}
+                      </SelectItem>
+                      <SelectItem value="gemini_native">
+                        {t("providerForm.apiFormatGeminiNative", {
+                          defaultValue:
+                            "Gemini Native generateContent (需转换)",
+                        })}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <HelpTip
+                    title={t("providerForm.apiFormat", {
                       defaultValue: "上游格式",
                     })}
                   >
-                    <SelectValue>
-                      {isCopilotPreset
-                        ? t("copilot.automaticFormat")
-                        : undefined}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="anthropic">
-                      {t("providerForm.apiFormatAnthropic", {
-                        defaultValue: "Anthropic Messages (原生)",
-                      })}
-                    </SelectItem>
-                    <SelectItem value="openai_chat">
-                      {t("providerForm.apiFormatOpenAIChat", {
-                        defaultValue: "OpenAI Chat Completions (需转换)",
-                      })}
-                    </SelectItem>
-                    <SelectItem value="openai_responses">
-                      {t("providerForm.apiFormatOpenAIResponses", {
-                        defaultValue: "OpenAI Responses API (需转换)",
-                      })}
-                    </SelectItem>
-                    <SelectItem value="gemini_native">
-                      {t("providerForm.apiFormatGeminiNative", {
-                        defaultValue: "Gemini Native generateContent (需转换)",
-                      })}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <HelpTip
-                  title={t("providerForm.apiFormat", {
-                    defaultValue: "上游格式",
-                  })}
-                >
-                  {t("providerForm.apiFormatHelp", {
-                    defaultValue:
-                      "看供应商原生支持哪种协议：Anthropic Messages 原样转发、不转换格式；其余三种由路由转成 Anthropic Messages。",
-                  })}
-                </HelpTip>
-              </div>
-            )}
-          </div>
+                    {t("providerForm.apiFormatHelp", {
+                      defaultValue:
+                        "看供应商原生支持哪种协议：Anthropic Messages 原样转发、不转换格式；其余三种由路由转成 Anthropic Messages。",
+                    })}
+                  </HelpTip>
+                </div>
+              ) : undefined
+            }
+          />
           {directModeFormatNotice && apiFormat !== "anthropic" && (
             <DirectModeFormatWarning notice={directModeFormatNotice} />
           )}
@@ -1069,12 +1066,6 @@ export function ClaudeFormFields({
     </>
   );
 
-  const copilotRoutingNotice = isCopilotPreset && (
-    <p className="text-xs leading-relaxed text-fg-2">
-      {t("copilot.automaticFormatHint")}
-    </p>
-  );
-
   // 认证字段选择器：经典布局放在高级选项里，Stack 布局放在 Key 旁边。
   const authFieldLabel = t("providerForm.authField", {
     defaultValue: "认证字段",
@@ -1112,7 +1103,6 @@ export function ClaudeFormFields({
       </Select>
     </div>
   );
-
 
   // 完整 URL 跟着地址框：托管账号卡的地址由后端固定，没有这个开关。
   const fullUrlToggle = shouldShowSpeedTest &&
@@ -1176,7 +1166,6 @@ export function ClaudeFormFields({
     return (
       <>
         {oauthSections}
-        {copilotRoutingNotice}
         {apiKeySection}
         {showAuthField && authFieldSelect}
         {templateSection}
@@ -1233,7 +1222,6 @@ export function ClaudeFormFields({
   return (
     <>
       {oauthSections}
-      {copilotRoutingNotice}
       {apiKeySection}
       {templateSection}
       {endpointSection}
@@ -1343,7 +1331,7 @@ export function ClaudeFormFields({
                     {t("providerForm.fetchModels")}
                   </Button>
                 </div>
-=======
+                =======
               </div>
             </div>
 
