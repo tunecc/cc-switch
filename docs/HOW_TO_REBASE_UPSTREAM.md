@@ -192,7 +192,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/components/providers/forms/ProviderForm.tsx` | fork：跨应用导入接线（ProviderImportEntry + useProviderImportApply，编辑/新建两条同步路径） |
 | `src/components/providers/forms/ProviderPresetSelector.tsx` | fork：`extraActions` 插槽（跨应用导入入口行，v4 两步外壳的外层渲染） |
 | `src/components/providers/forms/ClaudeFormFields.tsx` | fork：兜底模型直达区（fallbackQuickAccessSection，仅经典布局渲染）、API 格式选择器随端点输入框、1M 全选。v4.0.8 起上游在本文件让取模型列表带上供应商的本地代理 Header 覆盖（新增 `modelFetchRequestHeaders` 导入、`handleFetchModels` 传 `{requestHeaders: ...}`、`localProxyHeadersOverride` 进依赖数组，+22/−2 行）：取上游改动，fork 的兜底直达区、`hasCustomModelMapping` 与 `SearchableModelPicker`（对 `ModelDropdown` 的替换）照常叠加，两边导入块取并集；v4.0.9 起上游在本文件把说明改回 HelpTip 并把「完整 URL」开关移出（`EndpointField` 改 `help` 形态、新增 `directModeFormatNotice` prop 与 `FullUrlToggle`）：以上游形态为基础，fork 的兜底模型直达区（仅经典布局渲染，行内含 1M 勾选与获取/一键设置按钮）、`hasCustomModelMapping`、`SearchableModelPicker`、API 格式选择器（经 `rightSlot`）全部保留；上游高级选项里的 `apiFormatField` 整段与兜底模型整段由 fork 的位置取代，其 `apiFormatHelp`/`fallbackModelHelp*`/`fallbackModelMissing`/`fallbackModelHaikuMissing` 文案改在 fork 的位置渲染，不得因取上游而丢 HelpTip 与告警 |
-| `src/components/providers/forms/GrokBuildProviderForm.tsx` | fork：跨应用导入接线（grokbuild config.toml 路径） |
+| `src/components/providers/forms/GrokBuildProviderForm.tsx` | fork：跨应用导入接线（grokbuild config.toml 路径）、双官网链接与官方预设过滤接线。v4.0.9 起上游把 `inactiveFieldsHint` 的 `count` 参数去掉（+1/−2）：取上游文案，fork 的跨应用导入、双官网链接与预设过滤三段接线保留 |
 | `src/config/forkOfficialAllowlist.ts` | 上游 v4 新增 mcode 应用后补 `mcode: []` 空白名单 |
 | `src/contexts/UpdateContext.tsx` | 取消启动自检（fork 关闭自动更新） |
 | `src/lib/updater.ts` | 恒返回 up-to-date（fork 关闭自动更新） |
@@ -211,7 +211,6 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/components/providers/forms/shared/index.ts` | fork：`SearchableModelPicker` / `SearchableModelMultiPicker` 导出。v4.0.9 起上游加 `DirectModeFormatWarning`、`FullUrlToggle` 两个值导出与 `DirectModeFormatNotice` 类型导出：取并集，两侧导出都不许丢 |
 | `src/components/providers/forms/ClaudeDesktopProviderForm.tsx` | fork：跨应用导入接线、双官网链接字段与官方预设过滤接线。v4.0.9 起上游把模型模式说明改成平实语言（+4/−9）：取上游文案，fork 三段接线保留 |
 | `src/components/providers/forms/PiProviderForm.tsx` | fork：跨应用导入接线、双官网链接与预设过滤。v4.0.9 起上游把取模型参数的调用形态由 `rowBaseUrl` 改为 `{ baseUrl: rowBaseUrl }`（+1/−1）：取上游，fork 接线保留 |
-| `src/components/providers/forms/GrokBuildProviderForm.tsx` | fork：跨应用导入接线（grokbuild config.toml 路径）、双官网链接与预设过滤。v4.0.9 起上游把 `inactiveFieldsHint` 的 `count` 参数去掉（+1/−2）：取上游文案，fork 三段接线保留 |
 | `tests/components/{GrokBuildProviderForm,ProviderPresetSelector}.test.tsx` | fork：GrokBuild 20 行第二官网链接用例、预设选择器 33 行 `extraActions`/过滤用例。v4.0.9 起上游分别改了提示文案用例（+10/−8）与把 Claude 可见预设行数断言从 74 改为 81：取上游结构与断言，fork 用例叠加回 |
 | `tests/components/AddProviderDialog.test.tsx` | fork：两个 claude 用例的「common.add」按钮由同步 `getByRole` 改为 `await findByRole`（live 底到位后 step 从 pick 切 form 是第二次提交，CI 慢机器上 footer 晚一拍渲染，同步查找偶发 flaky，2026-10-06 CI 实测踩中）。上游 v4.0.3（a4d07f31）已内置等价 `findByRole` 修复：此后该文件冲突取上游版本，仅叠加回 fork 的两段 explanatory 注释 |
 
