@@ -31,7 +31,6 @@ import {
   DirectModeFormatWarning,
   EndpointField,
   FullUrlToggle,
-  ModelDropdown,
   ModelInputWithFetch,
   SearchableModelPicker,
   type DirectModeFormatNotice,
@@ -990,6 +989,16 @@ export function ClaudeFormFields({
     </>
   );
 
+  const fallbackModelLabel = t("providerForm.fallbackModelLabel", {
+    defaultValue: "默认兜底模型",
+  });
+  // 只有第三方端点才认不出原始 Claude 模型名：直连看后台任务用的 Haiku 档，路由看兜底模型本身。
+  const usesThirdPartyEndpoint =
+    category !== "official" && category !== "cloud_provider";
+  const fallbackModelMissing =
+    usesThirdPartyEndpoint &&
+    !(directModeFormatNotice ? defaultHaikuModel : claudeModel).trim();
+
   // 默认兜底模型直达区：紧跟请求地址，无需展开高级选项即可编辑。Stack / 经典两种布局共用。
   const fallbackQuickAccessSection = (
     <>
@@ -1190,15 +1199,6 @@ export function ClaudeFormFields({
     </div>
   );
 
-  const fallbackModelLabel = t("providerForm.fallbackModelLabel", {
-    defaultValue: "默认兜底模型",
-  });
-  // 只有第三方端点才认不出原始 Claude 模型名：直连看后台任务用的 Haiku 档，路由看兜底模型本身。
-  const usesThirdPartyEndpoint =
-    category !== "official" && category !== "cloud_provider";
-  const fallbackModelMissing =
-    usesThirdPartyEndpoint &&
-    !(directModeFormatNotice ? defaultHaikuModel : claudeModel).trim();
 
   // 完整 URL 跟着地址框：托管账号卡的地址由后端固定，没有这个开关。
   const fullUrlToggle = shouldShowSpeedTest &&
@@ -1287,7 +1287,6 @@ export function ClaudeFormFields({
           />
         )}
 
-        {fallbackQuickAccessSection}
         {/* 高级区只有 UA 和请求覆盖；无模型选择器时整块没有内容，Copilot 的转发也会跳过这两项 */}
         {shouldShowModelSelector && !isCopilotPreset && (
           <Collapsible
