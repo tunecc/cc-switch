@@ -218,6 +218,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/components/providers/forms/PiProviderForm.tsx` | fork：跨应用导入接线、双官网链接与预设过滤。v4.0.9 起上游把取模型参数的调用形态由 `rowBaseUrl` 改为 `{ baseUrl: rowBaseUrl }`（+1/−1）：取上游，fork 接线保留 |
 | `tests/components/{GrokBuildProviderForm,ProviderPresetSelector}.test.tsx` | fork：GrokBuild 20 行第二官网链接用例、预设选择器 33 行 `extraActions`/过滤用例。v4.0.9 起上游分别改了提示文案用例（+10/−8）与把 Claude 可见预设行数断言从 74 改为 81：取上游结构与断言，fork 用例叠加回；v4.0.10 起上游把该断言继续改为 82（NekoCode 预设）：取上游断言，fork 的 33 行 `extraActions`/过滤用例保留 |
 | `tests/components/AddProviderDialog.test.tsx` | fork：两个 claude 用例的「common.add」按钮由同步 `getByRole` 改为 `await findByRole`（live 底到位后 step 从 pick 切 form 是第二次提交，CI 慢机器上 footer 晚一拍渲染，同步查找偶发 flaky，2026-10-06 CI 实测踩中）。上游 v4.0.3（a4d07f31）已内置等价 `findByRole` 修复：此后该文件冲突取上游版本，仅叠加回 fork 的两段 explanatory 注释 |
+| `tests/components/DeepLinkImportDialog.test.tsx` | fork：把三处「开关初值」断言由同步 `expect(toggle).toBeChecked()` 改为 `await waitFor(() => expect(toggle).toBeChecked())`。v4.0.10 同步后 fork CI 实测：上游新增的 `the activate-after-import switch` 用例在 ubuntu runner 上偶发失败 2 条，`findByRole` 取到 switch 的那一帧仍是 `data-state="unchecked"`——组件初值由 `useState(false)` + `useEffect([request])` 写入，慢机器上会先渲染出 unchecked 的一帧（本地 `pnpm test:unit` 全绿、该文件连跑 10 次稳定）。只改测试断言，不动 `src/components/DeepLinkImportDialog.tsx` 的上游实现；上游若把这几行改成 `waitFor`，重放时直接取上游版本 |
 
 说明：
 
