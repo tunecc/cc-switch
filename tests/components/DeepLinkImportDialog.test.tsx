@@ -470,7 +470,8 @@ describe("DeepLinkImportDialog", () => {
       );
 
       const toggle = await screen.findByRole("switch");
-      expect(toggle).toBeChecked();
+      // 开关初值由 request 落地后的 effect 写入，慢机器上会先渲染出 unchecked 的一帧
+      await waitFor(() => expect(toggle).toBeChecked());
       expect(
         screen.getByText("deeplink.providerEnabledWarning"),
       ).toBeInTheDocument();
@@ -512,7 +513,7 @@ describe("DeepLinkImportDialog", () => {
       act(() => deliverDeepLink(providerLink({ app: "opencode" })));
 
       const toggle = await screen.findByRole("switch");
-      expect(toggle).toBeChecked();
+      await waitFor(() => expect(toggle).toBeChecked());
       expect(
         screen.getByText("deeplink.addToAppAfterImport"),
       ).toBeInTheDocument();
@@ -538,7 +539,7 @@ describe("DeepLinkImportDialog", () => {
       );
 
       const toggle = await screen.findByRole("switch");
-      expect(toggle).toBeChecked();
+      await waitFor(() => expect(toggle).toBeChecked());
       expect(
         screen.getByText("deeplink.prompt.enabledWarning"),
       ).toBeInTheDocument();
