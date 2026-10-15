@@ -889,48 +889,15 @@ export function ClaudeFormFields({
                       defaultValue: "上游格式",
                     })}
                   >
-                    <SelectValue>
-                      {isCopilotPreset
-                        ? t("copilot.automaticFormat")
-                        : undefined}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="anthropic">
-                      {t("providerForm.apiFormatAnthropic", {
-                        defaultValue: "Anthropic Messages (原生)",
-                      })}
-                    </SelectItem>
-                    <SelectItem value="openai_chat">
-                      {t("providerForm.apiFormatOpenAIChat", {
-                        defaultValue: "OpenAI Chat Completions (需转换)",
-                      })}
-                    </SelectItem>
-                    <SelectItem value="openai_responses">
-                      {t("providerForm.apiFormatOpenAIResponses", {
-                        defaultValue: "OpenAI Responses API (需转换)",
-                      })}
-                    </SelectItem>
-                    <SelectItem value="gemini_native">
-                      {t("providerForm.apiFormatGeminiNative", {
-                        defaultValue: "Gemini Native generateContent (需转换)",
-                      })}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <HelpTip
-                  title={t("providerForm.apiFormat", {
-                    defaultValue: "上游格式",
-                  })}
-                >
-                  {t("providerForm.apiFormatHelp", {
-                    defaultValue:
-                      "看供应商原生支持哪种协议：Anthropic Messages 原样转发、不转换格式；其余三种由路由转成 Anthropic Messages。",
-                  })}
-                </HelpTip>
-              </div>
-            )}
-          </div>
+                    {t("providerForm.apiFormatHelp", {
+                      defaultValue:
+                        "看供应商原生支持哪种协议：Anthropic Messages 原样转发、不转换格式；其余三种由路由转成 Anthropic Messages。",
+                    })}
+                  </HelpTip>
+                </div>
+              ) : undefined
+            }
+          />
           {category !== "cloud_provider" &&
             !isXaiOauthPreset &&
             !isCodexOauthPreset &&
