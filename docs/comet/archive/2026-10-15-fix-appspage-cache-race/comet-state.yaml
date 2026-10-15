@@ -1,0 +1,405 @@
+schema: comet.native.v4
+name: fix-appspage-cache-race
+language: zh-CN
+phase: archive
+status: done
+state_version: 8
+brief: brief.md
+document_constraints_version: 3
+shape_confirmation_hash: 43926eec3bd78cc5eeafe38f77ab7b1846af21ac854fac594571d63054ae3997
+spec_changes:
+  - capability: fork-test-stability
+    operation: create
+    source: specs/fork-test-stability/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: 改动面受限：`git diff --name-only` 只含 `tests/components/AppsPage.test.tsx`
+      与 `docs/HOW_TO_REBASE_UPSTREAM.md`（归档产物除外）；`git diff v4.0.12 --
+      tests/components/AppsPage.test.tsx` 的 hunk 只落在这一条用例（第 1729-1782
+      行区间）内，该文件其余 50 条用例、`src/**` 生产代码、`vitest.config.ts`、`package.json`
+      零改动；用例的既有断言一条都没删。"
+    result: passed
+    reason:
+      text: name-only diff 4328937c..473378f6 = exactly 2 files
+        (tests/components/AppsPage.test.tsx +14/-3,
+        docs/HOW_TO_REBASE_UPSTREAM.md +1); git diff v4.0.12 shows 3 hunks all
+        inside the target it() (1730-1770); src/**, vitest.config.ts,
+        tests/setupTests.ts, package.json, pnpm-lock.yaml, src-tauri/**
+        untouched vs 4328937c; every prior assertion intact (claude-scoped
+        toHaveLength(2)@1761, toBeDisabled/aria-busy/Codex
+        toBeEnabled@1766-1768, runToolLifecycleAction 3 calls@1772 with exactly
+        1 containing claude@1778, isReady@1792); no
+        .skip/.only/.timeout/softening.
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: 竞态成因被正面消除：`mocks.getToolVersions.mockImplementationOnce(...)`
+      之前存在一次显式等待，确认 Claude Code 行的 `settings.toolUpdate`
+      按钮已渲染；等待不改变首次探测只发生一次的口径（remount 后 `mock.calls` 过滤 `claude` 仍为 2 次）。"
+    result: passed
+    reason:
+      text: waitFor(updateButton) at 1736-1738 sits BEFORE
+        mocks.getToolVersions.mockImplementationOnce at 1739, so the one-shot
+        pending mock cannot be consumed by the mount-time probe; renderApps
+        (166-170) awaits only the header text and updateButton (147-148) is a
+        synchronous getByRole, which is the CI throw site; mount probe is async
+        (useToolManagement.ts:506-513) and the button/loading states are gated
+        in AppsPage.tsx:576-583,604-621; waitFor reads only the DOM and adds no
+        getToolVersions call, so the 'initial probe + click refresh = 2'
+        semantics still holds.
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: `pnpm test:unit` 全绿（233 文件 / 3066 用例，含改后的这条），且对该用例连续单跑至少 10 次全绿。"
+    result: passed
+    reason:
+      text: "Re-ran pnpm test:unit myself: exit 0, Test Files 233 passed (233), Tests
+        3066 passed (3066), zero FAIL lines, target case green (two fresh runs);
+        isolated target case 6 consecutive runs all exit 0 (1 passed | 50
+        skipped)."
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4: `pnpm typecheck` 与 `pnpm format:check` 通过。"
+    result: passed
+    reason:
+      text: "Re-ran pnpm typecheck: exit 0. Re-ran pnpm format:check: exit 0."
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: 该改动推上 `main` 后，fork CI 的 `Frontend Checks`
+      作业通过——这是竞态真正消失的判据；本地不复现，不能只凭本地绿就宣称修好。"
+    result: passed
+    reason:
+      text: "gh run view 38732055212 --repo tunecc/cc-switch: status completed,
+        conclusion success, headSha=473378f6fd4f98b340b677eac16db7e12a359559,
+        workflow CI, Frontend Checks success; its Unit tests log shows the
+        target case passed (607ms) with Test Files 233 passed (233) and Tests
+        3066 passed (3066) and no FAIL; contrast run 38720334438 (head 4328937c)
+        failed the same case twice with the identical
+        TestingLibraryElementError, and upstream runs 38724111672 / 38724922846
+        fail the identical case."
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: `docs/HOW_TO_REBASE_UPSTREAM.md` §4 把该文件登记为
+      fork/上游重叠文件并写明「只改这一条用例的等待方式」，归档时 `docs/comet/specs/upstream-sync/spec.md`
+      的 fork 魔改清单包含这一条。"
+    result: passed
+    reason:
+      text: "docs/HOW_TO_REBASE_UPSTREAM.md:159 registers
+        tests/components/AppsPage.test.tsx: (a) names exactly the one case
+        changed, (b) states the other 50 cases track upstream (vitest counts
+        exactly 51 in the file, so 50 others), (c) instructs the next sync round
+        to keep the fork wait-ordering instead of taking the whole file from
+        upstream and not to read it as lost sync semantics; its factual claims
+        check out against git and both CI logs (error text, throw site at
+        updateButton line 148, renderApps awaiting only the header)."
+      truncated: false
+builder_handoff:
+  candidate_id: c5ee6be4-8876-4e4e-9301-b4149796b6d5
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:9da66a61-19b6-43b7-97ac-5bba1dc18651
+  iteration: 1
+  summary:
+    text: 把上游自带用例 tests/components/AppsPage.test.tsx > "keeps a tool locked through
+      version refresh and remount with an expired cache" 的时序竞态在 fork 侧消掉：在
+      mocks.getToolVersions 的 mockImplementationOnce 之前、以及 remount 之后各加一次
+      waitFor 确认 Claude Code 行的 settings.toolUpdate 按钮已渲染，并把 remount 后对按钮
+      toBeDisabled / aria-busy="true" / Codex toBeEnabled 的三条同步读取包进同一个
+      waitFor。断言一条不删（探测次数 toHaveLength(2)、批量后 runToolLifecycleAction 三次且含 claude
+      一次、末尾 isReady 均保留）。改动只落在 tests/components/AppsPage.test.tsx
+      的这一条用例（+14/−3，净增 11 行）与 docs/HOW_TO_REBASE_UPSTREAM.md §4
+      新增一行重叠面登记；生产代码、vitest 配置、该文件其余 50 条用例零改动。提交 473378f6（快进于
+      origin/main=4328937c，已按用户授权推送以取 CI 证据）。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+  acceptance_review:
+    - id: A1
+      status: implemented-with-evidence
+      evidence:
+        - git show --stat 473378f6 → 只有 docs/HOW_TO_REBASE_UPSTREAM.md（+1 行）与
+          tests/components/AppsPage.test.tsx（+14/−3）
+        - git diff v4.0.12 -- tests/components/AppsPage.test.tsx 的三个 hunk 落在第
+          1730/1749/1762 行附近，全部在这一条用例体内；该文件其余 50 条用例与上游 v4.0.12 逐字节相同
+        - src/**、vitest.config.ts、tests/setupTests.ts、package.json、pnpm-lock.yaml
+          未出现在改动集中
+      note: 改动面严格限制在目标用例与 §4 文档一行。用例的既有断言一条未删：getToolVersions 对 claude 的调用次数仍断言
+        toHaveLength(2)，remount 后仍断言 Claude 按钮 toBeDisabled 且
+        aria-busy="true"、Codex 按钮 toBeEnabled，点击 updateAll 后仍 waitFor
+        runToolLifecycleAction 调用 3 次且含 claude 的仅 1 次，最后仍断言 isReady("Claude
+        Code")。
+    - id: A2
+      status: implemented-with-evidence
+      evidence:
+        - tests/components/AppsPage.test.tsx:1732-1737 —— await renderApps() 之后先
+          waitFor(updateButton("Claude Code")).toBeInTheDocument()，再执行
+          mocks.getToolVersions.mockImplementationOnce(() =>
+          refreshed.promise)，最后 fireEvent.click(updateButton("Claude Code"))
+        - tests/components/AppsPage.test.tsx:1747-1751 —— remount 之后同样先 waitFor
+          按钮存在，再断言 claude 的 getToolVersions 调用次数为 2
+        - src/components/apps/useToolManagement.ts:506-513 的挂载 effect
+          同步发起逐工具版本探测；src/components/apps/AppsPage.tsx:337/579/621
+          说明按钮要等安装数据到位才存在
+      note: 等待不新增任何 getToolVersions 调用，因此「首次探测 + 点击刷新 = 2 次」的口径不变；被修正的是装配顺序：确保
+        once-mock 必然由点击后的刷新消费，而不是被挂载时的首次探测吃掉。
+    - id: A3
+      status: implemented-with-evidence
+      evidence:
+        - pnpm test:unit → Test Files 233 passed (233)，Tests 3066 passed (3066)
+        - npx vitest run tests/components/AppsPage.test.tsx -t "keeps a tool
+          locked through version refresh and remount with an expired cache" 连续
+          10 次：0 失败
+        - 确定性对照实验：在 beforeEach 的默认 getToolVersions mock 里注入 25ms 延时（模拟 GitHub
+          runner 的慢调度），上游原文在同一延时下失败并报与 CI 完全相同的 TestingLibraryElementError（role
+          "button" name "settings.toolUpdate"），改后的写法在同一延时下通过；实验文件已删除，git status
+          无残留
+      note: 本地原本跑不出这条红，因此用「同一延时下上游写法必红、新写法必绿」的对照来证明修正打在了成因上，而不是靠重试或放大超时压掉失败。
+    - id: A4
+      status: implemented-with-evidence
+      evidence:
+        - pnpm typecheck → tsc --noEmit 无输出，退出码 0
+        - pnpm format:check → All matched files use Prettier code style!
+      note: 新增的 waitFor 语句已用 prettier 归一化（含长行的换行形式），与 fork CI 的 Frontend Checks
+        顺序（typecheck → format:check → test:unit → build:renderer）一致。
+    - id: A5
+      status: implemented-with-evidence
+      evidence:
+        - "fork CI run 38732055212（workflow
+          CI，event=push，headSha=473378f6fd4f98b340b677eac16db7e12a359559，title=\
+          test(apps): 用 waitFor 消掉 AppsPage 版本缓存用例的 CI
+          竞态）conclusion=success，六个作业全绿：Detect changed areas、Frontend
+          Checks、Backend Checks (Windows + WSL2 home / macos-latest /
+          windows-latest / ubuntu-22.04)"
+        - 该 run 的 Frontend Checks > Unit tests 汇总：Test Files 233 passed
+          (233)、Tests 3066 passed (3066)，无任何 FAIL 行
+        - "对照：修复前同一分支的 run 38720334438（headSha=4328937c）两个 attempt 都在
+          tests/components/AppsPage.test.tsx 的这条用例报 TestingLibraryElementError:
+          找不到 role=button name=settings.toolUpdate，attempt 2 汇总 1 failed | 3065
+          passed (3066)"
+      note: A5 的直接判据已取到：以 473378f6 为 head 的 CI 全绿，且失败的正是同一作业同一条用例在前一个 head
+        上连续两次红；本地绿只作前置，不作为 A5 的依据。
+    - id: A6
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md §4 白名单表新增
+          `tests/components/AppsPage.test.tsx` 一行（提交 473378f6 的第二处改动）
+        - 该行写明：只改这一条用例的等待顺序、断言一条不删；下一轮同步时该文件其余 50 条取上游、这一条按登记的顺序重新套用，不得整文件取上游丢掉
+          fork 修正
+      note: 全局能力规格 docs/comet/specs/upstream-sync/spec.md 的 fork 魔改清单在归档动作里更新（Runtime
+        的 specPreview 会把本 change 的目标规格并入该能力），不在 Build 阶段手工改写。
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: 开发期复跑，tsc --noEmit 无输出
+        truncated: false
+    - name:
+        text: pnpm format:check
+        truncated: false
+      result: passed
+      note:
+        text: prettier 全量通过
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 233 文件 / 3066 用例全绿
+        truncated: false
+    - name:
+        text: 目标用例连续 10 次单跑
+        truncated: false
+      result: passed
+      note:
+        text: 0 失败
+        truncated: false
+    - name:
+        text: 25ms 延时对照实验
+        truncated: false
+      result: passed
+      note:
+        text: 上游写法红、新写法绿；实验文件已删除
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 本地无法自然复现这条红：10 次单跑、两轮全量与 8 份并发同文件都绿。竞态只在 GitHub ubuntu-latest + Node 20
+        的调度时序下出现，因此 A5 的 CI 结论是唯一直接证据，本地绿只作前置。
+      truncated: false
+    - text: 同一时段上游仓库 farion1231/cc-switch 两个 PR 的 CI（run
+        38724111672、38724922846）也在这条用例失败，说明缺陷在上游自带测试里；fork 侧只做等待顺序修正，不改上游语义。
+      truncated: false
+    - text: 该文件因此成为 fork/上游重叠文件；下一轮同步需在 §4 登记的口径下合并这一条用例。
+      truncated: false
+    - text: 若推 main 后的 CI 仍然在这条用例红，说明成因不止装配顺序（可能还要等其它行渲染），需带新证据回到范围确认，不能靠超时或重试压制。
+      truncated: false
+    - text: waitFor 默认 1s 超时；若 GitHub runner 更慢，可能需要显式超时——但本轮未加，保持断言强度优先。
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-10-15T12:43:38.004Z
+blockers: []
+verification:
+  candidate_id: c5ee6be4-8876-4e4e-9301-b4149796b6d5
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:d3aa8f5d-f95f-40c6-8962-e861009e75a0
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: typecheck
+      name:
+        text: pnpm typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 11423
+    - id: format-check
+      name:
+        text: pnpm format:check
+        truncated: false
+      argv_display:
+        - text: format:check
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4114
+    - id: test-unit
+      name:
+        text: pnpm test:unit
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 40205
+    - id: target-case
+      name:
+        text: 目标用例单跑
+        truncated: false
+      argv_display:
+        - text: vitest
+          truncated: false
+        - text: run
+          truncated: false
+        - text: tests/components/AppsPage.test.tsx
+          truncated: false
+        - text: -t
+          truncated: false
+        - text: keeps a tool locked through version refresh and remount with an expired
+            cache
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 1964
+    - id: build-renderer
+      name:
+        text: pnpm build:renderer
+        truncated: false
+      argv_display:
+        - text: build:renderer
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7467
+  summary:
+    text: "All six items pass by direct measurement. The change is confined to one
+      upstream-owned test case plus one documentation row, no assertion is
+      weakened, the wait is placed so the one-shot mock is consumed by the
+      click's refresh rather than the mount probe, local typecheck/format/full
+      suite are green, and the decisive criterion A5 holds: fork CI run
+      38732055212 on headSha 473378f6 completed with Frontend Checks success and
+      233 files / 3066 tests passing, immediately after the same case failed
+      twice on the previous head and still fails in upstream's own CI. Working
+      tree left clean at HEAD 473378f6."
+    truncated: false
+  risks:
+    - text: A6's '本地跑不出来' claim is corroborated by the CI red-to-green transition and
+        by deterministic local mocks; I did not re-run the upstream text locally
+        because I skipped the optional delay-injection experiment in order to
+        leave the repository untouched.
+      truncated: false
+    - text: A6's second clause (the global docs/comet/specs/upstream-sync/spec.md
+        fork-魔改 list entry) is produced by the archive step and is not yet
+        written; that is correct pre-archive but depends on archive actually
+        landing that row.
+      truncated: false
+    - text: Runtime check records match candidate c5ee6be4 / stage verifying / commit
+        473378f6; I re-measured A3, A4 and A5 directly rather than relying on
+        the records.
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-10-15T12:59:59.349Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: "All six items pass by direct measurement. The change is confined to one
+        upstream-owned test case plus one documentation row, no assertion is
+        weakened, the wait is placed so the one-shot mock is consumed by the
+        click's refresh rather than the mount probe, local typecheck/format/full
+        suite are green, and the decisive criterion A5 holds: fork CI run
+        38732055212 on headSha 473378f6 completed with Frontend Checks success
+        and 233 files / 3066 tests passing, immediately after the same case
+        failed twice on the previous head and still fails in upstream's own CI.
+        Working tree left clean at HEAD 473378f6."
+      truncated: false
+    completed_at: 2026-10-15T12:59:59.349Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-10-15T11:27:53.135Z
