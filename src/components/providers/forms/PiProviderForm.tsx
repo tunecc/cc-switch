@@ -809,14 +809,18 @@ export function PiProviderForm({
     onSubmitReadyChange?.(isSubmitReady);
   }, [isSubmitReady, onSubmitReadyChange]);
 
-  const presetEntries = useMemo(
-    () =>
-      filterForkPresets("pi", piProviderPresets).map((preset, index) => ({
+  const presetEntries = useMemo(() => {
+    // 先按原数组下标编号再过滤 fork 白名单：添加对话框按 id 里的下标回查预设
+    const forkAllowed = new Set(
+      filterForkPresets("pi", piProviderPresets).map((preset) => preset.name),
+    );
+    return piProviderPresets
+      .map((preset, index) => ({
         id: `pi-${index}`,
         preset,
-      })),
-    [],
-  );
+      }))
+      .filter((entry) => forkAllowed.has(entry.preset.name));
+  }, []);
 
   const selectPreset = (id: string) => {
     setFormError(null);
