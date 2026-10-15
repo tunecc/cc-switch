@@ -747,6 +747,9 @@ describe("AppsPage concurrent CLI upgrades", () => {
     const refreshed =
       deferred<Awaited<ReturnType<typeof mocks.getToolVersions>>>();
     const view = await renderApps();
+    await waitFor(() =>
+      expect(updateButton("Claude Code")).toBeInTheDocument(),
+    );
     mocks.getToolVersions.mockImplementationOnce(() => refreshed.promise);
     fireEvent.click(updateButton("Claude Code"));
     await waitFor(() =>
@@ -769,6 +772,9 @@ describe("AppsPage concurrent CLI upgrades", () => {
       .mockReturnValue(Date.now() + 11 * 60 * 1000);
     try {
       await renderApps();
+      await waitFor(() =>
+        expect(updateButton("Claude Code")).toBeInTheDocument(),
+      );
       // Initial probe and the original task's refresh only: remount must not
       // probe a tool again while its installation/version refresh is pending.
       expect(
@@ -779,11 +785,9 @@ describe("AppsPage concurrent CLI upgrades", () => {
     } finally {
       now.mockRestore();
     }
-    expect(updateButton("Claude Code")).toBeDisabled();
-    expect(updateButton("Claude Code")).toHaveAttribute("aria-busy", "true");
-    // 缓存过期，重新挂载时别的工具会重新探测版本；等探测完、按钮出来再点「全部更新」，
-    // 不然机器慢时这几行还在加载
     await waitFor(() => {
+      expect(updateButton("Claude Code")).toBeDisabled();
+      expect(updateButton("Claude Code")).toHaveAttribute("aria-busy", "true");
       expect(updateButton("Codex")).toBeEnabled();
       expect(updateButton("Gemini CLI")).toBeEnabled();
     });
