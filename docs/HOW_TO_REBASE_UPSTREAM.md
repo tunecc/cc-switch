@@ -231,7 +231,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 - `src-tauri/src/commands/misc.rs`：上游 Windows CLI 生命周期恢复用户 PATH、`run_windows_tool_command_capture` 与 mise/node 搜索路径改造（+375/−68）；fork 只有 `check_for_updates` 跳 `https://github.com/tunecc/cc-switch/releases` 一行，不得整文件取上游。
 - `src-tauri/src/proxy/forwarder.rs`：上游 `proxy_url_for(&url)` / `get_for_url(&url)`（上游是本机地址时直连）；fork 的 `parse_custom_user_agent` 注释与测试字面量 `website_url_2: None` 保留。
 - `src/lib/api/settings.ts`：上游 `runToolLifecycleAction` 增加 `"uninstall"` 与 `uninstallPlan` 参数、新增 `prepareToolUninstall`、`getToolVersions` 返回加 `update_blocked_by_node`；fork 删除的 `installUpdateAndRestart` 仍不得复活。
-- `src/components/providers/ProviderList.tsx`：上游把卸载入口移入每行溢出菜单、搜索面板不再遮挡卡片操作、列对齐（+115/−85）；fork 右键置顶/置底、模型徽章、批量探针徽标、`websiteUrl2` 搜索全部保留。
+- `src/components/providers/ProviderList.tsx`：上游新增 `searchSlot`（搜索框位置由页头挂载，`null` 时先不画）、`focusSearch`（打开时滚回视口并选中）与「搜索框放在列表上方第一行最右端，不遮挡卡片、打开时卡片不下移」（+115/−85）；fork 右键置顶/置底、模型徽章、批量探针徽标、`websiteUrl2` 搜索全部保留。每行溢出菜单的**卸载入口在应用页 `AppsPage.tsx`**，不要记到本文件。
 - `src/types.ts`：上游 `ProviderCategory` 加 `"local"`、`Settings.language` 加 `"tr"`、`OpenClawModel.compat` 加 `supportsTools` / `toolSchemaProfile`；fork `websiteUrl2`、`VisibleSidebarPanels` 段并存。
 - `src/App.tsx`：上游「再点当前页不离开」守卫（`if (currentViewRef.current === page) return;`）；`GeneralSection.tsx` 的 `LANGUAGES` 加 `tr` 选项；`UniversalProviderFormModal.tsx` 的 `useEffect` → `useLayoutEffect`。
 - `src/config/*ProviderPresets.ts`：上游批量新增本机推理 Local 分组与十余个云/赞助商预设，并对 `claudeDesktopProviderPresets.ts` 自带 `hidden?: boolean`。**三方合并会在同一 interface 里留下 fork 与上游两份 `hidden?: boolean`**（本轮实测 `TS2300: Duplicate identifier 'hidden'`），合并后必须删掉 fork 侧重复声明；同理 `codexProviderPresets.ts` 的 fork 追加行会因上游已有同名声明而被 git 判为冗余提交内容（重放后该提交的改动文件数从 8 变 7，属正常）。
