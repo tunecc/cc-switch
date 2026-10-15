@@ -198,7 +198,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/components/providers/forms/ProviderPresetSelector.tsx` | fork：`extraActions` 插槽（跨应用导入入口行，v4 两步外壳的外层渲染） |
 | `src/components/providers/forms/ClaudeFormFields.tsx` | fork：兜底模型直达区（fallbackQuickAccessSection，仅经典布局渲染）、API 格式选择器随端点输入框、1M 全选。v4.0.8 起上游在本文件让取模型列表带上供应商的本地代理 Header 覆盖（新增 `modelFetchRequestHeaders` 导入、`handleFetchModels` 传 `{requestHeaders: ...}`、`localProxyHeadersOverride` 进依赖数组，+22/−2 行）：取上游改动，fork 的兜底直达区、`hasCustomModelMapping` 与 `SearchableModelPicker`（对 `ModelDropdown` 的替换）照常叠加，两边导入块取并集；v4.0.9 起上游在本文件把说明改回 HelpTip 并把「完整 URL」开关移出（`EndpointField` 改 `help` 形态、新增 `directModeFormatNotice` prop 与 `FullUrlToggle`）：以上游形态为基础，fork 的兜底模型直达区（仅经典布局渲染，行内含 1M 勾选与获取/一键设置按钮）、`hasCustomModelMapping`、`SearchableModelPicker`、API 格式选择器（经 `rightSlot`）全部保留；上游高级选项里的 `apiFormatField` 整段与兜底模型整段由 fork 的位置取代，其 `apiFormatHelp`/`fallbackModelHelp*`/`fallbackModelMissing`/`fallbackModelHaikuMissing` 文案改在 fork 的位置渲染，不得因取上游而丢 HelpTip 与告警 |
 | `src/components/providers/forms/GrokBuildProviderForm.tsx` | fork：跨应用导入接线（grokbuild config.toml 路径）、双官网链接与官方预设过滤接线。v4.0.9 起上游把 `inactiveFieldsHint` 的 `count` 参数去掉（+1/−2）：取上游文案，fork 的跨应用导入、双官网链接与预设过滤三段接线保留 |
-| `src/config/forkOfficialAllowlist.ts` | 上游 v4 新增 mcode 应用后补 `mcode: []` 空白名单 |
+| `src/config/forkOfficialAllowlist.ts` | 上游 v4 新增 mcode 应用后补 `mcode: []` 空白名单。v4.0.12 起按用户决定收录上游 `category: "local"` 的本机推理预设：claude / claude-desktop / codex / hermes 各加 `Ollama`、`LM Studio`、`llama.cpp`、`vLLM`，openclaw 加 `LM Studio`、`llama.cpp`、`vLLM`，opencode 加 `Ollama`、`llama.cpp`、`vLLM`，pi 加 `Ollama`、`LM Studio`、`vLLM`；gemini / grokbuild / mcode 不变。条目名必须与上游该 app 里同分类预设的 `name` 逐字一致（拼写不符会让条目静默消失），赞助商、聚合站与第三方云预设继续默认拒绝，`forkPresetFilter.ts` 的判定实现不改 |
 | `src/contexts/UpdateContext.tsx` | 取消启动自检（fork 关闭自动更新） |
 | `src/lib/updater.ts` | 恒返回 up-to-date（fork 关闭自动更新） |
 | `src/config/*ProviderPresets.ts` ×8 | 预设接口的 `hidden?: boolean` 字段与官方预设过滤接线 v4.0.9 起上游往这 8 个文件批量加了 SoruxGPT/IKunCode/RunToken/OpenModel/BotCF/YYLX/TokenFlux 等赞助商预设（各 +84..+372，纯新增）：取上游预设条目，fork 的 `hidden` 字段与过滤判定照常生效；这些新预设在 fork 构建下由 `forkOfficialAllowlist` 默认拒绝，不要为「让它们显示」而改白名单；v4.0.10 起上游往这 8 个文件加 NekoCode 预设（`openclaw` +58、`opencode` +46、`hermes` +38、`pi` +26、`claudeDesktop` +17、`codex` +15、`gemini`/`grokBuild` 各 +2，含版本号行）、把 OpenModel 注册链接改指 `?ref=cc-switch` 推荐地址、把 YYLX 中文名改「鱼鱼连线」：同样取上游预设条目，fork 的 `hidden` 字段与过滤判定照常生效 |
@@ -219,6 +219,24 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `tests/components/{GrokBuildProviderForm,ProviderPresetSelector}.test.tsx` | fork：GrokBuild 20 行第二官网链接用例、预设选择器 33 行 `extraActions`/过滤用例。v4.0.9 起上游分别改了提示文案用例（+10/−8）与把 Claude 可见预设行数断言从 74 改为 81：取上游结构与断言，fork 用例叠加回；v4.0.10 起上游把该断言继续改为 82（NekoCode 预设）：取上游断言，fork 的 33 行 `extraActions`/过滤用例保留 |
 | `tests/components/AddProviderDialog.test.tsx` | fork：两个 claude 用例的「common.add」按钮由同步 `getByRole` 改为 `await findByRole`（live 底到位后 step 从 pick 切 form 是第二次提交，CI 慢机器上 footer 晚一拍渲染，同步查找偶发 flaky，2026-10-06 CI 实测踩中）。上游 v4.0.3（a4d07f31）已内置等价 `findByRole` 修复：此后该文件冲突取上游版本，仅叠加回 fork 的两段 explanatory 注释 |
 | `tests/components/DeepLinkImportDialog.test.tsx` | fork：把三处「开关初值」断言由同步 `expect(toggle).toBeChecked()` 改为 `await waitFor(() => expect(toggle).toBeChecked())`。v4.0.10 同步后 fork CI 实测：上游新增的 `the activate-after-import switch` 用例在 ubuntu runner 上偶发失败 2 条，`findByRole` 取到 switch 的那一帧仍是 `data-state="unchecked"`——组件初值由 `useState(false)` + `useEffect([request])` 写入，慢机器上会先渲染出 unchecked 的一帧（本地 `pnpm test:unit` 全绿、该文件连跑 10 次稳定）。只改测试断言，不动 `src/components/DeepLinkImportDialog.tsx` 的上游实现；上游若把这几行改成 `waitFor`，重放时直接取上游版本 |
+
+### 4.1 v4.0.12 轮的叠加要点（2026-10-15 同步实测）
+
+上游 `v4.0.10..v4.0.12`（67 个提交、128 个文件）与 fork 的重叠面 34 个文件，除上表已有条目外的新增口径：
+
+- **预设 id 必须按原数组下标编号**（上游 `3069b556` 新契约）：`AddProviderDialog` / `useProviderCategory` 用 `id` 里的下标回查**原始**预设数组。`ProviderForm.tsx`、`ClaudeDesktopProviderForm.tsx`、`PiProviderForm.tsx`、`GrokBuildProviderForm.tsx` 四处一律 `.map(编号)` → 再过滤 `hidden`（上游）→ 再按 `filterForkPresets` 的名称集合过滤（fork）。先过滤后编号会让被过滤项之后的预设全部错位（本机推理条目在原数组第 72..94 位，错位后选中即填错配置）。
+- `src-tauri/src/lib.rs`：上游 `SESSION_SYNC_INTERVAL_SECS` 60 → `10 * 60`（页面打开时的加扫交给前端 `useUsageAutoRefresh`）与命令注册表新增 `commands::prepare_tool_uninstall`；fork 三段（无 Updater 插件、托盘左键切换、connectivity_test 注册）继续并存。
+- `src-tauri/src/settings.rs`：上游语言白名单 `matches!(… , "en" | "zh" | "zh-TW" | "ja" | "tr")`；fork `VisibleSidebarPanels` 段不动。
+- `src-tauri/src/tray.rs`：上游加土耳其语托盘文案与 `map_locale_to_tray_language` 分支（+77/−10）；fork `hide_main_window` / `toggle_main_window` 两个 helper 并存，本文件是本轮最容易整文件取一侧的点。
+- `src-tauri/src/commands/misc.rs`：上游 Windows CLI 生命周期恢复用户 PATH、`run_windows_tool_command_capture` 与 mise/node 搜索路径改造（+375/−68）；fork 只有 `check_for_updates` 跳 `https://github.com/tunecc/cc-switch/releases` 一行，不得整文件取上游。
+- `src-tauri/src/proxy/forwarder.rs`：上游 `proxy_url_for(&url)` / `get_for_url(&url)`（上游是本机地址时直连）；fork 的 `parse_custom_user_agent` 注释与测试字面量 `website_url_2: None` 保留。
+- `src/lib/api/settings.ts`：上游 `runToolLifecycleAction` 增加 `"uninstall"` 与 `uninstallPlan` 参数、新增 `prepareToolUninstall`、`getToolVersions` 返回加 `update_blocked_by_node`；fork 删除的 `installUpdateAndRestart` 仍不得复活。
+- `src/components/providers/ProviderList.tsx`：上游把卸载入口移入每行溢出菜单、搜索面板不再遮挡卡片操作、列对齐（+115/−85）；fork 右键置顶/置底、模型徽章、批量探针徽标、`websiteUrl2` 搜索全部保留。
+- `src/types.ts`：上游 `ProviderCategory` 加 `"local"`、`Settings.language` 加 `"tr"`、`OpenClawModel.compat` 加 `supportsTools` / `toolSchemaProfile`；fork `websiteUrl2`、`VisibleSidebarPanels` 段并存。
+- `src/App.tsx`：上游「再点当前页不离开」守卫（`if (currentViewRef.current === page) return;`）；`GeneralSection.tsx` 的 `LANGUAGES` 加 `tr` 选项；`UniversalProviderFormModal.tsx` 的 `useEffect` → `useLayoutEffect`。
+- `src/config/*ProviderPresets.ts`：上游批量新增本机推理 Local 分组与十余个云/赞助商预设，并对 `claudeDesktopProviderPresets.ts` 自带 `hidden?: boolean`。**三方合并会在同一 interface 里留下 fork 与上游两份 `hidden?: boolean`**（本轮实测 `TS2300: Duplicate identifier 'hidden'`），合并后必须删掉 fork 侧重复声明；同理 `codexProviderPresets.ts` 的 fork 追加行会因上游已有同名声明而被 git 判为冗余提交内容（重放后该提交的改动文件数从 8 变 7，属正常）。
+- `src/i18n/locales/**`：上游 4 个 locale 各 +36/−11（工具卸载键组 `toolUninstall*` / `manualUninstall*`、`settings.languageOptionTurkish`、隐藏应用说明、ClaudeAPI/code0 文案删除）；新增 `tr.json`（4109 键）**保持与上游逐字节一致、不补 fork 键**，土耳其语下 fork 专属文案由 `fallbackLng: "en"` 回退英文。4 个既有 locale 的重复键查重照旧必做（本轮实测 dup=0）。
+- 版本与锁文件：上游本轮对 `package.json` / `Cargo.toml` / `tauri.conf.json` / `Cargo.lock` 的改动**只有版本号行**，无新增依赖；`Cargo.lock` 终态只允许 `cc-switch` 条目版本号一行差异（`cargo check` 复验）。
 
 说明：
 

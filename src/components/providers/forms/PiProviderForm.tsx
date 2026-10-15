@@ -867,14 +867,20 @@ export function PiProviderForm({
     onSubmitReadyChange?.(isSubmitReady);
   }, [isSubmitReady, onSubmitReadyChange]);
 
-  const presetEntries = useMemo(
-    () =>
-      filterForkPresets(isOmp ? "omp" : "pi", presets).map((preset, index) => ({
+  const presetEntries = useMemo(() => {
+    // 先按原数组下标编号再过滤 fork 白名单：添加对话框按 id 里的下标回查预设
+    const forkAllowed = new Set(
+      filterForkPresets(isOmp ? "omp" : "pi", presets).map(
+        (preset) => preset.name,
+      ),
+    );
+    return presets
+      .map((preset, index) => ({
         id: `pi-${index}`,
         preset,
-      })),
-    [presets, isOmp],
-  );
+      }))
+      .filter((entry) => forkAllowed.has(entry.preset.name));
+  }, [presets, isOmp]);
 
   const selectPreset = (id: string) => {
     setFormError(null);
