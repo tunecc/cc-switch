@@ -359,14 +359,18 @@ export function ClaudeDesktopProviderForm({
     // 先按原数组下标编号，再过滤 hidden 与 fork 白名单：
     // AddProviderDialog 按 id 里的原数组下标回查预设
     const forkAllowed = new Set(
-      filterForkPresets("claude-desktop", claudeDesktopProviderPresets),
+      filterForkPresets("claude-desktop", claudeDesktopProviderPresets).map(
+        (preset) => preset.name,
+      ),
     );
     return claudeDesktopProviderPresets
       .map((preset, index) => ({
         id: `claude-desktop-${index}`,
         preset,
       }))
-      .filter((entry) => !entry.preset.hidden && forkAllowed.has(entry.preset));
+      .filter(
+        (entry) => !entry.preset.hidden && forkAllowed.has(entry.preset.name),
+      );
   }, []);
 
   const presetCategoryLabels: Record<string, string> = useMemo(

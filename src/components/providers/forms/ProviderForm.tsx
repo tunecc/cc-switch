@@ -896,68 +896,40 @@ function ProviderFormFull({
   );
 
   const presetEntries = useMemo(() => {
-    // 先编号再过滤 hidden：id 里的序号是原数组下标，AddProviderDialog /
-    // useProviderCategory 按它回查预设，先过滤会让隐藏项之后的预设全部错位
-    if (appId === "codex") {
-      const codexAllowed = new Set(
-        filterForkPresets("codex", codexProviderPresets),
+    // 先按原数组下标编号，再过滤 hidden 与 fork 白名单：AddProviderDialog /
+    // useProviderCategory 按 id 里的下标回查原始预设数组，先过滤会让其后的预设全部错位
+    const entriesFor = <T extends PresetEntry["preset"]>(
+      appIdKey: string,
+      presets: T[],
+      idPrefix: string,
+      dropHidden: boolean,
+    ): PresetEntry[] => {
+      const allowed = new Set(
+        filterForkPresets(appIdKey, presets).map((preset) => preset.name),
       );
-      return codexProviderPresets
-        .map<PresetEntry>((preset, index) => ({
-          id: `codex-${index}`,
+      return presets
+        .map((preset, index) => ({
+          id: `${idPrefix}-${index}`,
           preset,
         }))
         .filter(
           (entry) =>
-            !(entry.preset as CodexProviderPreset).hidden &&
-            codexAllowed.has(entry.preset),
+            (!dropHidden || !entry.preset.hidden) &&
+            allowed.has(entry.preset.name),
         );
+    };
+    if (appId === "codex") {
+      return entriesFor("codex", codexProviderPresets, "codex", true);
     } else if (appId === "gemini") {
-      return filterForkPresets(
-        "gemini",
-        geminiProviderPresets,
-      ).map<PresetEntry>((preset, index) => ({
-        id: `gemini-${index}`,
-        preset,
-      }));
+      return entriesFor("gemini", geminiProviderPresets, "gemini", false);
     } else if (appId === "opencode") {
-      return filterForkPresets(
-        "opencode",
-        opencodeProviderPresets,
-      ).map<PresetEntry>((preset, index) => ({
-        id: `opencode-${index}`,
-        preset,
-      }));
+      return entriesFor("opencode", opencodeProviderPresets, "opencode", false);
     } else if (appId === "openclaw") {
-      return filterForkPresets(
-        "openclaw",
-        openclawProviderPresets,
-      ).map<PresetEntry>((preset, index) => ({
-        id: `openclaw-${index}`,
-        preset,
-      }));
+      return entriesFor("openclaw", openclawProviderPresets, "openclaw", false);
     } else if (appId === "hermes") {
-      return filterForkPresets(
-        "hermes",
-        hermesProviderPresets,
-      ).map<PresetEntry>((preset, index) => ({
-        id: `hermes-${index}`,
-        preset,
-      }));
+      return entriesFor("hermes", hermesProviderPresets, "hermes", false);
     }
-    const claudeAllowed = new Set(
-      filterForkPresets("claude", providerPresets),
-    );
-    return providerPresets
-      .map<PresetEntry>((preset, index) => ({
-        id: `claude-${index}`,
-        preset,
-      }))
-      .filter(
-        (entry) =>
-          !(entry.preset as ProviderPreset).hidden &&
-          claudeAllowed.has(entry.preset),
-      );
+    return entriesFor("claude", providerPresets, "claude", true);
   }, [appId]);
 
   const selectedPresetEntry = useMemo(
