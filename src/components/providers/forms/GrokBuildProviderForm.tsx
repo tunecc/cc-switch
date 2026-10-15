@@ -62,17 +62,23 @@ type GrokBuildProviderFormProps = Omit<ProviderFormProps, "appId">;
 
 // 预设列表见 grokBuildProviderPresets.ts：独立维护（与 Codex 预设无联动），
 // 不含官方 / OAuth / 国产官方直连 / 纯开源托管站，默认模型为 Grok 系。
+const grokForkAllowed = new Set(
+  filterForkPresets("grokbuild", grokBuildProviderPresets).map(
+    (preset) => preset.name,
+  ),
+);
 const grokPresetEntries: Array<{
   id: string;
   preset: GrokBuildProviderPreset;
 }> = [
   { id: GROKBUILD_OFFICIAL_PROVIDER_ID, preset: grokBuildOfficialPreset },
-  ...filterForkPresets("grokbuild", grokBuildProviderPresets).map(
-    (preset, index) => ({
+  // 先按原数组下标编号再过滤 fork 白名单：添加对话框按 id 里的下标回查预设
+  ...grokBuildProviderPresets
+    .map((preset, index) => ({
       id: `grokbuild-${index}`,
       preset,
-    }),
-  ),
+    }))
+    .filter((entry) => grokForkAllowed.has(entry.preset.name)),
 ];
 
 export function GrokBuildProviderForm({
