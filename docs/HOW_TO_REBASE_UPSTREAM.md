@@ -139,7 +139,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/components/providers/ConnectivityDetailDialog.tsx` | 连通性测试详情弹窗（整文件保留） |
 | `src/components/providers/ConnectivityBadge.tsx` | 供应商列表批量探针徽标（整文件保留） |
 | `src/components/providers/connectivityEntry.ts` | 弹窗入口判定（整文件保留） |
-| `src/components/usage/ConnectivityCheckConfigPanel.tsx` | 用量页连通性测试参数面板（整文件保留） |
+| `src/components/usage/ConnectivityCheckConfigPanel.tsx` | 用量页连通性测试参数面板：已由 fork 提交 `6064fc1c`（refactor(health-check): drop connectivity check settings and dead batch/log paths）删除，HEAD 已无此文件。上游若重新引入同名组件，按第 3.2 节把改动移植到现存入口（`src/components/providers/ConnectivityTestDialog.tsx`、`src/hooks/useConnectivityTest.ts`、`src/lib/connectivityTestSettings.ts`），不要按本行恢复旧文件 |
 | `src/hooks/useConnectivityProbe.ts` / `useConnectivityTest.ts` | 测试/探针状态 hooks（整文件保留） |
 | `src/lib/api/connectivity-check.ts` / `connectivity-test.ts` | 连通性测试前端 API 绑定（整文件保留） |
 | `src/lib/api/settings.ts` | fork：移除 `installUpdateAndRestart()` 绑定（关闭应用内更新器）。v4.0.6 起上游在本文件加 `codexForcesMultiAgentV2()` 绑定（+5 行）：取上游新增，fork 移除的更新绑定不得复活。v4.0.7 起上游又加三个 Codex 会话压缩命令绑定（`getCodexSessionCompression`/`setCodexSessionCompression`/`getCodexSessionsDiskUsage`，+15 行）：取上游新增，fork 移除的更新绑定仍不得复活。v4.0.8 起上游再加 `revealAppLogFile()` 绑定（+4 行，诊断日志「打开日志」按钮）：取上游新增，fork 移除的更新绑定仍不得复活 |
@@ -154,7 +154,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `src/utils/providerImport.ts` / `providerCredentials.ts` / `piProviderConfig.ts` | 跨应用导入的字段映射、凭据与 Pi 配置转换（整文件保留） |
 | `tests/components/ProviderImportEntry.test.tsx` / `ProviderForm.crossAppImport.test.tsx` / `tests/utils/providerImport.test.ts` | 跨应用导入测试（整文件保留） |
 | `tests/components/ConnectivityTestDialog.test.tsx` 等连通性测试 | `tests/components/connectivityEntry.test.ts`、`tests/hooks/useConnectivityProbe.test.ts`、`tests/hooks/useConnectivityTest.test.ts`、`tests/lib/connectivityTestSettings.test.ts`（整文件保留） |
-| `tests/lib/providerModelIds.test.ts` / `tests/utils/providerModelUtils.test.ts` | 模型工具测试（整文件保留） |
+| `tests/lib/providerModelIds.test.ts` / `src/utils/providerModelUtils.test.ts` | 模型工具测试（整文件保留；后者的测试与被测文件同目录，不在 `tests/` 下） |
 | `tests/components/ProviderCard.websiteLinks.test.tsx` / `tests/lib/providerSchema.websiteUrl2.test.ts` | 双官网链接测试（整文件保留） |
 | `.github/workflows/ci.yml` / `release.yml` | fork 裁剪版 CI：仅构建 Windows x64 与 macOS arm64 unsigned（整文件保留） |
 | `src-tauri/capabilities/default.json` | fork 移除 `updater:default` 权限（保留 fork 版） |
