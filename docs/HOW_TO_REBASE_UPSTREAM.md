@@ -156,6 +156,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 | `tests/components/ConnectivityTestDialog.test.tsx` 等连通性测试 | `tests/components/connectivityEntry.test.ts`、`tests/hooks/useConnectivityProbe.test.ts`、`tests/hooks/useConnectivityTest.test.ts`、`tests/lib/connectivityTestSettings.test.ts`（整文件保留） |
 | `tests/lib/providerModelIds.test.ts` / `src/utils/providerModelUtils.test.ts` | 模型工具测试（整文件保留；后者的测试与被测文件同目录，不在 `tests/` 下） |
 | `tests/components/ProviderCard.websiteLinks.test.tsx` / `tests/lib/providerSchema.websiteUrl2.test.ts` | 双官网链接测试（整文件保留） |
+| `tests/components/AppsPage.test.tsx` | **只改一条用例**：`describe("AppsPage concurrent CLI upgrades")` 里的 `keeps a tool locked through version refresh and remount with an expired cache`。上游原文在 `await renderApps()` 之后直接装 `getToolVersions.mockImplementationOnce(...)` 再同步 `updateButton(...)`，而 `renderApps()` 只等页头文字、不等工具行的安装/版本探测落定，GitHub runner 上「更新」按钮还没渲染就取按钮 → `TestingLibraryElementError`（fork CI 与上游 CI 同一条用例同时红，本地跑不出来）。fork 的改法：装 `mockImplementationOnce` 之前、remount 之后各加一次 `await waitFor(() => expect(updateButton("Claude Code")).toBeInTheDocument())`，并把 remount 后对按钮 `toBeDisabled` / `aria-busy` / Codex `toBeEnabled` 的三条同步读取包进一个 `waitFor`；断言一条不删。**下一轮同步**：该文件其余 50 条用例直接取上游，这一条按本行重新套用等待顺序，不要整文件取上游把 fork 的稳定化丢掉，也不要把它当成同步丢语义 |
 | `.github/workflows/ci.yml` / `release.yml` | fork 裁剪版 CI：仅构建 Windows x64 与 macOS arm64 unsigned（整文件保留） |
 | `src-tauri/capabilities/default.json` | fork 移除 `updater:default` 权限（保留 fork 版） |
 | `README.md` | fork 重写版（记录 fork 差异与构建说明，整文件保留；README_ZH/DE/JA 为共享文件按 §3.2 处理） |
