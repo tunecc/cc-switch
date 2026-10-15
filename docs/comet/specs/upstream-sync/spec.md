@@ -178,6 +178,7 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 - fork 发版 tag 推送事件偶发丢失：推送后若 Actions 零排程，先取证再删远端 tag 重推同一本地对象补触发；查 fork 的 Actions 运行必须显式带 `--repo tunecc/cc-switch`。
 - SSH 通道可能被本机代理以 fake-IP 接管导致 22/443 同时 `Connection closed`：不改用户全局 `url insteadOf`，单次使用已注册的 gh HTTPS credential helper 推送。
 - 时间敏感用例：`tests/components/SessionManagerPage.test.tsx > switches to all apps and to time buckets` 在本地 00:00–00:30 窗口必然失败；遇到该失败先查时钟窗口再查实现。
+- 单条用例只在 CI 红：判定顺序固定为①`git diff --quiet <上游 tag> main -- <测试文件> <组件>` 证与上游逐字节相同，②`gh run view <上游 run> --repo farion1231/cc-switch --log-failed` 看上游是否在同一条用例上同样红，③本地按分布重复跑取证据。只有「上游绿、fork 红」才往 fork 侧查；否则属上游自带竞态，`gh run rerun --failed` 不会转绿（v4.0.12-1 实测两个 attempt 同因红），要根治就照 `fork-test-stability` 能力只改等待方式。反证竞态成因的做法：在 `beforeEach` 的默认 `getToolVersions` mock 里注入 25ms 延时，可让上游原文在同一份 spec 里必红、fork 修正版必绿。
 
 ### 版本号
 
@@ -203,6 +204,7 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 - 供应商双官网链接（主页横排双链接、表单双字段横排、`website_url_2` 列与 v18→v19 迁移；本轮 `types.ts`、`UniversalProviderFormModal.tsx`、`ProviderForm.tsx`、`deeplink/provider.rs`、`forwarder.rs` 测试字面量的 fork 段都要保留）。
 - 托盘图标左键单击切换主窗口显示/隐藏（本轮同文件上游新增土耳其语托盘文案，两侧并存）。
 - 从其他已启用应用导入供应商配置（`ProviderForm.tsx`、`ClaudeDesktopProviderForm.tsx`、`PiProviderForm.tsx`、`GrokBuildProviderForm.tsx`、`McodeProviderForm.tsx` 与 `ProviderPresetSelector.extraActions`）。
+- 对上游自带测试的稳定性修正（fork 只改等待方式、不改断言）：`tests/components/AppsPage.test.tsx` 的 `describe("AppsPage concurrent CLI upgrades") > it("keeps a tool locked through version refresh and remount with an expired cache")` 由 fork 提交 `473378f6` 加上「装 `mockImplementationOnce` 之前先等 `settings.toolUpdate` 按钮渲染、remount 之后同样先等按钮、按钮的 `toBeDisabled`/`aria-busy`/Codex `toBeEnabled` 包进 `waitFor`」。下一轮同步该文件时其余 50 条用例取上游，这一条必须按上述顺序重新套用，不得整文件取上游把修正丢掉。详见能力规格 `docs/comet/specs/fork-test-stability/spec.md`。
 - 禁用应用内更新器（About 指向 tunecc/cc-switch Releases、启动自检取消、`updater:default` 权限移除、后端无 updater 插件注册、`install_update_and_restart` 不执行安装且前端 `installUpdateAndRestart` API 已删除、`Cargo.toml`/`package.json` 无 updater 依赖）——本轮 `lib.rs` 新增 `prepare_tool_uninstall` 注册时必须确认 updater 相关命中仍为 0。
 - 上游 tag 的发版构建跳过（fork CI 裁剪：仅 Windows x64 与 macOS arm64 unsigned）。
 - README fork 差异说明与构建说明。
