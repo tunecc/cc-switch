@@ -1754,7 +1754,8 @@
       "alltokens": "AllTokens は「安定を基に、誠実を本に」を掲げ、すべての AI 呼び出しを安定的で正直、安心して任せられるものにすることを目指しています。信頼できるサービスと透明な課金で、GPT、Claude、Gemini、Grok、DeepSeek、GLM、Kimi などの主要モデルを 1 つのプラットフォームで利用でき、従量課金と利用上限の設定に対応しています。登録で 1 ドル分のお試しクレジットを進呈！",
       "openmodel": "OpenModel は Codex と Claude Code 向けにクライアント専用割引を提供し、対応モデルを Codex 経由で最大 90% オフ、Claude Code 経由で最大 60% オフで利用できます。CC Switch ユーザーはこのリンクから登録し、プロモコード \"cc-switch\" を使うと初回チャージが 10% オフになります！",
       "grooroute": "GrooRoute Pro は OpenAI、Claude、DeepSeek などの主要モデルに対応する信頼性の高い AI API 中継プラットフォームで、従量課金とサブスクリプションに対応しています。CC Switch ユーザーはこのリンクから登録すると 5 元分の無料お試しクレジットがもらえます！",
-      "etok": "公式サイトで ETok コミュニティに参加し、プランを購読してください。"    },
+      "etok": "公式サイトで ETok コミュニティに参加し、プランを購読してください。"
+    },
     "presets": {
       "ucloud": "Compshare",
       "ucloudCoding": "Compshare Coding Plan",

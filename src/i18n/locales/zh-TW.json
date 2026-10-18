@@ -1755,7 +1755,8 @@
       "alltokens": "AllTokens 秉持「穩定為基，真實為本」，致力於讓每一次 AI 呼叫都穩定、真實、值得託付：服務可靠、計費透明，一個平台接入 GPT、Claude、Gemini、Grok、DeepSeek、GLM、Kimi 等主流模型，按量計費、支援額度上限。註冊即送 1 美元體驗金！",
       "openmodel": "OpenModel 為 Codex 和 Claude Code 提供客戶端專屬折扣，所支援的模型透過 Codex 呼叫最高優惠 90%、透過 Claude Code 呼叫最高優惠 60%。CC Switch 使用者透過此連結註冊並使用優惠碼「cc-switch」，即可享受首次儲值九折優惠！",
       "grooroute": "GrooRoute Pro 是可靠流暢的 AI API 中轉服務平台，接入 OpenAI、Claude、DeepSeek 等主流大模型，支援按量計費與訂閱方案。CC Switch 使用者透過此連結註冊即可獲得免費 5 元體驗額度！",
-      "etok": "官網加入 ETok 社群，訂閱方案。"    },
+      "etok": "官網加入 ETok 社群，訂閱方案。"
+    },
     "presets": {
       "ucloud": "優雲智算",
       "ucloudCoding": "優雲智算 Coding Plan",
