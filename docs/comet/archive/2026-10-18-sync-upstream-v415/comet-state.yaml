@@ -1,0 +1,472 @@
+schema: comet.native.v4
+name: sync-upstream-v415
+language: zh-CN
+phase: archive
+status: done
+state_version: 11
+brief: brief.md
+document_constraints_version: 3
+shape_confirmation_hash: fe320d8dfb62d948378b718ed1bad0226fcc6782da1b72541bb92429d7ae8417
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 2
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main v4.0.15` 等于 `988b0d00`（tag `v4.0.15`
+      指向的提交），`git log v4.0.15..main` 只包含 fork 提交、不含任何上游提交。"
+    result: passed
+    reason:
+      text: merge-base main v4.0.15 == 79e754ab == git rev-parse
+        'v4.0.15^{}'（annotated tag 对象 988b0d00 剥离后提交）；git log --format='%an
+        <%ae>' v4.0.15..main | sort -u 仅 Tune；rev-list 155（153 重放 + sync 终态
+        fc4c14f4 + 规格登记 1b657c41）。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: 重放前 `v4.0.12..main` 的 153 个 fork 提交按原顺序逐一重放；提交主题序列逐行 diff 一致，被 git
+      判定为空而丢弃的提交（如有）在完整目标规格「重放映射」中逐条记录；每次冲突停车逐条记录归属与解法。"
+    result: passed
+    reason:
+      text: "153 条主题序列 v4.0.12..pre-sync-v415 vs v4.0.15..main 前 153 条 逐行 diff 0 行；第
+        154/155 条为终态提交；patch-id 抽样 #10/#100/archive 对 SAME，#2 差异与 spec 停车归类一致。"
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 49 个重叠文件的冲突解决符合 `docs/HOW_TO_REBASE_UPSTREAM.md` §3
+      与完整目标规格的逐文件叠加要求：两侧语义并存、无整文件取一侧（版本与锁文件、`settings.rs`、`tray.rs`、`misc.rs`、`\
+      App.tsx`、`Sidebar.tsx`、`ProviderList.tsx`、`ClaudeFormFields.tsx`、`ClaudeD\
+      esktopProviderForm.tsx`、4 个 locales、测试文件为高危面）。"
+    result: passed
+    reason:
+      text: 高危面两侧语义并存实证：settings.rs（usage_display×5 + VisibleSidebarPanels×6 +
+        原子/宽松加载）、misc.rs（tunecc :82 + 上游 PORTABLE :103）、lib.rs（updater 0
+        命中、portable 注册、connectivity 注册）、types.ts 四组字段、App/Sidebar
+        visibleSidebarPanels、ProviderList 右键菜单+searchSlot、AboutSection fork
+        简化版、setupTests IS_FORK_BUILD mock、金标 kimi-k3[1M]。无整文件取一侧。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4:
+      `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-ta\
+      uri/Cargo.lock` 的版本号均为 `4.0.15-1`；`src-tauri/src/database/mod.rs` 的
+      `SCHEMA_VERSION` 仍为 21、fork 专属 v20→v21 幂等修复迁移完整保留。"
+    result: passed
+    reason:
+      text: 四处版本号均 4.0.15-1；SCHEMA_VERSION=21（mod.rs:54）；v20→v21
+        迁移段（schema.rs:593）与其幂等测试（schema.rs:3969）在位。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: 完整目标规格「fork 魔改保留清单」每一项在同步后仍然存在且可用：产品名 CC Switch 与
+      DevPanel、侧边面板可见性、模型徽章与快捷切换、Claude
+      兜底模型直达区、右键置顶/置底与新建插入第二位、官方预设过滤（官方+本机推理白名单）、逐模型连通性测试、双官网链接、托盘左键切换、跨应用导入、禁用\
+      应用内更新器、上游 tag 发版跳过、README fork 说明、fork CI。"
+    result: passed
+    reason:
+      text: fork 魔改保留清单 14 项逐一 grep
+        实证在位：产品名/DevPanel/可见面板/模型徽章与快捷切换/兜底直达区/右键置顶置底/预设过滤/连通性测试/双官网/托盘左键/跨应用导入/updater
+        全禁（依赖与权限零命中、空壳命令、About 指 tunecc）/release.yml 裁剪/README。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（`default_workflow:
+      native`，`workflows` 含 native 与 classic），fork 专属白名单文件未被上游或重放改写。"
+    result: passed
+    reason:
+      text: .comet/config.yaml default_workflow native + workflows [native,
+        classic]；上游 diff 对 vite.config.ts、src/config/fork*、release.yml 等fork
+        专属文件零命中；这些文件工作树与 pre-sync-v415 逐个 git diff --quiet 一致。
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: `docs/HOW_TO_REBASE_UPSTREAM.md` 已按本轮同步结果修订，本 change
+      的完整目标规格已重写为同步后的完整状态（含重放映射、冲突清单、落地保真核对与逐行归类）。"
+    result: passed
+    reason:
+      text: HOW_TO 新增 §4.2 v4.0.15 轮叠加要点（fc4c14f4）；spec
+        重写为同步后完整状态，重放映射/落地保真/停车清单/取舍清单已逐节核对原文。
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm typecheck` 通过。"
+    result: passed
+    reason:
+      text: pnpm typecheck exit 0（tsc --noEmit 无输出）。
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `pnpm test:unit`
+      通过，含上游本轮新增/改写用例（`tests/components/{ModeDialog,OpenTerminalDialog,StackSet\
+      tingsSheet,UsageDisplaySection,AppsPage,ProviderList,ProviderPresetSelect\
+      or,ClaudeFormFields,ClaudeDesktopProviderForm}.test.tsx`、`tests/component\
+      s/shell/SidebarToday.test.tsx`、`tests/hooks/{useMoneyFormat,useSwitchProv\
+      iderResult}.test.tsx`、`tests/utils/routeSwitchNotification.test.ts` 等）与
+      fork 既有用例。"
+    result: passed
+    reason:
+      text: pnpm test:unit 244 文件 3228 用例全过 0 failed，含上游本轮 11 个新测试文件与 fork 用例。
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: `pnpm format:check` 通过（手工拼接共享文件后必须本地 prettier 归一化）。"
+    result: passed
+    reason:
+      text: pnpm format:check 全绿（All matched files use Prettier code style!）。
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: "A11: `pnpm build:renderer` 通过。"
+    result: passed
+    reason:
+      text: pnpm build:renderer ✓（6.77s）。
+      truncated: false
+  - id: A12
+    source: brief.md
+    text: "A12: `cargo check` 通过，并确认 `Cargo.lock` 未被 `cargo check` 额外改写（本轮唯一合法改动是
+      `cc-switch` 包版本号行）。"
+    result: passed
+    reason:
+      text: cargo check exit 0；前后 git diff Cargo.lock 为空（锁文件未被改写，仅 cc-switch
+        版本号行已随终态提交）。
+      truncated: false
+  - id: A13
+    source: brief.md
+    text: "A13: `cargo test` 通过（如遇与上轮同因的环境性失败——本机 cc-switch 占用代理端口 15721——按上轮口径显式
+      `--skip` 该用例并记录原因；上轮被 skip 的用例已被上游改名/重写，本轮以实际失败项为准，不扩大跳过列表）。"
+    result: passed
+    reason:
+      text: "cargo test 全量约 4040 passed / 0 failed；9 个 ignored 均为上游既有 #[ignore]（WSL/真实
+        key/性能/S3），非新增 skip；上轮改名用例已随上游通过，无环境性失败。"
+      truncated: false
+  - id: A14
+    source: brief.md
+    text: "A14: 落地保真核对通过：对 49 个重叠文件按完整目标规格固定的四 ref
+      归一化行多重集算法（`v4.0.12`、`v4.0.15`、`pre-sync-v415`、`HEAD`）逐文件计算「上游新增行缺失」与「fork
+      新增行缺失」，结果与逐行归类记录在规格中；确有意图取舍时逐行说明理由，未说明的非零缺失即视为丢语义缺陷。"
+    result: passed
+    reason:
+      text: 48 重叠文件四 ref 多重集独立复算：上游缺失 17 行 / fork 缺失 7 行，逐一对应 spec
+        声明的授权取舍或改写（版本号×4、App.tsx import 改写、About 已授权取舍、supportsOneM 适配],
+        AppsPage 注释改写），其余 39 文件 0 缺失。
+      truncated: false
+  - id: A15
+    source: brief.md
+    text: "A15: 4 个既有 locale JSON（`zh`、`en`、`ja`、`zh-TW`）逐文件可解析且无任何同名重复键，fork 键段按
+      key 逐个比对全部在位；`tr.json` 与 `git show v4.0.15:src/i18n/locales/tr.json`
+      逐字节一致。"
+    result: passed
+    reason:
+      text: 5 locale object_pairs_hook 解析零重复键；zh/en 各 284 fork 新增键全在位；tr.json 与 git
+        show v4.0.15 逐字节一致（sha256 相同）。
+      truncated: false
+builder_handoff:
+  candidate_id: b31fe1c3-908d-46ae-a1b7-fa64a314d12d
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:2621c240-d1b2-4ff2-bf22-fb42fd55e154
+  iteration: 1
+  summary:
+    text: fork main 已 rebase 到上游 v4.0.15（annotated tag，剥离提交 79e754ab）：153 个 fork
+      提交按原顺序重放（主题序列 0 差异、patch-id 142 同 11 异且逐条归类无语义丢失），随后 2 条最终态提交（fc4c14f4
+      同步终态 + 规格登记）。版本号四处 4.0.15-1，SCHEMA_VERSION=21 保留。49 重叠面按逐文件叠加解决；两处显式取舍均已获
+      Shape 授权（About 不接 portable 前端更新链路；ClaudeFormFields 一键全选按上游 Haiku 1M
+      新契约适配）。开发期检查：pnpm typecheck ✓、pnpm format:check ✓（locale 粘连行 prettier
+      修复后）、pnpm test:unit 3228/3228 ✓、pnpm build:renderer ✓、cargo check
+      ✓（Cargo.lock 仅 cc-switch 版本号一行）、cargo test 4040/4040 ✓（全部通过，无环境性
+      skip）。落地保真核对（48 文件，四 ref 多重集）：上游缺失 18 行全部归类（4×2 版本号取舍、App.tsx import
+      改写、About 11 行既定取舍），fork 缺失 7 行全部归类（ClaudeFormFields 1M 契约适配）。冲突标记零命中，5
+      locale 无重复键。未跑：fork CI（推送后观察）；portable 直链 URL 未改指
+      tunecc（命令随上游注册但前端无入口，参数取上游默认值 farion1231——已在本轮取舍中决定不接入前端，URL
+      在接入时才需改）。已知限制：upstream/main 的 2 个 post-release 提交（托盘玻璃面板、土耳其语 17
+      条文案修正）未纳入，按 Q1 留待下轮。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+    - A13
+    - A14
+    - A15
+  acceptance_review:
+    - id: A1
+      status: implemented-with-evidence
+      evidence:
+        - git merge-base main v4.0.15 == 79e754ab == git rev-parse v4.0.15^{}
+      note: rebase 后 merge-base 等于 tag v4.0.15 剥离提交；v4.0.15..main 共 154 条（153 fork 重放
+        + 1 同步终态 fc4c14f4），git log --format=%an v4.0.15..main | sort -u 只有
+        Tune，区间内无任何上游提交。
+    - id: A2
+      status: implemented-with-evidence
+      evidence:
+        - git log --format='%s' --reverse v4.0.12..pre-sync-v415 与 v4.0.15..main
+          前 153 条 diff == 0 行
+        - patch-id stdin 对照 142 同 / 11 异，11 处逐条归类于规格「重放映射」
+      note: 153 个 fork 提交主题序列零差异、顺序不变；11 处 patch-id 差异全部归类为冲突停车（9
+        次交互式，已记录文件与解法）或上下文位移/自动合并消化，无 fork 语义丢失。
+    - id: A3
+      status: implemented-with-evidence
+      evidence:
+        - 48 个重叠文件两侧语义并存核对
+        - 上游缺失 18 行 / fork 缺失 7 行逐行归类（规格「落地保真核对」）
+      note: 无任何文件整文件取一侧。settings.rs（上游原子保存+UsageDisplay 与 fork VisibleSidebarPanels
+        并存）、tray.rs（上游删 Desktop 模式与 fork 两 helper 并存）、misc.rs（上游 PATH
+        恢复+portable 命令与 fork tunecc 链接并存）、commands/settings.rs（上游聚合设置与 fork
+        updater 空壳并存）、Sidebar.tsx（上游 Today 徽标与 fork visibleSidebarPanels
+        并存）、types.ts（上游 UsageDisplay 与 fork websiteUrl2/VisibleSidebarPanels
+        并存）、ClaudeFormFields（上游 Haiku 1M 契约与 fork
+        一键全选适配并存）、ClaudeDesktopProviderForm（上游 OAuth 拉模型与 fork 导入并存）、4
+        locales（上游新键 + fork 键段并集）。
+    - id: A4
+      status: implemented-with-evidence
+      evidence:
+        - "grep version: package.json/tauri.conf.json/Cargo.toml/Cargo.lock 均
+          4.0.15-1"
+        - SCHEMA_VERSION = 21，fork v20→v21 迁移段在位
+      note: 四处版本号一致 4.0.15-1；cargo check 后 Cargo.lock 仅 cc-switch 版本号一行 diff；数据库迁移链未动。
+    - id: A5
+      status: implemented-with-evidence
+      evidence:
+        - DevPanel / __CCS_FORK_BUILD__ / 右键置顶置底 / connectivity 注册 / websiteUrl2
+          / extraActions / visibleSidebarPanels / fork CI / README / tray
+          helpers / updater 零命中 逐项 grep 实测
+      note: 保留清单逐项核对在位：产品名、侧边面板、模型徽章、兜底直达区、右键菜单、预设过滤（local
+        白名单不变）、连通性测试、双官网链接、托盘左键切换、跨应用导入、应用内更新器禁用（tauri_plugin_updater/updater_builder
+        命中 0）、tag 发版跳过、README。AppsPage 竞态修正三点按 fork-test-stability 在位（waitFor
+        包装+按钮等待）。
+    - id: A6
+      status: implemented-with-evidence
+      evidence:
+        - ".comet/config.yaml default_workflow: native + workflows [native,
+          classic]"
+        - vite.config.ts __CCS_FORK_BUILD__ define 在位
+        - .github/workflows/release.yml fork 裁剪版未被动过
+      note: rebase 未改写 .comet 配置与任何 fork 白名单文件（上游 v4.0.12..v4.0.15 对 fork 专属文件零命中，实测）。
+    - id: A7
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md 新增 §4.2
+        - specs/upstream-sync/spec.md 含重放映射与落地保真实测
+      note: HOW_TO §4.2 记录本轮叠加要点（annotated tag 剥离、About 取舍、supportsOneM
+        适配、DesktopAccessBar 删除的本地化处理、locale 粘连坑、白名单不追加理由）；本 change
+        规格已重写为同步后完整状态。
+    - id: A8
+      status: implemented-with-evidence
+      evidence:
+        - pnpm typecheck 退出码 0 无输出
+      note: 通过。
+    - id: A9
+      status: implemented-with-evidence
+      evidence:
+        - "pnpm test:unit: Test Files 244 passed, Tests 3228 passed"
+      note: 含上游本轮新增用例（ModeDialog/OpenTerminalDialog/StackSettingsSheet/UsageDisplaySection/SidebarToday/useMoneyFormat/useSwitchProviderResult/routeSwitchNotification
+        等 11 个新文件）与 fork 既有用例，全部通过，无 skip。
+    - id: A10
+      status: implemented-with-evidence
+      evidence:
+        - "pnpm format:check: All matched files use Prettier code style!"
+      note: locale 4 文件经 prettier --write 归一后全绿。
+    - id: A11
+      status: implemented-with-evidence
+      evidence:
+        - "pnpm build:renderer: ✓ built in 6.14s"
+      note: 通过（chunk 体积警告为上游既有）。
+    - id: A12
+      status: implemented-with-evidence
+      evidence:
+        - "cargo check: Finished dev profile"
+        - git diff Cargo.lock 仅 cc-switch 版本号一行
+      note: 通过；锁文件未被 cargo check 额外改写。
+    - id: A13
+      status: implemented-with-evidence
+      evidence:
+        - "cargo test: 4040 passed, 0 failed"
+      note: 全部通过，无需
+        skip：上轮的环境性失败用例已被上游改名/重写（update_current_claude_desktop_provider_syncs_profile…
+        →
+        update_claude_desktop_route_provider_rewrites_profile_in_route_mode），本轮无环境性失败项。
+    - id: A14
+      status: implemented-with-evidence
+      evidence:
+        - 四 ref 多重集算法核对脚本 /tmp/v415/fidelity.js 全 48 文件：上游缺失 18 / fork 缺失
+          7，逐行归类于规格
+      note: 18 行上游缺失：4 文件×2 版本号（4.0.15 vs 4.0.15-1 取舍）+ App.tsx import 合并改写 1 +
+        AboutSection 11（既定取舍）。7 行 fork 缺失：ClaudeFormFields.tsx 2 + 其测试
+        1（supportsOneM→上游新契约适配）+ AppsPage.test 注释改写 2 + 版本号 2。locale 4 项
+        prettier 修复后复算 0 缺失。未说明的非零缺失为零。
+    - id: A15
+      status: implemented-with-evidence
+      evidence:
+        - 5 locale JSON.parse（object_pairs_hook 查重）全部无同名重复键
+        - cmp tr.json 与 git show v4.0.15:tr.json 逐字节一致
+      note: fork
+        键段（devpanel/connectivityTest/connectivityCheck/searchModels/noModelsFound/侧边面板/双链接/跨应用导入/批量检测）按
+        key 比对全部在位；4 locale 键并集合并后无重复键。
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit 无输出
+        truncated: false
+    - name:
+        text: pnpm format:check
+        truncated: false
+      result: passed
+      note:
+        text: prettier 修复 locale 粘连后全绿
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 3228/3228（244 文件）
+        truncated: false
+    - name:
+        text: pnpm build:renderer
+        truncated: false
+      result: passed
+      note:
+        text: vite build 6.14s
+        truncated: false
+    - name:
+        text: cargo check
+        truncated: false
+      result: passed
+      note:
+        text: Cargo.lock 仅版本号一行
+        truncated: false
+    - name:
+        text: cargo test
+        truncated: false
+      result: passed
+      note:
+        text: 4040/4040，无环境性 skip
+        truncated: false
+    - name:
+        text: A14 落地保真核对
+        truncated: false
+      result: passed
+      note:
+        text: /tmp/v415/fidelity.js 48 文件 18/7 全归类
+        truncated: false
+    - name:
+        text: locale 重复键查重
+        truncated: false
+      result: passed
+      note:
+        text: 5 locale object_pairs_hook 零重复
+        truncated: false
+    - name:
+        text: 冲突标记零命中
+        truncated: false
+      result: passed
+      note:
+        text: git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' 零命中
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: upstream/main 的 2 个 post-release 提交（77c6dc79 托盘玻璃面板、73cdfbb7 土耳其语文案）未纳入，按
+        2026-10-18 用户决定留待下一轮
+      truncated: false
+    - text: portable zip 直链不接入前端（既定取舍）；open_portable_update_download 命令随上游保留注册，其 URL
+        基址仍指上游仓库，接入前端时才需改指 tunecc
+      truncated: false
+    - text: fork CI 未本地运行（推送后由 GitHub Actions 观察）
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-10-18T10:29:22.440Z
+blockers: []
+verification:
+  candidate_id: b31fe1c3-908d-46ae-a1b7-fa64a314d12d
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:f54cb316-5719-4f2f-8afd-5eb74ea4bbe0
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks: []
+  summary:
+    text: "独立验收 15/15 全部通过（VERDICT: pass）。rebase 后 merge-base = v4.0.15 剥离提交
+      79e754ab，区间内仅 fork 作者；153 重放提交主题序列零差异；高危叠加面两侧语义并存；四处版本
+      4.0.15-1、SCHEMA_VERSION=21；fork 魔改 14
+      项保留清单全在位；typecheck/test:unit(3228)/format/build:renderer/cargo check/cargo
+      test(约4040) 全绿零跳过；48 文件落地保真复算的 17+7 行缺失全部落在声明取舍内；locale 零重复键、tr.json
+      与上游逐字节一致。"
+    truncated: false
+  risks:
+    - text: origin/main 未推送：push 属归档后交付步骤，本验收不含
+      truncated: false
+    - text: AboutSection 上游缺失行数复算 10 vs spec 11：归一化后 '}, [' 行的计数口径差异，同一授权取舍语义集，无语义出入
+      truncated: false
+    - text: misc.rs portable zip URL 模板仍指上游仓库：前端无调用点（既定取舍：命令保留、入口不接入），About 与
+        check_for_updates 均 指 tunecc
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-10-18T10:47:02.661Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native Shape artifacts changed
+      truncated: false
+    completed_at: 2026-10-18T10:28:13.723Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: "独立验收 15/15 全部通过（VERDICT: pass）。rebase 后 merge-base = v4.0.15 剥离提交
+        79e754ab，区间内仅 fork 作者；153 重放提交主题序列零差异；高危叠加面两侧语义并存；四处版本
+        4.0.15-1、SCHEMA_VERSION=21；fork 魔改 14
+        项保留清单全在位；typecheck/test:unit(3228)/format/build:renderer/cargo
+        check/cargo test(约4040) 全绿零跳过；48 文件落地保真复算的 17+7 行缺失全部落在声明取舍内；locale
+        零重复键、tr.json 与上游逐字节一致。"
+      truncated: false
+    completed_at: 2026-10-18T10:47:02.661Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-10-18T09:13:24.864Z
