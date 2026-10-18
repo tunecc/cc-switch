@@ -143,7 +143,6 @@ import {
   DEFAULT_VISIBLE_APPS,
   DEFAULT_VISIBLE_SIDEBAR_PANELS,
   isModeAppId,
-  isProxyAppId,
 } from "@/config/appConfig";
 
 interface SyncStatusUpdatedPayload {
