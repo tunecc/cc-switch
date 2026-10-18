@@ -1760,7 +1760,8 @@
       "alltokens_si": "AllTokens SI 秉持「穩定為基，真實為本」，是專為企業打造的 AI Token 中轉與團隊協作平台：成員、金鑰、用量與餘額統一納入企業控制台，以清晰的權限與額度設定，讓團隊協作有據可查、安心可控。",
       "openmodel": "OpenModel 為 Codex 和 Claude Code 提供客戶端專屬折扣，所支援的模型透過 Codex 呼叫最高優惠 90%、透過 Claude Code 呼叫最高優惠 60%。CC Switch 使用者透過此連結註冊並使用優惠碼「cc-switch」，即可享受首次儲值九折優惠！",
       "grooroute": "GrooRoute Pro 是可靠流暢的 AI API 中轉服務平台，接入 OpenAI、Claude、DeepSeek 等主流大模型，支援按量計費與訂閱方案。CC Switch 使用者透過此連結註冊即可獲得免費 5 元體驗額度！",
-      "etok": "官網加入 ETok 社群，訂閱方案。"    },
+      "etok": "官網加入 ETok 社群，訂閱方案。"
+    },
     "presets": {
       "ucloud": "優雲智算",
       "ucloudCoding": "優雲智算 Coding Plan",

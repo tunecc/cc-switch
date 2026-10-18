@@ -696,8 +696,8 @@ export function ClaudeFormFields({
     handleRoleModelChange(row, setClaudeOneMMarker(row.model, enabled));
   };
 
-  // 1M 一键勾选范围：支持 1M 的角色行 + 兜底模型（Haiku 不参与）
-  const oneMRows = modelRoleRows.filter((row) => row.supportsOneM);
+  // 1M 一键勾选范围：全部角色行（上游 v4.0.13 起 Haiku 也可声明 1M）+ 兜底模型
+  const oneMRows = modelRoleRows;
   const oneMToggleValues = [...oneMRows.map((row) => row.model), claudeModel];
   const allOneMEnabled = oneMToggleValues.every((model) =>
     hasClaudeOneMMarker(model),
@@ -940,14 +940,11 @@ export function ClaudeFormFields({
                       subagentModel;
                     if (value) {
                       for (const row of modelRoleRows) {
-                        const roleValue = row.supportsOneM
-                          ? value
-                          : stripClaudeOneMMarker(value);
-                        onModelChange(row.modelField, roleValue);
+                        onModelChange(row.modelField, value);
                         if (row.displayNameField) {
                           onModelChange(
                             row.displayNameField,
-                            stripClaudeOneMMarker(roleValue),
+                            stripClaudeOneMMarker(value),
                           );
                         }
                       }
@@ -1260,70 +1257,6 @@ export function ClaudeFormFields({
                     {t("providerForm.modelMappingHint")}
                   </HelpTip>
                 </div>
-                <div className="flex gap-2">
-                  {/* 一键设置按钮 */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      // 按面板从上到下取值，默认兜底模型最后使用。
-                      const value =
-                        defaultSonnetModel ||
-                        defaultOpusModel ||
-                        defaultFableModel ||
-                        defaultHaikuModel ||
-                        subagentModel ||
-                        claudeModel;
-                      if (value) {
-                        for (const row of modelRoleRows) {
-                          onModelChange(row.modelField, value);
-                          if (row.displayNameField) {
-                            onModelChange(
-                              row.displayNameField,
-                              stripClaudeOneMMarker(value),
-                            );
-                          }
-                        }
-                        toast.success(
-                          t("providerForm.quickSetSuccess", {
-                            defaultValue: "已将模型名称应用到所有角色",
-                          }),
-                        );
-                      }
-                    }}
-                    disabled={
-                      !claudeModel &&
-                      !defaultHaikuModel &&
-                      !defaultSonnetModel &&
-                      !defaultOpusModel &&
-                      !defaultFableModel &&
-                      !subagentModel
-                    }
-                    className="h-7 gap-1"
-                  >
-                    <Wand2 className="h-3.5 w-3.5" />
-                    {t("providerForm.quickSetModels", {
-                      defaultValue: "一键设置",
-                    })}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleModelFetchClick}
-                    disabled={modelFetchLoading}
-                    className="h-7 gap-1"
-                  >
-                    {modelFetchLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Download className="h-3.5 w-3.5" />
-                    )}
-                    {t("providerForm.fetchModels")}
-                  </Button>
-                </div>
-=======
               </div>
             </div>
 
