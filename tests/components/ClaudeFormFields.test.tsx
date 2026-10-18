@@ -329,9 +329,10 @@ describe("ClaudeFormFields", () => {
       "ANTHROPIC_DEFAULT_OPUS_MODEL",
       "shared-model[1M]",
     );
+    // 上游 v4.0.13 起 Haiku 也可声明 1M：一键设置不再剥离 Haiku 的 [1M] 标记
     expect(onModelChange).toHaveBeenCalledWith(
       "ANTHROPIC_DEFAULT_HAIKU_MODEL",
-      "shared-model",
+      "shared-model[1M]",
     );
     expect(onModelChange).toHaveBeenCalledWith(
       "CLAUDE_CODE_SUBAGENT_MODEL",
@@ -371,9 +372,6 @@ describe("ClaudeFormFields", () => {
     expect(onModelChange).not.toHaveBeenCalledWith(
       "ANTHROPIC_DEFAULT_HAIKU_MODEL",
       expect.stringContaining("[1M]"),
-    );
-  });
-});
     );
   });
 });
