@@ -19,6 +19,37 @@ fn now() -> chrono::DateTime<chrono::Local> {
 }
 
 #[test]
+fn tray_left_click_never_opens_the_menu() {
+    let tray_src = include_str!("../tray.rs");
+    let style_body = tray_src
+        .split_once("pub fn apply_tray_style")
+        .expect("apply_tray_style")
+        .1
+        .split_once("\nfn ")
+        .expect("function end")
+        .0;
+    assert!(
+        style_body.contains("set_show_menu_on_left_click(false)"),
+        "apply_tray_style 必须固定传 false，不得回退上游的 native_menu_on_left_click"
+    );
+    let code_only = style_body
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        !code_only.contains("native_menu_on_left_click(native)"),
+        "apply_tray_style 不得再把左键行为交给 native_menu_on_left_click"
+    );
+
+    let lib_src = include_str!("../lib.rs");
+    assert!(
+        lib_src.contains(".show_menu_on_left_click(false)"),
+        "lib.rs 的托盘 builder 必须把左键固定在「不弹菜单」"
+    );
+}
+
+#[test]
 fn an_unreadable_provider_is_left_out_of_the_tray_instead_of_breaking_it() {
     use std::sync::Arc;
     let state = AppState::new(Arc::new(crate::database::Database::memory().unwrap()));
