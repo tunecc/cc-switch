@@ -3322,6 +3322,43 @@ pub(crate) async fn refresh_panel_provider_usage(app: &tauri::AppHandle) {
 
 #[cfg(test)]
 mod tests {
+    /// fork 左键契约的源码级回归护栏：`apply_tray_style` 与 `lib.rs` 的 builder 都必须把
+    /// 左键固定在「不弹菜单」。上游原实现传 `native_menu_on_left_click(native)`，macOS 上
+    /// 运行时就切原生菜单时为 true，会让 tray-icon 的 `on_tray_click` 与
+    /// `on_tray_icon_event` 两条路径同时生效（既弹系统菜单又切换主窗口）。
+    /// 该路径启动态与 Windows 都不触发，只有真实点击才能暴露，故用源码断言守住。
+    #[test]
+    fn tray_left_click_never_opens_the_menu() {
+        let tray_src = include_str!("tray.rs");
+        let style_body = tray_src
+            .split_once("pub fn apply_tray_style")
+            .expect("apply_tray_style")
+            .1
+            .split_once("\nfn ")
+            .expect("function end")
+            .0;
+        assert!(
+            style_body.contains("set_show_menu_on_left_click(false)"),
+            "apply_tray_style 必须固定传 false，不得回退上游的 native_menu_on_left_click"
+        );
+        // 只查代码行：注释里为解释缘由会提到上游原实现，不能算数。
+        let code_only = style_body
+            .lines()
+            .filter(|l| !l.trim_start().starts_with("//"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(
+            !code_only.contains("native_menu_on_left_click(native)"),
+            "apply_tray_style 不得再把左键行为交给 native_menu_on_left_click"
+        );
+
+        let lib_src = include_str!("lib.rs");
+        assert!(
+            lib_src.contains(".show_menu_on_left_click(false)"),
+            "lib.rs 的托盘 builder 必须把左键固定在「不弹菜单」"
+        );
+    }
+
     use super::*;
     use crate::provider::{UsageData, UsageResult};
     use crate::services::subscription::{
