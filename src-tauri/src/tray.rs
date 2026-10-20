@@ -2623,16 +2623,16 @@ pub fn apply_tray_style(app: &tauri::AppHandle) {
             // 菜单没了，旧句柄不再更新标题。
             lock(&TRAY_SECTION_SUBMENUS).clear();
         }
-        if let Err(e) = tray.set_show_menu_on_left_click(native_menu_on_left_click(native)) {
+        // fork：左键永不弹菜单（切换主窗口 / 面板），菜单只由右键触发。
+        // 上游这里传 `native_menu_on_left_click(native)`，macOS 上切到原生菜单会把
+        // 左键也改成出菜单；tray-icon 的 `on_tray_click` 与 `on_tray_icon_event`
+        // 是两条独立路径，届时左键会同时弹菜单并切换主窗口，违背 fork 已确认的
+        // 「左键单击不弹出托盘菜单」契约（docs/comet/specs/tray-left-click-toggle/）。
+        if let Err(e) = tray.set_show_menu_on_left_click(false) {
             log::warn!("设置托盘左键行为失败: {e}");
         }
     }
     refresh_tray_menu(app);
-}
-
-/// 左键是否直接出原生菜单：用面板时不出；Windows 的习惯是左键打开主界面、右键出菜单。
-pub fn native_menu_on_left_click(native: bool) -> bool {
-    native && cfg!(not(target_os = "windows"))
 }
 
 /// 悬停到托盘图标时：问题区该出现 / 该消失了（路由服务停了、又起来了）、反馈行显示过了或到点了，
