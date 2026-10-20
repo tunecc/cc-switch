@@ -1,0 +1,234 @@
+schema: comet.native.v4
+name: sync-upstream-v416
+language: zh-CN
+phase: build
+status: active
+state_version: 3
+brief: brief.md
+document_constraints_version: 3
+shape_confirmation_hash: 6447f328a5410dbe52df26e7d8686ea5c975868024925319c26729b8cae13c4f
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: building
+  goal_cycle: 1
+  iteration: 1
+  attempt: 0
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: submit-builder-candidate
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main v4.0.16` 等于 `f92ff0b0`（tag `v4.0.16`
+      指向的提交），`git log v4.0.16..main` 只包含 fork 提交、不含任何上游提交。"
+    result: pending
+    reason: null
+  - id: A2
+    source: brief.md
+    text: "A2: 重放前 `v4.0.15..main` 的 156 个 fork 提交按原顺序逐一重放；提交主题序列逐行 diff 一致，被 git
+      判定为空而丢弃的提交（如有）在完整目标规格「重放映射」中逐条记录；每次冲突停车逐条记录归属与解法。"
+    result: pending
+    reason: null
+  - id: A3
+    source: brief.md
+    text: "A3: 35 个重叠文件的冲突解决符合 `docs/HOW_TO_REBASE_UPSTREAM.md` §3
+      与完整目标规格的逐文件叠加要求：两侧语义并存、无整文件取一侧（版本与锁文件、`settings.rs`、`tray.rs`、`misc.rs`、`\
+      lib.rs`、`App.tsx`、`GeneralSection.tsx`、`AboutSection.tsx`、`Sidebar.tsx`、`\
+      ProviderList.tsx`、`ProviderForm.tsx`、7 个预设文件、4 个 locales、测试文件为高危面）。"
+    result: pending
+    reason: null
+  - id: A4
+    source: brief.md
+    text: "A4:
+      `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-ta\
+      uri/Cargo.lock` 的版本号均为 `4.0.16-1`；`src-tauri/src/database/mod.rs` 的
+      `SCHEMA_VERSION` 仍为 21、fork 专属 v20→v21 幂等修复迁移完整保留。"
+    result: pending
+    reason: null
+  - id: A5
+    source: brief.md
+    text: "A5: 完整目标规格「fork 魔改保留清单」每一项在同步后仍然存在且可用：产品名 CC Switch 与
+      DevPanel、侧边面板可见性、模型徽章与快捷切换、Claude 兜底模型直达区与 1M
+      全选、右键置顶/置底与新建插入第二位、官方预设过滤、逐模型连通性测试、双官网链接、跨应用导入、禁用应用内更新器、上游 tag 发版跳过、README
+      fork 说明、fork CI。"
+    result: pending
+    reason: null
+  - id: A6
+    source: brief.md
+    text: "A6: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（`default_workflow:
+      native`，`workflows` 含 native 与 classic），fork 专属白名单文件未被上游或重放改写。"
+    result: pending
+    reason: null
+  - id: A7
+    source: brief.md
+    text: "A7: `docs/HOW_TO_REBASE_UPSTREAM.md` 已按本轮同步结果修订（含 §4.3 v4.0.16 叠加要点），本
+      change 的完整目标规格已重写为同步后的完整状态（含重放映射、冲突清单、落地保真核对与逐行归类）。"
+    result: pending
+    reason: null
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm typecheck` 通过。"
+    result: pending
+    reason: null
+  - id: A9
+    source: brief.md
+    text: "A9: `pnpm test:unit`
+      通过，含上游本轮新增/改写用例（`tests/components/{TrayPanel,TrayPanelUsageTab,TrayPanel.\
+      styles,GeneralSection.trayStyle,GptContextWindowHint,UsageFooter.tokenPla\
+      nBalance,ProviderPresetSelector,AppsPage}.test.{ts,tsx}`、`tests/config/he\
+      rmesMinimaxProviderKey.test.ts`、`tests/hooks/useApiKeyLink.test.tsx`、`tes\
+      ts/tray-panel/menuAim.test.ts`、`tests/lib/modelMetadata.test.ts`、`tests/c\
+      onfig/{codexChatProviderPresets,codexReasoningLevelPresets,presetModelMet\
+      adata,hermesMinimaxProviderKey}.test.ts` 等）与 fork 既有用例。"
+    result: pending
+    reason: null
+  - id: A10
+    source: brief.md
+    text: "A10: `pnpm format:check` 通过（手工拼接共享文件后必须本地 prettier 归一化）。"
+    result: pending
+    reason: null
+  - id: A11
+    source: brief.md
+    text: "A11: `pnpm build:renderer` 通过。"
+    result: pending
+    reason: null
+  - id: A12
+    source: brief.md
+    text: "A12: `cargo check` 通过，并确认 `Cargo.lock` 的改动只来自本轮决定纳入的依赖与版本号行：允许
+      `cc-switch` 包版本号行改为 `4.0.16-1`、`objc2 0.6.4`/`objc2-app-kit
+      0.3.2`/`objc2-foundation 0.3.2` 三条目新增；`tauri-plugin-updater` 相关条目不得出现。"
+    result: pending
+    reason: null
+  - id: A13
+    source: brief.md
+    text: "A13: `cargo test` 通过（如遇与上轮同因的环境性失败——本机 cc-switch 占用代理端口 15721——按上轮口径显式
+      `--skip` 该用例并记录原因；上轮被 skip 的用例已被上游改名/重写，本轮以实际失败项为准，不扩大跳过列表）。"
+    result: pending
+    reason: null
+  - id: A14
+    source: brief.md
+    text: "A14: 落地保真核对通过：对 35 个重叠文件按完整目标规格固定的四 ref
+      归一化行多重集算法（`v4.0.15`、`v4.0.16`、`pre-sync-v416`、`HEAD`）逐文件计算「上游新增行缺失」与「fork
+      新增行缺失」，结果与逐行归类记录在规格中；确有意图取舍时逐行说明理由，未说明的非零缺失即视为丢语义缺陷。"
+    result: pending
+    reason: null
+  - id: A15
+    source: brief.md
+    text: "A15: 4 个既有 locale JSON（`zh`、`en`、`ja`、`zh-TW`）逐文件可解析且无任何同名重复键，fork 键段按
+      key 逐个比对全部在位；`tr.json` 与 `git show v4.0.16:src/i18n/locales/tr.json`
+      逐字节一致。"
+    result: pending
+    reason: null
+  - id: A16
+    source: brief.md
+    text: "A16: 托盘面板随上游落地且可用——`src-tauri/src/tray_panel.rs` 与 `src/tray-panel/**`（6
+      个 tsx + css + html）在位、`src-tauri/capabilities/tray-panel.json`
+      已注册、`src-tauri/tauri.conf.json` 的 `macOSPrivateApi: true` 与
+      `src-tauri/Cargo.toml` 的 `macos-private-api` feature + `objc2
+      0.6`/`objc2-app-kit 0.3`/`objc2-foundation 0.3` 三个 crate 在位、「托盘样式」设置项在
+      `src/components/settings/sections/GeneralSection.tsx` 可切换且 4 locale 的
+      `trayStyle*` 4 键齐全、`vite.config.ts` 的 tray-panel rollup 输入段在位。"
+    result: pending
+    reason: null
+  - id: A17
+    source: brief.md
+    text: "A17: `tauri_plugin_updater`/`updater_builder` 在全仓 `src-tauri` 命中数仍为
+      0；`tauri-plugin-updater` 未回到 `src-tauri/Cargo.toml`
+      依赖表；`createUpdaterArtifacts` 仍为 `false`。"
+    result: pending
+    reason: null
+  - id: A18
+    source: brief.md
+    text: "A18: 上游 `eadfc151` 的 opencode 默认模型功能在 fork
+      落地后可用：`src-tauri/src/opencode_config.rs` 的
+      `get_default_model`/`set_default_model`、`src/lib/api/providers.ts` 的对应
+      API、`src/components/providers/forms/helpers/opencodeFormUtils.ts` 的
+      `getOpencodeDeclaredModels`、`src/components/providers/ProviderList.tsx` 的
+      `defaultModel`/`defaultModelOptions` 泛化与 `src/App.tsx` 的 `onSetAsDefault`
+      扩入 opencode 全部在位，且不破坏 fork 的模型徽章/快捷切换（徽章逻辑在 `ProviderCard.tsx`，与 `App.tsx`
+      的 `onSetAsDefault` 是两条独立链路）。"
+    result: pending
+    reason: null
+  - id: A19
+    source: brief.md
+    text: "A19: 上游 `b92de269` 的「编辑时也能显示获取 API Key 链接」在 fork
+      落地后可用：`src/components/providers/forms/hooks/useApiKeyLink.ts` 的
+      `formBaseUrl` 反向反查逻辑在位，`src/components/providers/forms/ProviderForm.tsx` 的
+      6 处 `useApiKeyLink` 调用与 `ClaudeDesktopProviderForm.tsx` 的 1 处已传
+      `formBaseUrl`，`tests/hooks/useApiKeyLink.test.tsx` 通过。"
+    result: pending
+    reason: null
+  - id: A20
+    source: brief.md
+    text: "A20: 上游 Hermes MiniMax 修复落地后 fork 的 MiniMax cn/intl Hermes 预设不再与 Hermes
+      内置冲突：`hermesProviderPresets.ts` 中两条 MiniMax 的 `settingsConfig.name` 为
+      `cc-switch-minimax`/`cc-switch-minimax-en`、`providerKey`
+      字段已设、`suggestedDefaults.model.provider` 已改指新名、`MiniMax-M3.1-Flash`
+      条目在位；`useHermesFormState.ts` 的 `resetHermesState` 第二参 `providerKey` 与
+      `ProviderForm.tsx` 的传参在位；`tests/config/hermesMinimaxProviderKey.test.ts`
+      通过；且 `HermesProviderPreset` interface 中 `hidden?: boolean`（fork）与
+      `providerKey?: string`（上游）两个字段并存、无重复声明。"
+    result: pending
+    reason: null
+  - id: A21
+    source: brief.md
+    text: "A21: 上游 GPT 上下文窗口治理落地后行为正确：`src/lib/modelMetadata.ts` 的
+      `GPT_CONTEXT_WINDOW_CAP`/`isGptModelId`/`capGptContextWindow`（只封顶借来的窗口）在位\
+      、`src/components/providers/forms/shared/GptContextWindowHint.tsx` 已从
+      `shared/index.ts` 导出并在上游 5 个表单（Codex/Hermes/OpenClaw/OpenCode/Pi）渲染、4
+      locale 的 `gptContextWindowHint` 键在位、`tests/lib/modelMetadata.test.ts` 与
+      `tests/config/presetModelMetadata.test.ts` 已随上游改写（不再断言一刀切封顶）且通过。"
+    result: pending
+    reason: null
+  - id: A22
+    source: brief.md
+    text: "A22: **fork 的逐模型连通性测试功能未因 `lib.rs` 合并而失效**：`src-tauri/src/lib.rs` 的
+      `invoke_handler` 中 `commands::connectivity_test_provider_models` 与
+      `commands::connectivity_probe_provider` 两个注册仍在位（上游 v4.0.16 把这两个注册删掉、换成
+      `stream_check_provider`，若整段取上游会让 fork 该功能在运行时报未处理命令、且不报编译错误）。"
+    result: pending
+    reason: null
+  - id: A23
+    source: brief.md
+    text: "A23: **上游 `deeplink/provider.rs` 的 `Provider` 结构体字面量已补 `website_url_2:
+      None`**：上游 `build_provider_from_request` 的 `Provider { … }` 字面量没有该字段（fork
+      新增的列），不补则 `cargo check` 直接失败；补完后该行在位。"
+    result: pending
+    reason: null
+  - id: A24
+    source: brief.md
+    text: "A24: **`src-tauri/src/tray.rs` 的 `note_tray_click` → `mark_feedback_seen`
+      改名已适配**：上游把 `note_tray_click` 改名为 `mark_feedback_seen`，fork 的
+      `note_tray_click` 定义、两个调用点与两个测试断言（`tray.rs:4260,4262`）已按上游新名适配，`cargo
+      check`/`cargo test` 通过；fork 的「悬停/点击时刷新用量」与「反馈行显示过就拿掉」语义不丢失。"
+    result: pending
+    reason: null
+builder_handoff: null
+blockers: []
+verification: null
+history: []
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pending
+verification_report: null
+archived: false
+created_at: 2026-10-20T01:09:57.933Z
