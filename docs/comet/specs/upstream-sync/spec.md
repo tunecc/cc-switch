@@ -71,6 +71,7 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 - **非原生菜单模式（上游默认，面板启用）**：左键 Up 时先读 `tray_panel::panel_visible(app)` —— 面板已弹出则收起面板（沿用上游 toggle 语义，避免「左键既关面板又切窗口」的双重响应）；面板未弹出则 `tray::toggle_main_window(app)`（fork 语义）。右键 Up 走 `tray_panel::toggle`。
 - **原生菜单模式（`settings.nativeTrayMenu = true`，或 Linux）**：左键 Up 走 `tray::toggle_main_window(app)`（fork 语义，替换上游的 `show_main_window`）；右键 Up 走 `tray::mark_feedback_seen()` 并交由系统弹出原生菜单。
 - **`show_menu_on_left_click(false)`** 保持 fork 值：左键永不直接弹菜单，菜单只由右键触发。
+- **`apply_tray_style` 的运行时切换也必须保持 fork 左键契约**（第三轮独立验收发现并修复的真实缺陷）：上游 `apply_tray_style` 里传 `tray.set_show_menu_on_left_click(native_menu_on_left_click(native))`，macOS 上用户运行时就切到「原生托盘菜单」时该值为 `true`。而 tray-icon 0.21.3 的 `on_tray_click`（`platform_impl/macos/mod.rs:476-477`）与 `on_tray_icon_event` 是**两条独立路径**：`menu_on_left_click && button == Left` 时会 `performClick` 弹出系统菜单，同时 `on_tray_icon_event` 仍会触发 fork 的 `toggle_main_window`——同一次左键既弹菜单又切主窗口，违背已确认的「左键单击不弹出托盘菜单」契约。启动态不受影响（builder 值 `false` 生效）、Windows 不受影响（`native_menu_on_left_click` 在 Windows 恒 `false`），因此六项自动检查都发现不了。解法：`apply_tray_style` 里同样固定传 `false`，与 `lib.rs` 的 builder 值一致；上游的 `native_menu_on_left_click` 辅助函数随之失去调用方，已删除（纯上游代码、无 fork 语义）。
 - **悬停/点击刷新用量**（`TrayIconEvent::Enter` 分支）与 **10 秒防抖**语义随上游原位保留，未受影响。
 - **反馈行（feedback）「显示过就拿掉」语义核对**：fork 原 `note_tray_click(button)` 内部按 `opens_menu` 判定（`Right` 恒真、`Left` 仅非 Windows 为真）——即**只有会弹出菜单的那次点击才置 `seen`**。fork 的左键被改为切换主窗口后本就不弹菜单，故左键在 fork 原版里也不会置 `seen`。终态把 `mark_feedback_seen()` 收进右键分支，与该判定完全一致：左键（收起面板或切换主窗口）不置 `seen`，右键（弹出原生菜单）置 `seen`。上游 `tray_panel::hide_window` 收起面板时也调 `mark_feedback_seen()`，与 fork 原语义不冲突。
 - 新增辅助函数 `tray_panel::panel_visible(app) -> bool`（`src-tauri/src/tray_panel.rs:308`）：只读 `get_webview_window(PANEL_LABEL)` 的 `is_visible()`，**不负责创建窗口**（与 `ensure_window` 的副作用区分开）。
@@ -206,3 +207,4 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 - `src-tauri/src/tray.rs` 的 `note_tray_click` 已被上游改名为 `mark_feedback_seen`；fork 侧的定义、两个调用点与两个测试断言必须适配，否则 `cargo check` 失败。
 - `tests/lib/modelMetadata.test.ts` 与 `tests/config/presetModelMetadata.test.ts` 必须随上游改写（GPT 窗口封顶语义收窄），保留 fork 旧断言即视为缺陷。
 - 上游 `8d7a7415` 之后 `src/lib/modelMetadata.ts` 的 `capGptContextWindow` 只作用于「从 models.dev 借来的窗口」；fork 不得为恢复旧的一刀切行为而改回该文件。
+- `src-tauri/src/tray.rs::apply_tray_style` 的 `set_show_menu_on_left_click` 必须固定传 `false`（不得回退上游的 `native_menu_on_left_click(native)`）：macOS 运行时就切原生菜单时会把左键也改成出菜单，与 `on_tray_icon_event` 的 fork 左键分支叠加成「既弹菜单又切主窗口」。该路径启动态与 Windows 均不触发，只有 macOS + 运行时就切 + 左键三个条件同时满足才复现，自动检查无法发现。
