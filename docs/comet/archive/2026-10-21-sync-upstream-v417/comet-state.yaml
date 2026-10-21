@@ -1,0 +1,918 @@
+schema: comet.native.v4
+name: sync-upstream-v417
+language: zh-CN
+phase: archive
+status: done
+state_version: 11
+brief: brief.md
+document_constraints_version: 3
+shape_confirmation_hash: a32b141d4ab7f064b8c23ba322fd88158d2e868779a9b8ca00fba2a773e6c9b8
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 2
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main v4.0.17` 等于 `19798e2f`（tag `v4.0.17`
+      剥离出的提交），`git log v4.0.17..main` 只包含 fork 提交、不含任何上游提交。"
+    result: passed
+    reason:
+      text: git merge-base main v4.0.17 = 19798e2f92a4ff949a7647e07c33351bf597fa10
+        (tag b5a1bdc7 peeled). v4.0.17..main authors are only 'Tune
+        <176898395+tunecc@...>'; no upstream commit sits on top (the whole
+        v4.0.17 tree is an ancestor).
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: 重放前 `v4.0.16..pre-sync-v417` 的 166 个 fork 提交按原顺序逐一重放；`git log
+      --format='%s' --reverse` 主题序列逐行 diff 一致，被 git
+      判定为空而丢弃的提交（如有）在完整目标规格「重放映射」中逐条记录；patch-id 走 stdin 对照，差异逐个归类为「仅 hunk
+      位移」或「冲突停车」；每次冲突停车逐条记录归属与解法。"
+    result: passed
+    reason:
+      text: "v4.0.16..pre-sync-v417 = 166 replayed onto v4.0.17 as v4.0.17..f48039a53
+        = 166 (subject-sequence diff = 0 lines, none dropped). patch-id via
+        stdin (git show|patch-id --stable): 163 identical / 3 different = #2
+        3532fef1->fd2e5482 (version files, numstat 4/5-9=4/5-9), #74
+        5db8e5e8->bdb0d3ef (Cargo.lock, 21/352-628 identical), #90
+        5774e116->c1124388 (lib.rs tray, 7/322-107 -> 7/326-110); all 3 are the
+        recorded interactive conflict stops, no fork-semantic loss. The extra 3
+        commits in v4.0.17..HEAD (7728570e4 sync + 2be37cbb2 + 0c9241009 docs)
+        are this round's own commits, exactly as spec line 17 states."
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 12 个重叠文件的冲突解决符合 `docs/HOW_TO_REBASE_UPSTREAM.md` §3
+      与完整目标规格的逐文件叠加要求：两侧语义并存、无整文件取一侧（高危面为
+      `src-tauri/src/lib.rs`、`src-tauri/src/tray.rs`、`src-tauri/src/tray_panel.\
+      rs`、`src/components/providers/forms/ProviderForm.tsx`、4 个 locale、4
+      个版本与锁文件）。"
+    result: passed
+    reason:
+      text: "12 overlap files merged both sides, none taken whole: git diff --numstat
+        v4.0.17 HEAD -> lib.rs 32/42, tray.rs 75/6 (6 del =
+        native_menu_on_left_click removal), tray_panel.rs 10/0 (upstream
+        +144/-24 fully kept, only fork panel_visible added), ProviderForm.tsx
+        183/43, locales 317-330/25-26, 4 version/lock files small deltas.
+        Conflict-marker grep on HEAD (src src-tauri tests docs README.md) = 0
+        hits (exit 1)."
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4:
+      `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-ta\
+      uri/Cargo.lock` 的版本号均为 `4.0.17-1`；`src-tauri/src/database/mod.rs` 的
+      `SCHEMA_VERSION` 仍为 21、fork 专属 v20→v21 幂等修复迁移完整保留。"
+    result: passed
+    reason:
+      text: package.json:3, tauri.conf.json:4, Cargo.toml:3, Cargo.lock:761 all =
+        4.0.17-1; no bare 4.0.17 residual in version files. SCHEMA_VERSION=21
+        (database/mod.rs:54); fork v20->v21 idempotent repair migration present
+        (schema.rs:593) with tests
+        migrate_v20_to_v21_repairs_missing_mcode_column_idempotently/is_noop
+        (4019/4058).
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: 完整目标规格「fork 魔改保留清单」每一项在同步后仍然存在且可用：产品名 CC Switch 与
+      DevPanel、侧边面板可见性、模型徽章与快捷切换、Claude 兜底模型直达区与 1M
+      全选、右键置顶/置底与新建插入第二位、官方预设过滤、逐模型连通性测试（含 `lib.rs` 的
+      `connectivity_test_provider_models`/`connectivity_probe_provider`
+      两个注册在位）、双官网链接、跨应用导入、禁用应用内更新器、上游 tag 发版跳过、README fork 说明、fork CI。"
+    result: passed
+    reason:
+      text: "Fork-preservation grep counts match spec exactly: __CCS_FORK_BUILD__ 2,
+        __CCS_DEV_PANEL__ 2, DevPanel 3, visibleSidebarPanels 4,
+        batchConnectivityTest 4, extractModelBadgeForProvider 3,
+        ModelQuickSwitchDialog 4, websiteUrl2 27, website_url_2 17,
+        filterForkPresets 6, forkOfficialAllowlist 2, ProviderImportEntry 7,
+        applyQuickSort 1. lib.rs:1726-1727 register
+        connectivity_test_provider_models + connectivity_probe_provider
+        (silent-drop trap avoided). 1M all-select oneMRows/allOneMEnabled in
+        ClaudeFormFields.tsx:700. .github/workflows/{ci,release}.yml differ from
+        v4.0.17 (fork CI preserved). README fork section present."
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（`default_workflow:
+      native`，`workflows` 含 native 与 classic），fork 专属白名单文件未被上游或重放改写。"
+    result: passed
+    reason:
+      text: "git diff --quiet pre-sync-v417 HEAD -- .comet/config.yaml = empty
+        (byte-identical); default_workflow: native and workflows contain native
+        + classic; fork whitelist files untouched by upstream/replay."
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: `docs/HOW_TO_REBASE_UPSTREAM.md` 已按本轮同步结果修订（含 §4.4 v4.0.17
+      叠加要点、`lib.rs`/`tray.rs`/`tray_panel.rs` 行的新口径与 `trayStyleHelp` 的 fork
+      专属文案登记），本 change
+      的完整目标规格已重写为同步后的完整状态（含重放映射、冲突清单、落地保真核对与逐行归类），三处记录的数字与归属互相一致。"
+    result: passed
+    reason:
+      text: "All four formal records (change spec, global
+        docs/comet/specs/upstream-sync/spec.md, HOW_TO §4.4, brief) agree with
+        the repo: fidelity 13 upstream / 4 fork (recomputed independently),
+        lib.rs 5 not-adopted lines itemized and matched line-for-line, patch-id
+        163/3 with numstats, code line refs (panel_visible:349,
+        release_if_lightweight:416, hide_panel:440, tray.rs:2628, upstream
+        native_menu_on_left_click tray.rs:2644/lib.rs:1195) all verified true.
+        No stale or wrong attribution found."
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm typecheck` 通过。"
+    result: passed
+    reason:
+      text: "Re-ran pnpm typecheck (tsc --noEmit) on committed HEAD: exit 0, no
+        TS2300/TS2339/TS2353. Matches Runtime C1 (exit 0, 12.9s)."
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `pnpm test:unit`
+      通过，含上游本轮新增/改写用例（`tests/components/ProviderForm.hermesBuiltinKey.test.tsx`\
+      、`tests/config/hermesBuiltinProviderIds.test.ts`、`tests/utils/textNormali\
+      zation.test.ts`、`tests/components/TrayPanel.test.tsx`、`tests/components/A\
+      piKeySection.test.tsx`、`tests/config/hermesMinimaxProviderKey.test.ts`）与
+      fork 既有用例；时间敏感用例按既有 00:00–00:30 窗口口径处理。"
+    result: passed
+    reason:
+      text: Runtime C3 pnpm test:unit passed (3321 tests/256 files, exit 0).
+        Independently re-ran the 6 upstream-round suites
+        (ProviderForm.hermesBuiltinKey, hermesBuiltinProviderIds,
+        textNormalization, TrayPanel, ApiKeySection, hermesMinimaxProviderKey) =
+        62 passed/6 files, exit 0. Local clock 10:39-10:42, outside the
+        00:00-00:30 SessionManagerPage window, so no time-sensitive skip needed.
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: `pnpm format:check` 通过（手工拼接共享文件后必须本地 prettier 归一化）。"
+    result: passed
+    reason:
+      text: "Re-ran pnpm format:check: exit 0 ('All matched files use Prettier code
+        style'). Matches Runtime C2."
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: "A11: `pnpm build:renderer` 通过。"
+    result: passed
+    reason:
+      text: Runtime C4 pnpm build:renderer passed (exit 0, 7.7s); build log shows
+        tray-panel chunk emitted, so the vite tray-panel rollup input is intact.
+      truncated: false
+  - id: A12
+    source: brief.md
+    text: "A12: `cargo check` 通过，并确认 `Cargo.lock` 的改动只来自本轮允许项：`cc-switch` 版本号行
+      `4.0.17-1` 与上游的 `mio 1.2.1`（含 checksum 行）；`tauri-plugin-updater`
+      相关条目不得出现。"
+    result: passed
+    reason:
+      text: "Runtime C5 cargo check --all-targets exit 0 (corroborated: cargo test
+        --lib compiled the crate cleanly). Cargo.lock: cc-switch=4.0.17-1, mio
+        1.2.1 landed from upstream (identical to v4.0.17),
+        tauri-plugin-updater=0; the -174 vs upstream is the fork's deliberate
+        updater-removal transitive chain
+        (filetime/tar/zip/tauri-plugin-updater/rustls-platform-verifier etc.),
+        not lost upstream content."
+      truncated: false
+  - id: A13
+    source: brief.md
+    text: "A13: `cargo test` 通过（含 fork 的托盘左键源码护栏用例与随上游改写的
+      `src-tauri/tests/mcp_commands.rs`、`services/session_usage_codex.rs`）；如遇与上\
+      轮同因的环境性失败，按规格固定的 skip 口径记录原因，不扩大跳过列表。"
+    result: passed
+    reason:
+      text: "Runtime C6 cargo test exit 0 (3900 passed/9 ignored). Independently
+        re-ran: tray:: = 50 passed (incl. tray_left_click_never_opens_the_menu),
+        session_usage_codex::test_parent_rollout_is_cached_once_across_fork_cut\
+        offs = 1 passed (upstream CI race green locally), mcp_commands = 34
+        passed. No environment failure, no --skip used."
+      truncated: false
+  - id: A14
+    source: brief.md
+    text: "A14: 落地保真核对通过：对 12 个重叠文件按完整目标规格固定的四 ref
+      归一化行多重集算法（`v4.0.16`、`v4.0.17`、`pre-sync-v417`、`HEAD`）逐文件计算「上游新增行缺失」与「fork
+      新增行缺失」，结果与逐行归类记录在规格中；计算在本轮全部最终态提交落完之后执行；确有意图取舍时逐行说明理由并带重数，未说明的非零缺失即视为丢语义缺\
+      陷。"
+    result: passed
+    reason:
+      text: "Independently recomputed with a four-ref normalized line-multiset script
+        (v4.0.16/v4.0.17/pre-sync-v417/HEAD, strip + drop one trailing comma +
+        drop empty/pure-symbol lines) at actual HEAD 0c9241009:
+        upstream-missing=13, fork-missing=4, matching the spec itemization
+        exactly — 4 version/lock files x1+x1, lib.rs x5 (Q1 not-adopted tray
+        lines, itemized), 4 locales x1 (Q2 trayStyleHelp). Every non-zero
+        attributed to version churn / Q1 / Q2; no unexplained lost line. 30
+        fork-untouched upstream files contribute 0."
+      truncated: false
+  - id: A15
+    source: brief.md
+    text: "A15: 4 个既有 locale
+      JSON（`zh`、`en`、`ja`、`zh-TW`）逐文件可解析且按对象作用域统计无任何同名重复键，fork 键段按 key
+      逐个比对全部在位；上游本轮 2
+      个新键（`hermes.form.providerKeyBuiltin`/`providerKeyBuiltinLocked`）在 4 个
+      locale 全部在位且取值与 `v4.0.17` 逐字节一致；`tr.json` 与 `git show
+      v4.0.17:src/i18n/locales/tr.json` 逐字节一致。"
+    result: passed
+    reason:
+      text: object_pairs_hook per-scope duplicate-key scan of en/zh/ja/zh-TW/tr = dup
+        0. Fork-added key segments all present in HEAD (en 297/0 missing, zh
+        297/0, ja 286/0, zh-TW 286/0). Upstream's 2 hermes keys present in all 4
+        locales and byte-equal to v4.0.17. tr.json byte-identical to git show
+        v4.0.17:tr.json (both 285070 bytes).
+      truncated: false
+  - id: A16
+    source: brief.md
+    text: "A16: `tauri_plugin_updater`/`updater_builder` 在全仓 `src-tauri` 命中数仍为
+      0；`tauri-plugin-updater` 未回到 `src-tauri/Cargo.toml`
+      依赖表；`createUpdaterArtifacts` 仍为 `false`。"
+    result: passed
+    reason:
+      text: git grep tauri_plugin_updater HEAD -- src-tauri = 0, updater_builder = 0,
+        tauri-plugin-updater in Cargo.toml = 0 and Cargo.lock = 0;
+        tauri.conf.json:40 createUpdaterArtifacts = false.
+      truncated: false
+  - id: A17
+    source: brief.md
+    text: "A17: 上游本轮托盘面板改动在 fork 落地后可用：`src-tauri/src/tray_panel.rs` 的
+      `release_if_lightweight`、`PanelPlacement`
+      缩放/负坐标与两列同高逻辑、`QuotaLine.emphasis` → `PanelQuotaLine.emphasis`
+      链路、`src/tray-panel/TrayPanel.tsx` 与 `api.ts` 的 `emphasis`/reset
+      倒计时渲染、`src-tauri/src/lightweight.rs` 的调用点全部在位，且
+      `tests/components/TrayPanel.test.tsx` 与 `src-tauri/src/tray.rs` 的 emphasis
+      单测通过。"
+    result: passed
+    reason:
+      text: "release_if_lightweight defined tray_panel.rs:416, called at
+        lightweight.rs:29 and tray_panel.rs:410; PanelPlacement scale/neg-coord
+        logic present; QuotaLine.emphasis (tray.rs:590) ->
+        PanelQuotaLine.emphasis (tray.rs:2099) chain; TrayPanel.tsx
+        EmphasizedText render + api.ts emphasis field. tray:: emphasis tests and
+        TrayPanel.test.tsx pass (cargo tray 50 ok, vitest TrayPanel 25 ok)."
+      truncated: false
+  - id: A18
+    source: brief.md
+    text: 'A18: 上游 Hermes 内置 provider id 警告在 fork
+      落地后可用：`src/config/hermesBuiltinProviderIds.ts` 与
+      `isHermesBuiltinProviderId` 在位、`ProviderForm.tsx` 的两条提示分支与
+      `data-testid="hermes-key-builtin-warning"` 在位、4 locale
+      两个新键被该分支引用、两个上游新测试通过；fork 的预设过滤接线（`entriesFor` 编号先于一切过滤）不受该分支改写影响。'
+    result: passed
+    reason:
+      text: isHermesBuiltinProviderId (hermesBuiltinProviderIds.ts:74) imported into
+        ProviderForm.tsx:60; two branches at 2688/2701 with
+        data-testid=hermes-key-builtin-warning (2691) referencing
+        providerKeyBuiltin/providerKeyBuiltinLocked (2695-2696). Both upstream
+        tests pass (hermesBuiltinKey 3, hermesBuiltinProviderIds 14). entriesFor
+        (ProviderForm 904) and the other 3 forms all map id=original index
+        BEFORE filter (filterForkPresets/hidden applied after numbering) —
+        invariant intact.
+      truncated: false
+  - id: A19
+    source: brief.md
+    text: "A19: **fork 左键契约的源码级回归护栏通过**：`src-tauri/src/tray.rs` 的
+      `tray_left_click_never_opens_the_menu` 用例在重放后仍成立（`apply_tray_style` 固定
+      `set_show_menu_on_left_click(false)`、`lib.rs` 的 builder 固定
+      `.show_menu_on_left_click(false)`），上游的 `native_menu_on_left_click`
+      辅助函数与其调用点在 fork 终态仍为零命中。"
+    result: passed
+    reason:
+      text: cargo test tray::tests::tray_left_click_never_opens_the_menu = ok.
+        lib.rs:1195 .show_menu_on_left_click(false) and tray.rs:2641
+        set_show_menu_on_left_click(false) are the fork values.
+        native_menu_on_left_click has 0 function definitions and 0 code call
+        sites in HEAD; the 5 src-tauri hits are all comments (tray.rs:2637,3328)
+        and guard-test assertion strings (3344,3353,3354).
+      truncated: false
+  - id: A20
+    source: brief.md
+    text: 'A20: **托盘左键终态行为等于 Q1 确认的 fork 口径**：`src-tauri/src/lib.rs` 的
+      `TrayIconEvent::Click` 分支为——非原生菜单（面板样式）下左键 Up 且
+      `tray_panel::panel_visible()` 为假时调 `tray::toggle_main_window`，面板已显示或右键 Up
+      时调 `tray_panel::toggle`；原生菜单样式下左键 Up 调 `tray::toggle_main_window`、右键 Up 调
+      `tray::mark_feedback_seen()` 后交由系统弹菜单；上游本轮的 `cfg!(target_os = "windows")
+      && Left → hide_panel + show_main_window`
+      分支不在终态代码中。`tray::toggle_main_window`/`hide_main_window` 与
+      `tray_panel::panel_visible` 三个 helper 在位且调用关系与完整目标规格「托盘左键与文案终态」一节逐条一致。'
+    result: passed
+    reason:
+      text: "lib.rs Click block (1148-1173) read line-by-line: panel style ->
+        left+!panel_visible => tray::toggle_main_window, else (panel shown OR
+        right) => tray_panel::toggle + return; native menu -> left =>
+        toggle_main_window, right => mark_feedback_seen. Upstream's
+        cfg!(windows)&&Left => hide_panel+show_main_window branch is absent.
+        helpers
+        toggle_main_window(3050)/hide_main_window(3033)/panel_visible(349)
+        present and used as spec §'托盘左键与文案终态' states; hide_panel kept non-dead
+        (tray.rs:2628 + 2 tests)."
+      truncated: false
+  - id: A21
+    source: brief.md
+    text: 'A21: 4 个 locale 的 `settings.general.trayStyleHelp` 等于 Q2 确认的 fork
+      文案（完整目标规格逐 locale 记录终态文本），文案描述与 A20
+      的实际行为不矛盾；`src/components/settings/sections/GeneralSection.tsx` 仍通过
+      `t("settings.general.trayStyleHelp")` 渲染该行。'
+    result: passed
+    reason:
+      text: settings.general.trayStyleHelp byte-matches the Q2 spec text in all 4
+        locales (en/zh/ja/zh-TW MATCH via script). Text describes fork behavior
+        (left toggles main window, right opens chosen style) and does not
+        contradict A20. GeneralSection.tsx:237 renders
+        t("settings.general.trayStyleHelp").
+      truncated: false
+  - id: A22
+    source: brief.md
+    text: "A22: Q3 确认的两处 fork 侧文档已修正为终态行为：`README.md` §14
+      不再声称「右键单击仍弹出托盘菜单」（改为按托盘样式区分：面板样式右键弹面板、原生菜单样式右键弹菜单，左键切换主窗口），`docs/comet/sp\
+      ecs/tray-left-click-toggle/spec.md` 的「右键菜单行为保持不变」需求与场景同步改写为同一口径；两处描述与 A20
+      的代码行为一致。"
+    result: passed
+    reason:
+      text: "README.md §14 (129-136) rewritten: no unconditional 'right-click pops
+        tray menu'; line 134 makes right-click depend on tray style
+        (panel->panel, native menu->menu), line 133 states left collapses panel
+        first, line 135 notes upstream v4.0.17 Windows branch not adopted.
+        docs/comet/specs/tray-left-click-toggle/spec.md requirement '右键菜单行为保持不变'
+        replaced by '右键行为随托盘样式而定' + '运行时就切到原生菜单后左键仍无菜单' scenario. Both
+        consistent with A20 code."
+      truncated: false
+  - id: A23
+    source: brief.md
+    text: "A23: 上游 `2dfc848f`（子进程不继承监听 socket）与 `cf312f6a`/`52e87344`（MCP 切换锁与
+      url-only 服务器投影）在 fork
+      落地后可用：`src-tauri/src/proxy/server.rs`、`src-tauri/src/commands/mcp.rs`、`sr\
+      c-tauri/src/services/mcp.rs`、`src-tauri/src/mcp/{codex,hermes,opencode,va\
+      lidation}.rs` 与 `src-tauri/tests/mcp_commands.rs` 全部等于上游 `v4.0.17` 形态（fork
+      未触碰这些文件，逐项 `git diff --quiet v4.0.17 HEAD -- <file>` 为空）。"
+    result: passed
+    reason:
+      text: "git diff --quiet v4.0.17 HEAD -- <file> empty (SAME) for all A23 files:
+        proxy/server.rs, commands/mcp.rs, services/mcp.rs,
+        mcp/{codex,hermes,opencode,validation}.rs, tests/mcp_commands.rs; also
+        SAME for lightweight.rs, textNormalization.ts,
+        hermesBuiltinProviderIds.ts, ApiKeyInput.tsx, TrayPanel.tsx, api.ts,
+        CHANGELOG.md, session_usage_codex.rs, webdav_sync.rs, codex_login.rs,
+        codex_direct.rs, per-user-main.wxs."
+      truncated: false
+builder_handoff:
+  candidate_id: f7746c48-bd9f-4fde-9e3a-fb1b2070568c
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:f802a7cb-d255-493b-be6a-66aa4451e808
+  iteration: 1
+  summary:
+    text: 把 main rebase 到上游 tag v4.0.17（b5a1bdc7 → 剥离提交 19798e2f），166 个 fork
+      提交一趟顺序重放、无提交被丢弃；3 处交互式冲突停车（版本号三文件、Cargo.lock、lib.rs 托盘左键分支），其余 163 个提交
+      patch-id 与重放前逐字相同。本轮唯一的功能重叠按 Q1 保留 fork 的左键切换语义（不采纳上游
+      Windows「收起面板+打开主界面」分支，共 5 行），并按 Q2 把 4 个 locale 的 trayStyleHelp 改写为 fork
+      行为描述，按 Q3 修正 README §14 与 tray-left-click-toggle 总规格。版本四处升为 4.0.17-1；上游其余
+      30 个文件与 6 个新文件逐字节落地。开发期已实跑六项检查（typecheck / test:unit 256 文件 3321 用例 /
+      format:check / build:renderer / cargo check --all-targets / cargo test
+      3900 用例）全部 exit 0，未使用 --skip；落地保真脚本实测上游缺 13 行、fork 缺 4 行，逐行归因已写入规格与 HOW_TO
+      §4.4。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+    - A13
+    - A14
+    - A15
+    - A16
+    - A17
+    - A18
+    - A19
+    - A20
+    - A21
+    - A22
+    - A23
+  acceptance_review:
+    - id: A1
+      status: implemented-with-evidence
+      evidence:
+        - git merge-base main v4.0.17 == 19798e2f
+        - git rev-list --count v4.0.17..HEAD == 166
+        - git log --format='%an' v4.0.17..HEAD | sort -u == Tune
+      note: rebase 已完成：`git merge-base main v4.0.17` 返回
+        `19798e2f92a4ff949a7647e07c33351bf597fa10`（tag v4.0.17 剥离出的提交），`git log
+        --format='%an <%ae>' v4.0.17..HEAD | sort -u` 只有 `Tune
+        <176898395+tunecc@users.noreply.github.com>`，区间内无任何上游提交。
+    - id: A2
+      status: implemented-with-evidence
+      evidence:
+        - diff /tmp/subj_before.txt /tmp/subj_after.txt → 0 行
+        - patch-id same=163 diff=3（#2/#74/#90）
+        - docs/comet/changes/sync-upstream-v417/specs/upstream-sync/spec.md
+          的「重放映射」节
+      note: "重放映射已实测并写进本 change 规格「重放映射」节：重放前 `v4.0.16..pre-sync-v417` = 166 条，重放后
+        `v4.0.17..HEAD` = 166 条，无提交被判定为空；主题序列 `git log --format='%s' --reverse`
+        逐行 diff 为 0 行；patch-id（stdin 口径）163 同、3 不同，分别是 #2 版本号、#74 Cargo.lock、#90
+        lib.rs 左键分支，三次都是交互式冲突停车，文件集与增删行数逐条登记（#2 4=4 / 5-9=5-9，#74 21=21 /
+        352-628 相同，#90 7=7 / 322-107→326-110）。"
+    - id: A3
+      status: implemented-with-evidence
+      evidence:
+        - git diff --numstat v4.0.17 HEAD -- src-tauri/src/tray_panel.rs == 10/0
+        - git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' HEAD -- src src-tauri
+          tests docs README.md → 0 命中（exit 1）
+        - 规格「冲突解决」节逐文件要求已逐条核对
+      note: 12 个重叠文件按 HOW_TO §3 与规格逐文件叠加，无整文件取一侧：`git diff --numstat v4.0.17 HEAD` 口径下
+        `tray_panel.rs` = 10/0（只有 fork 的 panel_visible，上游 +144/−24
+        全落地）、`tray.rs` = 75/6、`lib.rs` = 32/42、`ProviderForm.tsx` = 183/43、4 个
+        locale = 316..329/24..25、4 个版本与锁文件各 1-2 行；最终态冲突标记零命中。
+    - id: A4
+      status: implemented-with-evidence
+      evidence:
+        - grep 4.0.17-1 命中四处版本文件
+        - SCHEMA_VERSION == 21
+        - cargo test 的 database 迁移用例全部通过
+      note: "四处版本号均为
+        `4.0.17-1`（package.json:3、tauri.conf.json:4、Cargo.toml:3、Cargo.lock:761\
+        ）；`src-tauri/src/database/mod.rs:54` 的 `SCHEMA_VERSION: i32 = 21`
+        未变，fork 的 v20→v21 幂等修复迁移与 `enabled_mcode`
+        补齐段（schema.rs:71/102/565/588）完整保留。"
+    - id: A5
+      status: implemented-with-evidence
+      evidence:
+        - 规格取证节逐条命中数
+        - src-tauri/src/lib.rs:1728-1729 两个 fork 命令注册
+        - git diff --quiet v4.0.17 HEAD -- .github/workflows/ci.yml → 有差异（fork
+          版保留）
+      note: 保留清单逐项在位，取证数字见规格「fork 魔改保留清单落地取证」节：__CCS_FORK_BUILD__ 2、DevPanel
+        3、visibleSidebarPanels 4、batchConnectivityTest
+        4、extractModelBadgeForProvider 3、ModelQuickSwitchDialog 4、websiteUrl2
+        27、website_url_2 17、filterForkPresets 6、forkOfficialAllowlist
+        2、ProviderImportEntry 7、applyQuickSort
+        1、connectivity_test_provider_models 5、connectivity_probe_provider
+        4；`lib.rs` 的 invoke_handler 仍注册 fork
+        的两个连通性命令；`.github/workflows/{ci,release}.yml` 与上游存在差异（fork 裁剪版整文件保留）；1M
+        全选以 `oneMRows`/`oneMToggleValues`/`allOneMEnabled` 在
+        `ClaudeFormFields.tsx:700-705` 在位。
+    - id: A6
+      status: implemented-with-evidence
+      evidence:
+        - git diff --quiet pre-sync-v417 HEAD -- .comet/config.yaml → exit 0
+        - .comet/config.yaml 第 4/7/8 行
+      note: "`.comet/config.yaml` 相对 `pre-sync-v417` 逐字节未变（`git diff --quiet` 为空），仍为
+        `default_workflow: native` 且 `workflows` 含 native 与 classic；fork
+        专属白名单文件未被上游或重放改写。"
+    - id: A7
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md §4.4 与四处行修订
+        - docs/comet/specs/upstream-sync/spec.md 与 change 规格同源
+        - grep -c 'v4.0.17 起' 命中 4 处
+      note: "`docs/HOW_TO_REBASE_UPSTREAM.md` 已新增 §4.4（v4.0.17 轮叠加要点）、给
+        `lib.rs`/`tray.rs` 行与 locale 白名单行补本轮口径、新增 `tray_panel.rs` 行、清掉 §4 共享文件表里
+        `ProviderForm.tsx` 的重复行、并把 `database/mod.rs` 行的 stream_check 口径修正为「后端只剩
+        schema.rs 建表与索引 + 上游自带前端 hook 是死代码」；本 change 规格与
+        `docs/comet/specs/upstream-sync/spec.md` 已重写为同步后完整状态，重放映射与落地保真数字（上游 13 /
+        fork 4）在规格、HOW_TO 与 brief 三处一致。"
+    - id: A8
+      status: implemented-with-evidence
+      evidence:
+        - /tmp/tc417.log exit=0
+      note: "`pnpm typecheck`（tsc --noEmit）在终态工作树通过，真实退出码 0，无 TS2300/TS2339/TS2353。"
+    - id: A9
+      status: implemented-with-evidence
+      evidence:
+        - /tmp/test417.log：Test Files 256 passed (256) / Tests 3321 passed
+          (3321) / test_exit=0
+      note: "`pnpm test:unit` 通过：Test Files 256 passed，Tests 3321 passed，真实退出码
+        0，含上游本轮新增的
+        ProviderForm.hermesBuiltinKey、hermesBuiltinProviderIds、textNormalizatio\
+        n、TrayPanel、ApiKeySection、hermesMinimaxProviderKey 用例与 fork 既有用例；本机时钟
+        10:10（不在 00:00–00:30 窗口）。"
+    - id: A10
+      status: implemented-with-evidence
+      evidence:
+        - /tmp/fmt417.log：All matched files use Prettier code style! /
+          format_exit=0
+      note: "`pnpm format:check` 通过（prettier 对 src 全量检查），4 个 locale 的单行文案改写与 README
+        未引入格式漂移。"
+    - id: A11
+      status: implemented-with-evidence
+      evidence:
+        - /tmp/build417.log：✓ built in 7.27s / build_exit=0 / tray-panel chunk
+          命中 3 次
+      note: "`pnpm build:renderer` 通过并产出 tray-panel 入口（`tray-panel-BcNLKjtp.js`），说明
+        vite 的 tray-panel rollup 输入仍完整。"
+    - id: A12
+      status: implemented-with-evidence
+      evidence:
+        - /tmp/cargocheck417.log：cargo_check_exit=0
+        - git diff --numstat HEAD -- src-tauri/Cargo.lock == 1/1
+        - grep -c tauri-plugin-updater src-tauri/Cargo.lock == 0
+      note: "`cargo check --all-targets` 真实退出码 0（先 `Downloaded mio v1.2.1` 再
+        Checking/Compiling）；`cargo check` 之后 `Cargo.lock` 相对上一次提交只差 `cc-switch`
+        版本号一行（`git diff --numstat HEAD -- src-tauri/Cargo.lock` =
+        1/1），`tauri-plugin-updater` 在 Cargo.lock 命中 0。"
+    - id: A13
+      status: implemented-with-evidence
+      evidence:
+        - /tmp/cargotest417.log：cargo_test_exit=0
+        - "test result: ok. 3900 passed; 0 failed; 9 ignored"
+      note: "`cargo test` 真实退出码 0：lib test 3900 passed / 0 failed / 9
+        ignored，其余各测试二进制全部 ok（含 `tests/mcp_commands.rs` 与上游改写的
+        `session_usage_codex` 用例），本轮没有出现上轮的 15721 端口环境性失败，未使用任何 --skip。"
+    - id: A14
+      status: implemented-with-evidence
+      evidence:
+        - node /tmp/v417/fidelity.json → totalUp=13 totalFork=4 fileCount=42
+        - 规格「落地保真核对」节逐行清单
+      note: 落地保真已按四 ref 口径（v4.0.16 / v4.0.17 / pre-sync-v417 / HEAD=2be37cbb2）用
+        `/tmp/v417/fidelity.js` 复算：上游新增行缺失合计 13 行、fork 新增行缺失合计 4
+        行，逐行清单与归因写在规格「落地保真核对」节（4 个版本与锁文件各 1+1 行、lib.rs 5 行、4 个 locale 各 1 行），全部属
+        Q1/Q2 刻意取舍或版本号流转，无一行是丢语义。
+    - id: A15
+      status: implemented-with-evidence
+      evidence:
+        - python object_pairs_hook 查重：en/zh/ja/zh-TW/tr dup_scopes=0
+        - "tr byte-identical to v4.0.17: True"
+        - builtin_keys=True ×4
+      note: 4 个 locale 用 `object_pairs_hook` 逐文件按对象作用域查重：dup=0；上游新增的
+        `hermes.form.providerKeyBuiltin`/`providerKeyBuiltinLocked` 在
+        en/zh/ja/zh-TW 全部在位；`src/i18n/locales/tr.json` 与 `git show
+        v4.0.17:src/i18n/locales/tr.json` 逐字节一致；fork 键段（devpanel 仅 zh/en
+        属既有状态、connectivityTest/connectivityCheck/batchConnectivity*、模型快捷切换、双官网、跨应用导入、侧边面板）在位。
+    - id: A16
+      status: implemented-with-evidence
+      evidence:
+        - 四项 grep 计数（0/0/0/false）
+      note: "updater 三项零命中复核：`git grep -I -c tauri_plugin_updater HEAD -- src-tauri` =
+        0、`updater_builder` = 0、`tauri-plugin-updater` 在 `src-tauri/Cargo.lock`
+        = 0、`src-tauri/tauri.conf.json:40` 的 `createUpdaterArtifacts: false`。"
+    - id: A17
+      status: implemented-with-evidence
+      evidence:
+        - git grep -c release_if_lightweight HEAD -- src-tauri == 3
+        - "cargo test 3900 passed（含 tray:: 模块 emphasis 用例）"
+        - vitest TrayPanel.test.tsx 在 256 个文件内通过
+      note: 上游托盘面板改动全部落地：`tray_panel.rs:416` 的
+        `release_if_lightweight`（`lightweight.rs:29` 与 `hide_window`
+        调用）、`QuotaLine.emphasis`→`PanelQuotaLine.emphasis` 链路（HEAD 全仓 emphasis
+        命中 40）、`PanelPlacement`
+        与缩放/负坐标测试在位；`tests/components/TrayPanel.test.tsx` 通过、`tray.rs` 的
+        emphasis 单测（含 `82.10 CNY` 断言）在 cargo test 中通过。
+    - id: A18
+      status: implemented-with-evidence
+      evidence:
+        - grep 命中行号（60/2688/2691/2701/74/904-935）
+        - vitest ProviderForm.hermesBuiltinKey.test.tsx 通过
+      note: Hermes 内置 provider id 警告落地：`src/config/hermesBuiltinProviderIds.ts:74` 的
+        `isHermesBuiltinProviderId`、`ProviderForm.tsx:60` 的
+        import、`:2688`/`:2701` 两条提示分支与
+        `data-testid="hermes-key-builtin-warning"`（:2691）在位；两个上游新测试通过；fork 的
+        `entriesFor`（ProviderForm.tsx:904-935，编号先于 hidden 过滤先于白名单过滤）与其余三处
+        `filterForkPresets` 入口形态未变。
+    - id: A19
+      status: implemented-with-evidence
+      evidence:
+        - cargo test 行 `tray_left_click_never_opens_the_menu ... ok`
+        - git grep -I -c native_menu_on_left_click HEAD -- src-tauri ==
+          5（全为注释与断言文本）
+      note: 源码护栏用例通过：`cargo test` 输出 `test
+        tray::tests::tray_left_click_never_opens_the_menu ... ok`；`lib.rs` 的
+        `.show_menu_on_left_click(false)` 与 `tray.rs::apply_tray_style` 的
+        `set_show_menu_on_left_click(false)` 两处均为 fork
+        值；`native_menu_on_left_click` 的函数定义与代码调用点为 0（该名字只出现在 `tray.rs` 的 2
+        处注释与护栏用例的 2 条断言文本/1 条 contains 参数里）。
+    - id: A20
+      status: implemented-with-evidence
+      evidence:
+        - src-tauri/src/lib.rs:1151-1173 实际代码块
+        - 规格「托盘左键与文案终态」节四条分支逐条核对
+      note: lib.rs 的 Click 分支终态等于 Q1 口径：面板样式下 `panel_visible` 为假且左键 →
+        `tray::toggle_main_window`，否则 → `tray_panel::toggle` +
+        `return`；原生菜单样式下左键 → `toggle_main_window`、右键 →
+        `mark_feedback_seen`；上游本轮的 `cfg!(target_os = "windows") && Left →
+        hide_panel + show_main_window` 分支不在终态代码中（`git diff v4.0.16 v4.0.17 --
+        lib.rs` 新增 7 行里 5
+        行未落地，已在规格里逐行列出）。`tray.rs:2628`、`tray_panel.rs:1185/1198` 仍调用
+        `hide_panel`，无死代码。
+    - id: A21
+      status: implemented-with-evidence
+      evidence:
+        - python 规格串 vs JSON 实际值：MATCH ×4
+        - src/components/settings/sections/GeneralSection.tsx:237
+      note: 4 个 locale 的 `settings.general.trayStyleHelp` 等于规格「fork
+        专属文案终态（Q2）」记录的文本（用脚本逐 locale 比对规格引用串与 JSON 实际值：en/zh/ja/zh-TW 全部
+        MATCH）；`GeneralSection.tsx:237` 仍通过
+        `t("settings.general.trayStyleHelp")` 渲染，没有测试断言旧文本（`git grep
+        trayStyleHelp tests` 只命中 `GeneralSection.trayStyle.test.tsx`
+        的两个不含该文案的行为用例）。
+    - id: A22
+      status: implemented-with-evidence
+      evidence:
+        - README.md:129-136
+        - docs/comet/specs/tray-left-click-toggle/spec.md:44-59
+        - 与 lib.rs 终态分支逐条对照一致
+      note: 两处 fork 侧文档已按 Q3 修正并与代码一致：`README.md` §14
+        现在写明「面板已弹出时左键先收起面板」「右键行为随托盘样式而定（面板/原生菜单）」并注明上游 v4.0.17 的 Windows
+        分支未被采纳；`docs/comet/specs/tray-left-click-toggle/spec.md` 的 Purpose
+        与「右键行为随托盘样式而定」需求（含面板/菜单两个场景）、「运行时就切到原生菜单后左键仍无菜单」场景已补齐。
+    - id: A23
+      status: implemented-with-evidence
+      evidence:
+        - 16 个文件逐项 SAME 的循环输出
+      note: fork 未触碰的上游文件逐字节等于 `v4.0.17`：对
+        `proxy/server.rs`、`commands/mcp.rs`、`services/mcp.rs`、`mcp/{codex,hermes,opencode,validation}.rs`、`tests/mcp_commands.rs`、`lightweight.rs`、`src/utils/textNormalization.ts`、`src/config/hermesBuiltinProviderIds.ts`、`ApiKeyInput.tsx`、`src/tray-panel/{TrayPanel.tsx,api.ts}`、`tr.json`、`CHANGELOG.md`
+        逐项 `git diff --quiet v4.0.17 HEAD -- <file>` 全部为 SAME（16/16）。
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit，退出码 0
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 256 文件 / 3321 用例全绿，含上游本轮新增用例
+        truncated: false
+    - name:
+        text: pnpm format:check
+        truncated: false
+      result: passed
+      note:
+        text: prettier 全量检查通过
+        truncated: false
+    - name:
+        text: pnpm build:renderer
+        truncated: false
+      result: passed
+      note:
+        text: 产出 tray-panel chunk，退出码 0
+        truncated: false
+    - name:
+        text: cargo check --all-targets
+        truncated: false
+      result: passed
+      note:
+        text: 除 live.rs:1499 一条 fork 既有 unused import 告警外零告警，退出码 0
+        truncated: false
+    - name:
+        text: cargo test
+        truncated: false
+      result: passed
+      note:
+        text: lib test 3900 passed / 9 ignored，其余测试二进制全 ok，退出码 0
+        truncated: false
+    - name:
+        text: 落地保真四 ref 脚本
+        truncated: false
+      result: passed
+      note:
+        text: node /tmp/v417/fidelity.js：上游缺 13 行、fork 缺 4 行，逐行归类见规格
+        truncated: false
+    - name:
+        text: locale 重复键查重
+        truncated: false
+      result: passed
+      note:
+        text: object_pairs_hook 按对象作用域统计：en/zh/ja/zh-TW/tr dup=0
+        truncated: false
+    - name:
+        text: 冲突标记扫描
+        truncated: false
+      result: passed
+      note:
+        text: git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' HEAD：0 命中
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: fork 交付尚未执行：推 main 与打 tag v4.0.17-1 属归档之后的步骤，按 Q4 授权在验收被用户接受后进行。
+      truncated: false
+    - text: 落地保真里的 13 行上游缺失是 Q1/Q2
+        的刻意取舍与版本号流转，逐行清单在规格「落地保真核对」节；`native_menu_on_left_click`
+        的名字仍出现在注释与护栏断言文本中（5 处），代码定义与调用点为 0。
+      truncated: false
+    - text: 上游自带的 `src/hooks/useStreamCheck.ts` 与 `src/lib/api/connectivity-check.ts`
+        仍写着 `stream_check_provider`，但 fork 已删该后端命令且无任何组件调用这两个前端文件（实测仅命中自身与一处测试
+        mock），属既有死代码，不是本轮丢失。
+      truncated: false
+    - text: "`services/session_usage_codex.rs` 的
+        `test_parent_rollout_is_cached_once_across_fork_cutoffs` 是上游自带 CI
+        竞态（v4.0.15-1 轮 fork CI 与上游 CI 同红）；本地 cargo test 全绿，若 fork CI
+        单条红需按既有取证顺序判断。"
+      truncated: false
+    - text: 本地时钟 10:10 不在 00:00–00:30 窗口；若 Verifier 复跑 `pnpm test:unit`
+        时进入该窗口，`tests/components/SessionManagerPage.test.tsx`
+        的分桶用例会因日历日分桶而失败，属已知时钟坑。
+      truncated: false
+    - text: 托盘左键、面板弹出与轻量模式释放 WebView 是 GUI
+        运行时行为，无法在本机自动化验证；本轮以源码分支、护栏用例与六项检查作为证据，真实点击行为需用户在本机 app 里复核。
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-10-21T02:27:27.555Z
+blockers: []
+verification:
+  candidate_id: f7746c48-bd9f-4fde-9e3a-fb1b2070568c
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:96422b43-e48f-4c7a-a578-ee2730830bd4
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: C1
+      name:
+        text: pnpm typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 12882
+    - id: C2
+      name:
+        text: pnpm format:check
+        truncated: false
+      argv_display:
+        - text: format:check
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4526
+    - id: C3
+      name:
+        text: pnpm test:unit
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 50490
+    - id: C4
+      name:
+        text: pnpm build:renderer
+        truncated: false
+      argv_display:
+        - text: build:renderer
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7675
+    - id: C5
+      name:
+        text: cargo check --all-targets
+        truncated: false
+      argv_display:
+        - text: check
+          truncated: false
+        - text: --all-targets
+          truncated: false
+      argv_truncated: false
+      cwd_ref: src-tauri
+      status: passed
+      exit_code: 0
+      duration_ms: 9676
+    - id: C6
+      name:
+        text: cargo test
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+      argv_truncated: false
+      cwd_ref: src-tauri
+      status: passed
+      exit_code: 0
+      duration_ms: 60189
+  summary:
+    text: "Independent re-verification of candidate f7746c48: all 23 acceptance
+      items A1..A23 PASS. Re-derived the git forensics from scratch
+      (merge-base=19798e2f, 166 replayed with 0 subject-diff, patch-id 163/3
+      categorized, tag/branch/counts), independently recomputed the four-ref
+      fidelity (upstream-missing 13 / fork-missing 4, matched line-for-line to
+      the spec), ran per-scope locale duplicate-key scan (0 dup, fork keys
+      297/286 all present, tr.json byte-identical, hermes keys byte-equal),
+      verified the lib.rs TrayIconEvent::Click branch against A20 and the
+      native_menu_on_left_click zero-code-hits claim, and confirmed updater
+      removal, fork-preservation grep counts, upstream-untouched files
+      byte-equal to v4.0.17, and doc attribution consistency across
+      brief/spec/HOW_TO. Checks: reused Runtime C1-C6 (all executed exit 0 for
+      this candidate, still valid against the clean HEAD); independently re-ran
+      typecheck (0), format:check (0), targeted vitest 62 passed (0), cargo tray
+      50 / session_usage_codex 1 / mcp_commands 34 (all ok); Cargo.lock verified
+      (4.0.17-1, mio 1.2.1, updater 0). Workspace clean except Runtime-managed
+      comet-state.yaml (phase bookkeeping). No defects found."
+    truncated: false
+  risks:
+    - text: GUI runtime click behavior (tray left-click toggle, panel collapse,
+        lightweight WebView release) cannot be automated on this host; verified
+        via source branch read, the tray_left_click_never_opens_the_menu guard
+        test and the six checks, not via live clicking — user should spot-check
+        the running app.
+      truncated: false
+    - text: services/session_usage_codex::test_parent_rollout_is_cached_once_across_fork_cutoffs
+        is an upstream-owned CI race (green in local cargo test here and in
+        Runtime C6, but may show single-red in fork CI); if red, follow the
+        recorded取证 order (byte-diff vs tag, check upstream same-test, rerun)
+        before any skip.
+      truncated: false
+    - text: The full pnpm test:unit was reused from Runtime C3 (exit 0); I re-ran only
+        the 6 upstream-round suites plus targeted cargo tests. Local clock 10:4x
+        is outside the 00:00-00:30 window, so the known SessionManagerPage
+        time-bucket failure was not exercised.
+      truncated: false
+    - text: Upstream-owned frontend files src/hooks/useStreamCheck.ts and
+        src/lib/api/connectivity-check.ts still reference stream_check_provider
+        but have no caller in the fork (only the hook itself + one test mock) —
+        pre-existing dead code, not a sync loss; re-confirm 'no caller' next
+        round.
+      truncated: false
+    - text: Delivery (push main + annotated tag v4.0.17-1) is a post-acceptance step
+        per Q4 and is not part of any acceptance item; nothing has been pushed.
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-10-21T02:44:56.228Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native Shape artifacts changed
+      truncated: false
+    completed_at: 2026-10-21T02:26:49.707Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: "Independent re-verification of candidate f7746c48: all 23 acceptance
+        items A1..A23 PASS. Re-derived the git forensics from scratch
+        (merge-base=19798e2f, 166 replayed with 0 subject-diff, patch-id 163/3
+        categorized, tag/branch/counts), independently recomputed the four-ref
+        fidelity (upstream-missing 13 / fork-missing 4, matched line-for-line to
+        the spec), ran per-scope locale duplicate-key scan (0 dup, fork keys
+        297/286 all present, tr.json byte-identical, hermes keys byte-equal),
+        verified the lib.rs TrayIconEvent::Click branch against A20 and the
+        native_menu_on_left_click zero-code-hits claim, and confirmed updater
+        removal, fork-preservation grep counts, upstream-untouched files
+        byte-equal to v4.0.17, and doc attribution consistency across
+        brief/spec/HOW_TO. Checks: reused Runtime C1-C6 (all executed exit 0 for
+        this candidate, still valid against the clean HEAD); independently
+        re-ran typecheck (0), format:check (0), targeted vitest 62 passed (0),
+        cargo tray 50 / session_usage_codex 1 / mcp_commands 34 (all ok);
+        Cargo.lock verified (4.0.17-1, mio 1.2.1, updater 0). Workspace clean
+        except Runtime-managed comet-state.yaml (phase bookkeeping). No defects
+        found."
+      truncated: false
+    completed_at: 2026-10-21T02:44:56.228Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-10-21T01:49:09.707Z
