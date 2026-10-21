@@ -188,15 +188,14 @@ jobs:
           wsl-version: 2
           additional-packages: python3
 
-      - name: Cache Cargo registry and build
-        uses: actions/cache@v5
+      # 只恢复不保存：这里只编 lib 测试，若由它先存，同 key 的 Windows 缓存就只剩一小半。
+      # 完整缓存由 backend 矩阵的 Windows job 保存（同一个 shared-key）。
+      - name: Restore Rust dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          workspaces: src-tauri -> target
+          shared-key: backend
+          save-if: false
 
       - name: Create frontend dist placeholder
         shell: bash
