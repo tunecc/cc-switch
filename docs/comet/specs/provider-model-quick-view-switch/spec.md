@@ -13,7 +13,7 @@
 - claude：`settingsConfig.env.ANTHROPIC_DEFAULT_SONNET_MODEL`，为空回退 `ANTHROPIC_MODEL`
 - codex / grokbuild：settingsConfig.config（TOML）的顶层 `model` 字段
 - gemini：`settingsConfig.env.GEMINI_MODEL`
-- 其余 app（claude-desktop/opencode/openclaw/hermes/pi）SHALL 不显示徽章。
+- 其余 app（claude-desktop/opencode/openclaw/hermes/pi/mcode/agy）SHALL 不显示徽章。AGY 例外说明：AGY（v4.0.18 起的第 11 个应用）使用上游自带的卡片模型行（`extractAgyModel`：`config.model.name` → `env.GEMINI_MODEL`，显示在徽章位之后的 URL 之前），不进入模型快捷切换体系（2026-10-22 Q2：AGY 无「当前供应商」概念，卡片主操作是 Open Terminal）。
 
 Claude 卡片在显示模型名的基础上，SHALL 额外标识当前主对话模型是否开启 1M：当 claude 当前主对话模型（`ANTHROPIC_DEFAULT_SONNET_MODEL`，空则回退 `ANTHROPIC_MODEL`）的原始 env 值以 `[1M]` 结尾（大小写不敏感）时，徽章 SHALL 在模型名后显示「1M」小标记；未开启时不显示。其余 3 个核心 app（codex/grokbuild/gemini）SHALL 不显示 1M 标记（1M 语义仅 claude 有）。
 
@@ -80,7 +80,7 @@ Claude 卡片在显示模型名的基础上，SHALL 额外标识当前主对话�
 - label 为「未设置模型」类文案（区别于有模型时的模型名）；
 - 不显示 1M 小标记（无模型即无 1M 状态）。
 
-其余 app（claude-desktop/opencode/openclaw/hermes/pi）SHALL 不渲染徽章，也不渲染占位按钮。
+其余 app（claude-desktop/opencode/openclaw/hermes/pi/mcode/agy）SHALL 不渲染徽章，也不渲染占位按钮。
 
 #### Scenario: 无模型时占位可点击
 

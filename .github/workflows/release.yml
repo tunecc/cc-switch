@@ -164,7 +164,6 @@ jobs:
             $msi = Get-ChildItem -Path (Join-Path $targetRoot 'bundle') -Recurse -Include *.msi -ErrorAction SilentlyContinue | Select-Object -First 1
           }
           if ($null -ne $msi) {
-<<<<<<< HEAD
             # #8534：旧版本的应用内更新器以 `msiexec /passive /promptrestart` 安装、不带任何 REBOOT
             # 选项，文件被占用时会不经提示直接重启系统，所以 MSI 自身必须带 REBOOT=ReallySuppress。
             $installer = New-Object -ComObject WindowsInstaller.Installer
@@ -179,7 +178,7 @@ jobs:
             }
             Write-Host "MSI REBOOT property: $reboot"
 
-            $dest = "CC-Switch-$VERSION-Windows$assetSuffix.msi"
+            $dest = "CC-Switch-$VERSION-Windows.msi"
             Copy-Item $msi.FullName (Join-Path release-assets $dest)
             Write-Host "Installer copied: $dest"
           } else {
