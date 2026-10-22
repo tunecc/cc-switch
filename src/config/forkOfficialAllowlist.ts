@@ -20,6 +20,7 @@ export const forkOfficialAllowlist: Record<AppId, string[]> = {
   ],
   codex: ["OpenAI Official", "Ollama", "LM Studio", "llama.cpp", "vLLM"],
   gemini: ["Google Official"],
+  agy: ["Google Official"],
   grokbuild: ["Grok Official"],
   opencode: ["Ollama", "llama.cpp", "vLLM"],
   openclaw: ["LM Studio", "llama.cpp", "vLLM"],
