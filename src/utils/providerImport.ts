@@ -133,7 +133,8 @@ function readConfigFields(
         defaultModel: "",
       };
     }
-    case "gemini": {
+    case "gemini":
+    case "agy": {
       const env = envOf(settingsConfig);
       return {
         baseUrl: asTrimmedString(env.GOOGLE_GEMINI_BASE_URL),
@@ -211,8 +212,14 @@ export function targetSupportsApiFormat(appId: AppId): boolean {
 }
 
 // 只有这三个应用有明确的「默认 / 兜底模型」字段；其余应用的模型由各自的
-// 模型表或 catalog 管理，没有可写入的单值字段。
-const DEFAULT_MODEL_SUPPORT: readonly AppId[] = ["claude", "codex", "gemini"];
+// 模型表或 catalog 管理，没有可写入的单值字段。agy 复用 Gemini 形状的表单
+// 与 env（GEMINI_MODEL），因此同属这一类。
+const DEFAULT_MODEL_SUPPORT: readonly AppId[] = [
+  "claude",
+  "codex",
+  "gemini",
+  "agy",
+];
 
 /** 目标应用是否有可写入的默认（兜底）模型字段。 */
 export function targetSupportsDefaultModel(appId: AppId): boolean {
@@ -299,7 +306,8 @@ export function buildImportedSettingsConfig(
       });
       return { config };
     }
-    case "gemini": {
+    case "gemini":
+    case "agy": {
       const env: Record<string, string> = {
         GOOGLE_GEMINI_BASE_URL: baseUrl,
         GEMINI_API_KEY: apiKey,
@@ -436,7 +444,8 @@ export function patchImportedSettingsConfig(
       });
       return next;
     }
-    case "gemini": {
+    case "gemini":
+    case "agy": {
       const env: Record<string, unknown> = {
         ...(asRecord(existing.env) ?? {}),
       };

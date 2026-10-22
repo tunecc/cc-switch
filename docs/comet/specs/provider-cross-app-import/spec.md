@@ -12,6 +12,7 @@
 - 每个可用来源应用渲染一个按钮，内容为应用图标 + 应用显示名。
 - 来源应用的判定同时满足三个条件：该应用在 `settings.visibleApps` 中为启用；该应用的供应商数量 ≥ 1；该应用不是当前正在编辑 / 新建的应用。任一条件不满足时不渲染对应按钮。
 - 全部来源应用都不可用时，整个入口行不渲染。
+- AGY（Antigravity，v4.0.18 起的第 11 个应用）SHALL 作为来源与目标都可用，按 Gemini 形状读写；不对 AGY 做额外排除（2026-10-22 Q3）。
 
 ### 来源选择弹窗
 
@@ -44,6 +45,7 @@
 | claude-desktop | `env.ANTHROPIC_BASE_URL` | `env.ANTHROPIC_AUTH_TOKEN` | 无 |
 | codex | TOML `[model_providers.*].base_url` | `auth.OPENAI_API_KEY` | TOML 顶层 `model` |
 | gemini | `env.GOOGLE_GEMINI_BASE_URL` | `env.GEMINI_API_KEY` | `env.GEMINI_MODEL` |
+| agy | `env.GOOGLE_GEMINI_BASE_URL` | `env.GEMINI_API_KEY` | `env.GEMINI_MODEL` |
 | grokbuild | TOML `base_url` | TOML `api_key`（缺失时 `auth.OPENAI_API_KEY`） | 无 |
 | opencode | `options.baseURL` | `options.apiKey` | 无 |
 | openclaw | `baseUrl` | `apiKey` | 无 |
@@ -60,8 +62,8 @@
 
 ### 默认模型名迁移
 
-- 只在 Claude ↔ Codex ↔ Gemini 三者之间迁移：`env.ANTHROPIC_MODEL` ↔ TOML 顶层 `model` ↔ `env.GEMINI_MODEL`。
-- 读侧同样受此约束：只有 claude / codex / gemini 作为来源时才取默认模型。claude-desktop 的 env 由提交时按 baseUrl / apiKey 重建、从不落 `ANTHROPIC_MODEL`；grokbuild 的 `upstreamModel` 是客户端 profile 的真实模型名而非兜底模型。两者按「无该字段」返回空。
+- 只在 Claude ↔ Codex ↔ Gemini ↔ AGY 之间迁移：`env.ANTHROPIC_MODEL` ↔ TOML 顶层 `model` ↔ `env.GEMINI_MODEL`；AGY 与 Gemini 同形状（2026-10-22 v4.0.18 同步 Q3 决定纳入 AGY）。
+- 读侧同样受此约束：只有 claude / codex / gemini / agy 作为来源时才取默认模型。claude-desktop 的 env 由提交时按 baseUrl / apiKey 重建、从不落 `ANTHROPIC_MODEL`；grokbuild 的 `upstreamModel` 是客户端 profile 的真实模型名而非兜底模型。两者按「无该字段」返回空。
 - 来源或目标没有该字段时，目标模型字段保持为空（Codex 删掉模板自带的 `model` 行，Claude 不落键，Gemini 保存时被丢弃），不填占位值。
 - 不迁移 Claude 的 `ANTHROPIC_DEFAULT_*_MODEL` 分级、`CLAUDE_CODE_SUBAGENT_MODEL`、Codex 的 `modelCatalog` 与 reasoning 配置。
 
