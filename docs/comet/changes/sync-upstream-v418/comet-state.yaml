@@ -1,0 +1,225 @@
+schema: comet.native.v4
+name: sync-upstream-v418
+language: zh-CN
+phase: build
+status: active
+state_version: 3
+brief: brief.md
+document_constraints_version: 3
+shape_confirmation_hash: 52dec534420e1573ca2ec30cd43234321f718f98a5575fdcfffe3962320ec2d0
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: building
+  goal_cycle: 1
+  iteration: 1
+  attempt: 0
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: submit-builder-candidate
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main v4.0.18` 等于 `cb90a2440`（tag `v4.0.18`
+      剥离出的提交），`git log v4.0.18..main` 只包含 fork 提交（作者 `Tune`），不含任何上游提交。"
+    result: pending
+    reason: null
+  - id: A2
+    source: brief.md
+    text: "A2: 重放前 `git rev-list --count v4.0.17..pre-sync-v418` == 173；重放后 `git
+      rev-list --count v4.0.18..HEAD` 与之的差异只来自「被 git 判定为空而丢弃」或「本轮新增提交」，逐条记录；`git
+      log --format='%s' --reverse` 主题序列逐行 diff 为 0 行；patch-id 对照走 stdin（`git
+      show <c> | git patch-id --stable`），不同的提交逐个归类为「仅 hunk
+      位移」或「冲突停车」，冲突停车逐条记录归属与解法。"
+    result: pending
+    reason: null
+  - id: A3
+    source: brief.md
+    text: "A3: 45 个重叠文件的冲突解决符合 `docs/HOW_TO_REBASE_UPSTREAM.md` §3
+      与完整目标规格的逐文件叠加要求：两侧语义并存、无整文件取一侧（高危面为
+      `database/schema.rs`、`lib.rs`、`commands/misc.rs`、`ProviderForm.tsx`、`Prov\
+      iderCard.tsx`、`ProviderList.tsx`、`App.tsx`、4 个 locale、4
+      个版本与锁文件、`.github/workflows/release.yml`、`README.md`）。"
+    result: pending
+    reason: null
+  - id: A4
+    source: brief.md
+    text: "A4:
+      `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-ta\
+      uri/Cargo.lock` 的版本号均为 `4.0.18-1`；`src-tauri/src/database/mod.rs` 的
+      `SCHEMA_VERSION` == 22；迁移链：v18→v19（fork `website_url_2` + 上游 mcode
+      并存）、v19→v20（上游 pi）、v20→v21（fork 修复 mcode/pi + 上游
+      `enabled_agy`）、v21→v22（fork 幂等补齐 `enabled_agy`）全部在位；`create_tables` 的
+      `mcp_servers`/`skills` 含 `enabled_agy`；上游迁移测试改到 22，新增 v21→v22 用例。"
+    result: pending
+    reason: null
+  - id: A5
+    source: brief.md
+    text: "A5: 完整目标规格「fork 魔改保留清单」每一项在同步后仍然存在且可用：产品名 CC Switch 与
+      DevPanel、侧边面板可见性、模型徽章与快捷切换（claude/codex/gemini/grokbuild）、Claude 兜底模型直达区与
+      1M 全选、右键置顶/置底与新建插入第二位、官方预设过滤（含 Q1 的 agy 条目）、逐模型连通性测试（`lib.rs`
+      两个命令注册在位）、双官网链接、跨应用导入（含 Q3 的 agy 口径）、禁用应用内更新器、上游 tag 发版跳过、README fork
+      说明、fork CI。"
+    result: pending
+    reason: null
+  - id: A6
+    source: brief.md
+    text: "A6: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（`default_workflow:
+      native`，`workflows` 含 native 与 classic），fork 专属白名单文件未被上游或重放改写。"
+    result: pending
+    reason: null
+  - id: A7
+    source: brief.md
+    text: "A7: `docs/HOW_TO_REBASE_UPSTREAM.md` 已按本轮同步结果修订（含
+      §4.5、`lib.rs`/`database/schema.rs`/`commands/misc.rs`/`ProviderCard.tsx`
+      等行的新口径与 agy 白名单登记），全局与 change
+      内完整目标规格已重写为同步后的完整状态（含重放映射、冲突清单、落地保真核对与逐行归类），三处记录的数字与归属互相一致。"
+    result: pending
+    reason: null
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm typecheck` 通过（零 `TS2300`，AppId/VisibleApps/McpApps 的 agy
+      字段无重复声明）。"
+    result: pending
+    reason: null
+  - id: A9
+    source: brief.md
+    text: "A9: `pnpm test:unit`
+      通过，含上游本轮新增/改写用例（`AgyOAuthSection`、`GeminiFormFields`、`ProviderCard.agyMod\
+      el`、`ProviderForm.agyLogin`、`agyLocales`、`useGeminiConfigState`、`DeepLink\
+      ImportDialog`、`AppsPage`、`ProviderPresetSelector`）与 fork 既有用例；时间敏感用例按既有
+      00:00–00:30 窗口口径处理。"
+    result: pending
+    reason: null
+  - id: A10
+    source: brief.md
+    text: "A10: `pnpm format:check` 通过（手工拼接共享文件后必须本地 prettier 归一化）。"
+    result: pending
+    reason: null
+  - id: A11
+    source: brief.md
+    text: "A11: `pnpm build:renderer` 通过。"
+    result: pending
+    reason: null
+  - id: A12
+    source: brief.md
+    text: "A12: `cargo check` 通过，并确认 `Cargo.lock` 的改动只来自本轮允许项：`cc-switch` 版本号行
+      `4.0.18-1`、tokio 依赖的 `signal-hook-registry` 行；`tauri-plugin-updater`
+      相关条目不得出现。"
+    result: pending
+    reason: null
+  - id: A13
+    source: brief.md
+    text: "A13: `cargo test` 通过（含 fork 的托盘左键源码护栏、上游 agy
+      迁移/持久化用例、`src-tauri/tests/mcp_commands.rs`）；如遇环境性失败，按规格固定口径取证并记录，不扩大跳过列表。"
+    result: pending
+    reason: null
+  - id: A14
+    source: brief.md
+    text: "A14: 落地保真核对通过：对 45 个重叠文件按固定四 ref
+      归一化行多重集算法（`v4.0.17`、`v4.0.18`、`pre-sync-v418`、最终
+      `HEAD`）逐文件计算「上游新增行缺失」与「fork
+      新增行缺失」，结果与逐行归类记录在规格中；计算在本轮全部最终态提交落完之后执行；确有意图取舍时逐行说明理由并带重数，未说明的非零缺失即视为丢语义缺\
+      陷。"
+    result: pending
+    reason: null
+  - id: A15
+    source: brief.md
+    text: "A15: 4 个既有 locale
+      JSON（`zh`、`en`、`ja`、`zh-TW`）逐文件可解析且按对象作用域统计无任何同名重复键，fork 键段按 key
+      逐个比对全部在位；上游本轮 47 个新键在 4 个 locale 全部在位且取值与 `v4.0.18` 逐字节一致；上游删除的 17 个键在 4 个
+      locale 均不再残留（fork 无引用）；fork 专属覆盖 `provider.connectivityCheck` 与
+      `settings.general.trayStyleHelp` 保持 fork 文案；`tr.json` 与 `git show
+      v4.0.18:src/i18n/locales/tr.json` 逐字节一致。"
+    result: pending
+    reason: null
+  - id: A16
+    source: brief.md
+    text: "A16: `tauri_plugin_updater`/`updater_builder` 在全仓 `src-tauri` 命中数仍为
+      0；`tauri-plugin-updater` 未回到 `src-tauri/Cargo.toml`
+      依赖表；`createUpdaterArtifacts` 仍为 `false`；`install_update_and_restart`
+      仍为空壳。"
+    result: pending
+    reason: null
+  - id: A17
+    source: brief.md
+    text: "A17: 上游 AGY 能力在 fork 落地后可用：11 个 `APP_IDS` 含 agy、Apps 页可安装/打开终端、agy 表单走
+      Gemini 形状与 `preferConfigModel`、官方卡绑定授权中心账号（仅 macOS 显示切号）、授权中心 Antigravity
+      分组与额度、会话/用量归属、MCP/Skills agy 开关、`enabled_agy` 持久化与迁移、上游新增测试全部通过。"
+    result: pending
+    reason: null
+  - id: A18
+    source: brief.md
+    text: 'A18: Q1 的 agy 预设白名单生效：`forkOfficialAllowlist.agy === ["Google
+      Official"]`，agy 表单预设条目 id 仍为 `gemini-<原始下标>`，`entriesFor` 保持「编号先于 hidden
+      过滤、先于白名单过滤」；上游 agy 预设（Google Official）在 fork 构建下可见，第三方/赞助商预设被过滤。'
+    result: pending
+    reason: null
+  - id: A19
+    source: brief.md
+    text: "A19: Q2 的 agy 卡片模型口径生效：agy 使用上游 `extractAgyModel` 模型行（含
+      `config.model.name` → `env.GEMINI_MODEL` 的取值顺序），不进入 fork 的
+      `MODEL_CAPABLE_APPS`/模型徽章/快捷切换弹窗；4 个既有 app 的徽章与快捷切换行为不变。"
+    result: pending
+    reason: null
+  - id: A20
+    source: brief.md
+    text: "A20: Q3 的跨应用导入口径生效：agy 的读/建/改三个分支按 Gemini
+      形状处理（`env.GOOGLE_GEMINI_BASE_URL`/`GEMINI_API_KEY`/`GEMINI_MODEL`），`Provi\
+      derForm` 的 gemini 分支改用 `usesGeminiStyleForm(appId)`，agy
+      作为来源与目标都可用且不会写空配置；`useProviderImportSources` 与 `ProviderImportEntry` 对 agy
+      不做排除。"
+    result: pending
+    reason: null
+  - id: A21
+    source: brief.md
+    text: "A21: **fork 左键契约的源码级回归护栏通过**：`src-tauri/src/tray.rs` 的
+      `tray_left_click_never_opens_the_menu` 用例在重放后仍成立（`apply_tray_style` 固定
+      `set_show_menu_on_left_click(false)`、`lib.rs` 的 builder 固定
+      `.show_menu_on_left_click(false)`），上游的 `native_menu_on_left_click`
+      辅助函数与其调用点在 fork 终态仍为零命中；`lib.rs` 的 `TrayIconEvent::Click` 分支保持 fork
+      四条分支语义。"
+    result: pending
+    reason: null
+  - id: A22
+    source: brief.md
+    text: "A22: 上游本轮稳定性与修复在 fork 落地后可用：Unix 启动提高文件描述符上限、Unix 运行时 CLI 使用登录 shell
+      PATH、Windows 终端不再等待控制台、MSI `REBOOT=ReallySuppress`（`per-user-main.wxs`）与
+      release.yml 的 Property 断言、桌面快捷方式可选、Claude 会话按 `/cd` 归组、Codex
+      未用量窗口隐藏倒计时、deepseek-v4.1-flash 定价、用量应用筛选。"
+    result: pending
+    reason: null
+  - id: A23
+    source: brief.md
+    text: "A23: 冲突标记零命中：`git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' HEAD -- src
+      src-tauri tests docs README.md` 为 0（exit 1）。"
+    result: pending
+    reason: null
+builder_handoff: null
+blockers: []
+verification: null
+history: []
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pending
+verification_report: null
+archived: false
+created_at: 2026-10-22T11:47:56.509Z
