@@ -1,0 +1,970 @@
+schema: comet.native.v4
+name: sync-upstream-v418
+language: zh-CN
+phase: archive
+status: done
+state_version: 11
+brief: brief.md
+document_constraints_version: 3
+shape_confirmation_hash: 44526689d46424c08b439147621eafffb1c7718db15854d4cf7ce912d18a92f5
+spec_changes:
+  - capability: upstream-sync
+    operation: modify
+    source: specs/upstream-sync/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 2
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: rebase 后 `git merge-base main v4.0.18` 等于 `cb90a2440`（tag `v4.0.18`
+      剥离出的提交），`git log v4.0.18..main` 只包含 fork 提交（作者 `Tune`），不含任何上游提交。"
+    result: passed
+    reason:
+      text: merge-base main v4.0.18 = cb90a2440d1a771d; tag 81096e4 peels to
+        cb90a2440; git log v4.0.18..HEAD (177 commits) authors = only Tune
+        <176898395+tunecc@users.noreply.github.com>.
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: "A2: 重放前 `git rev-list --count v4.0.17..pre-sync-v418` == 173；重放后 `git
+      rev-list --count v4.0.18..HEAD` 与之的差异只来自「被 git 判定为空而丢弃」或「本轮新增提交」，逐条记录；`git
+      log --format='%s' --reverse` 主题序列逐行 diff 为 0 行；patch-id 对照走 stdin（`git
+      show <c> | git patch-id --stable`），不同的提交逐个归类为「仅 hunk
+      位移」或「冲突停车」，冲突停车逐条记录归属与解法。"
+    result: passed
+    reason:
+      text: "pre-sync-v418 = a83bb9013; rev-list --count v4.0.17..pre-sync-v418 = 173;
+        v4.0.18..HEAD = 177 = 173 replay + 4 this-round commits (4047eff0b
+        sync-final, f796bae4c/fc3b15891/7f1a510c5 docs), enumerated in change
+        state; reverse subject diff over the 173 replay commits = 0 lines; stdin
+        patch-id comparison: 154 identical, 19 differ at exactly
+        #2/13/20/34/41/42/43/46/47/69/72/74/79/84/110/117/120/144/154; the five
+        hunk-shift commits (#34/47/72/79/110) have identical file sets and
+        identical sorted add/del line multisets; the 14 conflict stops are
+        recorded with file attribution in spec.md."
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: "A3: 45 个重叠文件的冲突解决符合 `docs/HOW_TO_REBASE_UPSTREAM.md` §3
+      与完整目标规格的逐文件叠加要求：两侧语义并存、无整文件取一侧（高危面为
+      `database/schema.rs`、`lib.rs`、`commands/misc.rs`、`ProviderForm.tsx`、`Prov\
+      iderCard.tsx`、`ProviderList.tsx`、`App.tsx`、4 个 locale、4
+      个版本与锁文件、`.github/workflows/release.yml`、`README.md`）。"
+    result: passed
+    reason:
+      text: "Overlap set recomputed with comm -12 = 45 files (213 upstream files, 457
+        fork files). Zero conflict markers. Independent fidelity recompute shows
+        only the documented intentional upstream losses (README 12, version
+        lines 4, settings.rs updater hunk 9, SCHEMA_VERSION 1, test assert 1)
+        and documented fork losses, i.e. no unexplained whole-file side-taking.
+        High-risk files keep both sides: schema.rs (22 + enabled_agy +
+        website_url_2), lib.rs (AGY modules + fork tray/connectivity),
+        commands/misc.rs (AGY + tunecc URLs; farion1231/cc-switch/releases hits
+        = 0), ProviderForm (entriesFor + usesGeminiStyleForm + extraActions +
+        websiteUrl2), ProviderCard (extractAgyModel + model badge +
+        websiteLinks), ProviderList (buildLaunchSections + applyQuickSort +
+        websiteUrl2), App.tsx (IS_FORK_BUILD + useConnectivityProbe +
+        batchTest), release.yml (fork matrix + MSI assertion), 4 locales (key
+        audit below)."
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: "A4:
+      `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-ta\
+      uri/Cargo.lock` 的版本号均为 `4.0.18-1`；`src-tauri/src/database/mod.rs` 的
+      `SCHEMA_VERSION` == 22；迁移链：v18→v19（fork `website_url_2` + 上游 mcode
+      并存）、v19→v20（上游 pi）、v20→v21（fork 修复 mcode/pi + 上游
+      `enabled_agy`）、v21→v22（fork 幂等补齐 `enabled_agy`）全部在位；`create_tables` 的
+      `mcp_servers`/`skills` 含 `enabled_agy`；上游迁移测试改到 22，新增 v21→v22 用例。"
+    result: passed
+    reason:
+      text: Versions 4.0.18-1 in package.json, tauri.conf.json, Cargo.toml and
+        Cargo.lock (cc-switch entry); SCHEMA_VERSION = 22 at database/mod.rs:54;
+        chain 18->19 (website_url_2 + enabled_mcode, schema.rs:561-575), 19->20
+        (enabled_pi, 576-587), 20->21 (mcode/pi + enabled_agy, 588-632), 21->22
+        (idempotent enabled_agy, 633-649); create_tables has enabled_agy on
+        mcp_servers (line 72) and skills (line 104);
+        agy_migration_preserves_existing_flags_and_defaults_to_disabled asserts
+        SCHEMA_VERSION (22) and new
+        fork_v21_migration_adds_agy_flags_idempotently exists; both pass in C6.
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5: 完整目标规格「fork 魔改保留清单」每一项在同步后仍然存在且可用：产品名 CC Switch 与
+      DevPanel、侧边面板可见性、模型徽章与快捷切换（claude/codex/gemini/grokbuild）、Claude 兜底模型直达区与
+      1M 全选、右键置顶/置底与新建插入第二位、官方预设过滤（含 Q1 的 agy 条目）、逐模型连通性测试（`lib.rs`
+      两个命令注册在位）、双官网链接、跨应用导入（含 Q3 的 agy 口径）、禁用应用内更新器、上游 tag 发版跳过、README fork
+      说明、fork CI。"
+    result: passed
+    reason:
+      text: "Preserved: __CCS_FORK_BUILD__ (2 files), DevPanel (3),
+        visibleSidebarPanels (4), extractModelBadgeForProvider (3),
+        ModelQuickSwitchDialog (4, gated by isModelCapableApp at
+        ProviderCard:698), websiteUrl2 (27) and website_url_2 (17),
+        connectivity_test_provider_models and connectivity_probe_provider
+        registered at lib.rs:1785-1786, filterForkPresets( (4),
+        ProviderImportEntry (7; ProviderForm:2507/2532), ClaudeFormFields
+        fallbackQuickAccessSection:903 and allOneMEnabled:702, right-click sort
+        plus insert-second (mutations.ts:119-145), fork README (fork-difference
+        rewrite), fork CI release.yml:20/27-28 (dash-tag trigger, windows-2022,
+        macos-14) and updater disabled (A16)."
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: "A6: rebase 后 `.comet/config.yaml` 仍为 fork 当前配置（`default_workflow:
+      native`，`workflows` 含 native 与 classic），fork 专属白名单文件未被上游或重放改写。"
+    result: passed
+    reason:
+      text: ".comet/config.yaml has default_workflow: native and workflows [native,
+        classic]; git diff pre-sync-v418 HEAD -- .comet is empty (unchanged by
+        replay)."
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: "A7: `docs/HOW_TO_REBASE_UPSTREAM.md` 已按本轮同步结果修订（含
+      §4.5、`lib.rs`/`database/schema.rs`/`commands/misc.rs`/`ProviderCard.tsx`
+      等行的新口径与 agy 白名单登记），全局与 change
+      内完整目标规格已重写为同步后的完整状态（含重放映射、冲突清单、落地保真核对与逐行归类），三处记录的数字与归属互相一致。"
+    result: passed
+    reason:
+      text: "HOW_TO_REBASE_UPSTREAM.md section 4.5 exists (line 293) covering AGY
+        Q1-Q3, schema 22, usesGeminiStyleForm/entriesFor and MSI assertion;
+        change spec is byte-identical to docs/comet/specs/upstream-sync/spec.md;
+        numbers agree across spec/HOW_TO/brief: 39 commits, 213 files
+        +11006/-1257, 31A/1D/181M, 45 overlap, fork 457 files, 173 replay, 19
+        patch-id differences (14 conflict stops + 5 hunk shifts), fidelity 27
+        upstream-missing / 15 fork-missing; brief line 39 uses the corrected
+        pre-sync-v418 overlap basis; spot-checked numstat matches brief (lib.rs
+        85/0 vs 32/42, misc.rs 747/166 vs 6/5, ProviderForm 45/13 vs 183/43,
+        ProviderCard 51/10 vs 104/1, schema.rs 68/0 vs 184/0, release.yml 14/0,
+        locales 63/27 and fork 330/26, 329/25, 317/25, 317/25)."
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: "A8: `pnpm typecheck` 通过（零 `TS2300`，AppId/VisibleApps/McpApps 的 agy
+      字段无重复声明）。"
+    result: passed
+    reason:
+      text: Runtime check C1 pnpm typecheck passed with exit 0 on candidate d9995605
+        (runtime state.json, log 2ec6e40d...-C1.log, tsc --noEmit no
+        diagnostics).
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: "A9: `pnpm test:unit`
+      通过，含上游本轮新增/改写用例（`AgyOAuthSection`、`GeminiFormFields`、`ProviderCard.agyMod\
+      el`、`ProviderForm.agyLogin`、`agyLocales`、`useGeminiConfigState`、`DeepLink\
+      ImportDialog`、`AppsPage`、`ProviderPresetSelector`）与 fork 既有用例；时间敏感用例按既有
+      00:00–00:30 窗口口径处理。"
+    result: passed
+    reason:
+      text: "C3 pnpm test:unit passed exit 0: 262 test files / 3372 tests passed; log
+        includes AgyOAuthSection, GeminiFormFields, ProviderCard.agyModel,
+        ProviderForm.agyLogin, agyLocales, useGeminiConfigState,
+        DeepLinkImportDialog, AppsPage, ProviderPresetSelector; run at 22:07
+        local, outside the 00:00-00:30 failure window."
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: "A10: `pnpm format:check` 通过（手工拼接共享文件后必须本地 prettier 归一化）。"
+    result: passed
+    reason:
+      text: C2 pnpm format:check passed exit 0; log says all matched files use
+        Prettier code style.
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: "A11: `pnpm build:renderer` 通过。"
+    result: passed
+    reason:
+      text: C4 pnpm build:renderer passed exit 0; vite build completed.
+      truncated: false
+  - id: A12
+    source: brief.md
+    text: "A12: `cargo check` 通过，并确认 `Cargo.lock` 的改动只来自本轮允许项：`cc-switch` 版本号行
+      `4.0.18-1`、tokio 依赖的 `signal-hook-registry` 行；`tauri-plugin-updater`
+      相关条目不得出现。"
+    result: passed
+    reason:
+      text: "C5 cargo check --all-targets passed exit 0 (only a pre-existing
+        unused-import warning). Cargo.lock delta pre-sync-v418..HEAD is exactly
+        2 insertions / 1 deletion: cc-switch 4.0.17-1 -> 4.0.18-1 and tokio
+        signal-hook-registry; tauri-plugin-updater absent from Cargo.toml and
+        Cargo.lock."
+      truncated: false
+  - id: A13
+    source: brief.md
+    text: "A13: `cargo test` 通过（含 fork 的托盘左键源码护栏、上游 agy
+      迁移/持久化用例、`src-tauri/tests/mcp_commands.rs`）；如遇环境性失败，按规格固定口径取证并记录，不扩大跳过列表。"
+    result: passed
+    reason:
+      text: "C6 cargo test passed exit 0: lib 3992 passed / 0 failed;
+        tray::tests::tray_left_click_never_opens_the_menu ok; agy
+        migration/persistence tests ok; tests/mcp_commands.rs 36 passed."
+      truncated: false
+  - id: A14
+    source: brief.md
+    text: "A14: 落地保真核对通过：对 45 个重叠文件按固定四 ref
+      归一化行多重集算法（`v4.0.17`、`v4.0.18`、`pre-sync-v418`、最终
+      `HEAD`）逐文件计算「上游新增行缺失」与「fork
+      新增行缺失」，结果与逐行归类记录在规格中；计算在本轮全部最终态提交落完之后执行；确有意图取舍时逐行说明理由并带重数，未说明的非零缺失即视为丢语义缺\
+      陷。"
+    result: passed
+    reason:
+      text: Independent four-ref recompute at HEAD 7f1a510 (code tree identical to
+        4047eff0b; later commits touch docs only) reproduces upstream-added-line
+        missing = 27 across 8 files (README 12;
+        package.json/Cargo.toml/Cargo.lock/tauri.conf.json 1 each;
+        commands/settings.rs 9; database/mod.rs 1; schema.rs test assert 1) and
+        fork-added-line missing = 15 across 12 files (4 version lines;
+        SCHEMA_VERSION; schema.rs 3; ProviderForm 2; EndpointField 1;
+        en/zh/ja/zh-TW etok 1 each), exactly matching the spec attribution and
+        counts.
+      truncated: false
+  - id: A15
+    source: brief.md
+    text: "A15: 4 个既有 locale
+      JSON（`zh`、`en`、`ja`、`zh-TW`）逐文件可解析且按对象作用域统计无任何同名重复键，fork 键段按 key
+      逐个比对全部在位；上游本轮 47 个新键在 4 个 locale 全部在位且取值与 `v4.0.18` 逐字节一致；上游删除的 17 个键在 4 个
+      locale 均不再残留（fork 无引用）；fork 专属覆盖 `provider.connectivityCheck` 与
+      `settings.general.trayStyleHelp` 保持 fork 文案；`tr.json` 与 `git show
+      v4.0.18:src/i18n/locales/tr.json` 逐字节一致。"
+    result: passed
+    reason:
+      text: "All four locales parse with duplicate-key detection at object scope
+        (dups=0). Per locale: upstream-new keys 47, missing 0; upstream-deleted
+        keys 17, leftover 0; value mismatches vs v4.0.18 are exactly the two
+        fork overrides provider.connectivityCheck and
+        settings.general.trayStyleHelp (fork text present). No fork key lost vs
+        pre-sync (the 18 keys absent from HEAD are all in the upstream-deleted
+        set). tr.json is byte-identical to git show
+        v4.0.18:src/i18n/locales/tr.json (299935 bytes)."
+      truncated: false
+  - id: A16
+    source: brief.md
+    text: "A16: `tauri_plugin_updater`/`updater_builder` 在全仓 `src-tauri` 命中数仍为
+      0；`tauri-plugin-updater` 未回到 `src-tauri/Cargo.toml`
+      依赖表；`createUpdaterArtifacts` 仍为 `false`；`install_update_and_restart`
+      仍为空壳。"
+    result: passed
+    reason:
+      text: tauri_plugin_updater and updater_builder have 0 hits under src-tauri;
+        tauri-plugin-updater has 0 hits in
+        Cargo.toml/Cargo.lock/package.json/pnpm-lock.yaml/capabilities;
+        createUpdaterArtifacts is false at src-tauri/tauri.conf.json:40;
+        install_update_and_restart remains a stub returning Ok(false) at
+        commands/settings.rs:265-267.
+      truncated: false
+  - id: A17
+    source: brief.md
+    text: "A17: 上游 AGY 能力在 fork 落地后可用：11 个 `APP_IDS` 含 agy、Apps 页可安装/打开终端、agy 表单走
+      Gemini 形状与 `preferConfigModel`、官方卡绑定授权中心账号（仅 macOS 显示切号）、授权中心 Antigravity
+      分组与额度、会话/用量归属、MCP/Skills agy 开关、`enabled_agy` 持久化与迁移、上游新增测试全部通过。"
+    result: passed
+    reason:
+      text: AGY backend/frontend files exist (agy_config.rs, commands/agy_account.rs,
+        services/agy_account/{oauth,keychain,quota,tests},
+        provider/agy_direct.rs, session_usage_agy.rs, subscription_agy.rs,
+        session_manager/providers/agy.rs, mcp/agy.rs, AgyAccountQuotaFooter.tsx,
+        AgyOAuthSection.tsx, antigravity.svg); APP_IDS has 11 entries including
+        agy; AppType::Agy wired (app_config.rs:434 etc.); agy form uses Gemini
+        shape with preferConfigModel (ProviderForm:1028); account binding/switch
+        UI is macOS-only (isMac at ProviderCard:295, ProviderForm:2955; keychain
+        cfg macos); enabled_agy persisted (dao/mcp.rs:12/100, dao/skills.rs);
+        Apps-page install/terminal and MCP/Skills wiring present; upstream agy
+        tests pass in C3/C6.
+      truncated: false
+  - id: A18
+    source: brief.md
+    text: 'A18: Q1 的 agy 预设白名单生效：`forkOfficialAllowlist.agy === ["Google
+      Official"]`，agy 表单预设条目 id 仍为 `gemini-<原始下标>`，`entriesFor` 保持「编号先于 hidden
+      过滤、先于白名单过滤」；上游 agy 预设（Google Official）在 fork 构建下可见，第三方/赞助商预设被过滤。'
+    result: passed
+    reason:
+      text: 'src/config/forkOfficialAllowlist.ts:23 has agy: ["Google Official"];
+        entriesFor numbers presets with gemini-<original index> before
+        hidden/whitelist filtering (ProviderForm:917-929) and the agy branch
+        calls entriesFor(appId, geminiProviderPresets, "gemini", false) at
+        :933-934; Google Official exists in geminiProviderPresets.ts:40, and
+        filterForkPresets restricts agy to that name.'
+      truncated: false
+  - id: A19
+    source: brief.md
+    text: "A19: Q2 的 agy 卡片模型口径生效：agy 使用上游 `extractAgyModel` 模型行（含
+      `config.model.name` → `env.GEMINI_MODEL` 的取值顺序），不进入 fork 的
+      `MODEL_CAPABLE_APPS`/模型徽章/快捷切换弹窗；4 个既有 app 的徽章与快捷切换行为不变。"
+    result: passed
+    reason:
+      text: extractAgyModel reads config.model.name then env.GEMINI_MODEL
+        (ProviderCard:161-169) and is applied only when appId === agy (:244),
+        rendered after the badge row and before website/display URL (:514-521);
+        MODEL_CAPABLE_APPS remains exactly [claude, codex, gemini, grokbuild]
+        (providerModelUtils.ts:21-26) with a test asserting that set; badge and
+        ModelQuickSwitchDialog are gated by isModelCapableApp (ProviderCard:406,
+        698), so agy has no badge/quick switch and the four apps are unchanged.
+      truncated: false
+  - id: A20
+    source: brief.md
+    text: "A20: Q3 的跨应用导入口径生效：agy 的读/建/改三个分支按 Gemini
+      形状处理（`env.GOOGLE_GEMINI_BASE_URL`/`GEMINI_API_KEY`/`GEMINI_MODEL`），`Provi\
+      derForm` 的 gemini 分支改用 `usesGeminiStyleForm(appId)`，agy
+      作为来源与目标都可用且不会写空配置；`useProviderImportSources` 与 `ProviderImportEntry` 对 agy
+      不做排除。"
+    result: passed
+    reason:
+      text: providerImport.ts read (line 137), create (310) and update (448) branches
+        handle agy together with gemini using
+        env.GOOGLE_GEMINI_BASE_URL/GEMINI_API_KEY/GEMINI_MODEL;
+        DEFAULT_MODEL_SUPPORT includes agy; useProviderImportSources enumerates
+        APP_IDS with no agy exclusion and ProviderImportEntry is rendered by
+        ProviderForm (2507/2532); ProviderForm flat-state/import branches use
+        usesGeminiStyleForm(appId).
+      truncated: false
+  - id: A21
+    source: brief.md
+    text: "A21: **fork 左键契约的源码级回归护栏通过**：`src-tauri/src/tray.rs` 的
+      `tray_left_click_never_opens_the_menu` 用例在重放后仍成立（`apply_tray_style` 固定
+      `set_show_menu_on_left_click(false)`、`lib.rs` 的 builder 固定
+      `.show_menu_on_left_click(false)`），上游的 `native_menu_on_left_click`
+      辅助函数与其调用点在 fork 终态仍为零命中；`lib.rs` 的 `TrayIconEvent::Click` 分支保持 fork
+      四条分支语义。"
+    result: passed
+    reason:
+      text: apply_tray_style sets set_show_menu_on_left_click(false) (tray.rs:2642)
+        and the lib.rs builder uses .show_menu_on_left_click(false)
+        (lib.rs:1240); tray_left_click_never_opens_the_menu exists
+        (tray.rs:3329+) and reports ok in C6; native_menu_on_left_click has 5
+        occurrences, all comments/assertion strings, zero function definitions
+        or calls; lib.rs TrayIconEvent::Click keeps the fork four-branch
+        semantics (non-native left with hidden panel -> toggle_main_window,
+        otherwise toggle; native left -> toggle_main_window; native right ->
+        mark_feedback_seen).
+      truncated: false
+  - id: A22
+    source: brief.md
+    text: "A22: 上游本轮稳定性与修复在 fork 落地后可用：Unix 启动提高文件描述符上限、Unix 运行时 CLI 使用登录 shell
+      PATH、Windows 终端不再等待控制台、MSI `REBOOT=ReallySuppress`（`per-user-main.wxs`）与
+      release.yml 的 Property 断言、桌面快捷方式可选、Claude 会话按 `/cd` 归组、Codex
+      未用量窗口隐藏倒计时、deepseek-v4.1-flash 定价、用量应用筛选。"
+    result: passed
+    reason:
+      text: Unix fd limit raised via raise_open_file_limit (lib.rs:358-385, called at
+        567); Unix CLI uses login_shell_path (misc.rs:2962, used at 398);
+        Windows terminal launch uses Stdio::null + status only
+        (misc.rs:5852-5859); MSI carries Property REBOOT=ReallySuppress
+        (per-user-main.wxs:42) and release.yml:176-177 fails the build
+        otherwise; desktop shortcut optional (CREATEDESKTOPSHORTCUT
+        wxs:68-110,165); Claude sessions group by last /cd
+        (session_manager/providers/claude.rs:91,235); Codex unused windows hide
+        reset time (subscription.rs:1046-1050); deepseek-v4.1-flash pricing
+        (schema.rs:2467, tests.rs:1059); usage app filter uses visible apps
+        (UsageDashboard.tsx:522-533).
+      truncated: false
+  - id: A23
+    source: brief.md
+    text: "A23: 冲突标记零命中：`git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' HEAD -- src
+      src-tauri tests docs README.md` 为 0（exit 1）。"
+    result: passed
+    reason:
+      text: git grep -I -l -e "^<<<<<<<" -e "^>>>>>>> " HEAD -- src src-tauri tests
+        docs README.md matched nothing (exit 1).
+      truncated: false
+builder_handoff:
+  candidate_id: d9995605-39d3-46f0-92e1-10a766977215
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:bdf85757-140d-495a-8be7-a4757bf40e4f
+  iteration: 1
+  summary:
+    text: 把 main rebase 到上游 tag v4.0.18（annotated tag 81096e4 → 剥离提交 cb90a2440）：173
+      个 fork 提交按原顺序重放、无提交被丢弃，主题序列前 173 条逐行 diff 为 0 行；patch-id 19 处差异全部归类为 14
+      处冲突停车 + 5 处仅 hunk 位移，无 fork 语义丢失。重放后另有 4 个本轮提交（4047eff0b 同步终态、f796bae4c
+      重放/AGY/保真登记、fc3b15891 重叠面口径更正、7f1a510c5 brief 口径更正），当前 v4.0.18..HEAD = 177
+      = 173 + 4。45 个重叠文件按 HOW_TO §3 逐文件叠加：AGY 作为第 11 个应用按 Q1（agy 白名单 Google
+      Official）、Q2（保留上游 extractAgyModel 模型行，不进模型徽章/快捷切换）、Q3（纳入跨应用导入，Gemini
+      形状）落地；schema 升到 22（v20→21 合并 fork mcode/pi 修复 + agy，v21→22 幂等补 agy）；四处版本
+      4.0.18-1。开发期六项检查全部 exit 0（typecheck / test:unit 262 文件 3372 用例 /
+      format:check / build:renderer / cargo check --all-targets / cargo test 17
+      个测试二进制 4187 passed）；落地保真实测上游新增行缺失 27 行（8 文件）、fork 新增行缺失 15 行（12
+      文件），逐行归因写入规格与 HOW_TO §4.5。交付（push main + tag v4.0.18-1）尚未执行，按 Q4
+      在验收被接受并归档后进行。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+    - A12
+    - A13
+    - A14
+    - A15
+    - A16
+    - A17
+    - A18
+    - A19
+    - A20
+    - A21
+    - A22
+    - A23
+  acceptance_review:
+    - id: A1
+      status: implemented-with-evidence
+      evidence:
+        - git rev-parse v4.0.18 = 81096e49442a97fc34a4b41db32cdd8f4120757d（tag
+          对象），git rev-parse v4.0.18^{commit} =
+          cb90a2440d1a771d67f46b65b2e0f2ea5106ce85
+        - git merge-base HEAD v4.0.18 = cb90a2440d1a771d67f46b65b2e0f2ea5106ce85
+        - git log --format='%an <%ae>' v4.0.18..HEAD | sort -u = Tune
+          <176898395+tunecc@users.noreply.github.com>
+        - git rev-list --count v4.0.18..HEAD = 177（173 条重放 + 4 条本轮提交）
+      note: main 已基于 v4.0.18 的剥离提交 cb90a2440（annotated tag 对象 81096e4）；v4.0.18..HEAD 的
+        177 条提交作者只有 Tune，区间内没有上游提交。
+    - id: A2
+      status: implemented-with-evidence
+      evidence:
+        - git rev-list --count v4.0.17..pre-sync-v418 = 173
+        - 重放完成时 git rev-list --count v4.0.18..HEAD = 173；当前 = 177，差值 4
+          全部为本轮新增提交（4047eff0b / f796bae4c / fc3b15891 / 7f1a510c5）
+        - diff <(git log --format='%s' --reverse v4.0.17..pre-sync-v418) <(git
+          log --format='%s' --reverse v4.0.18..HEAD | head -173) = 0 行
+        - patch-id（stdin 口径）差异 19 处：14
+          处冲突停车（#2/#13/#20/#41/#42/#43/#46/#69/#74/#84/#117/#120/#144/#154）+ 5
+          处仅 hunk 位移（#34/#47/#72/#79/#110）
+        - docs/comet/changes/sync-upstream-v418/specs/upstream-sync/spec.md
+          的「重放映射」节
+      note: 173 个 fork 提交全部按原顺序重放，无提交被 git 判空丢弃；主题序列 0 行差异；19 个 patch-id
+        差异逐个归类为冲突停车或上下文位移，文件集与增删行已登记，未发现 fork 语义丢失。当前 177 = 173 + 4 个本轮提交。
+    - id: A3
+      status: implemented-with-evidence
+      evidence:
+        - comm -12 <(git diff --name-only v4.0.17 v4.0.18 | sort) <(git diff
+          --name-only v4.0.17 pre-sync-v418 | sort) = 45 个重叠文件（上游 213 文件 + fork
+          侧 457 文件）
+        - git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' HEAD -- src src-tauri
+          tests docs README.md = 0 命中
+        - git diff --numstat v4.0.17 HEAD -- database/schema.rs / lib.rs /
+          commands/misc.rs / ProviderForm.tsx / ProviderCard.tsx /
+          ProviderList.tsx / App.tsx =
+          311/0、117/42、753/171、228/56、155/11、244/13、109/6
+        - commands/misc.rs 保留 5 处 tunecc/cc-switch/releases；src-tauri 内
+          farion1231/cc-switch/releases 命中 0
+        - locale en.json 相对 v4.0.17 = 391/52，release.yml = 90/780，README.md =
+          96/522（fork 整文件重写）
+      note: 45 个重叠文件按 HOW_TO §3 与完整目标规格逐文件叠加：schema.rs 同时含 fork v22 迁移与上游 agy
+        列，ProviderForm 同时含 entriesFor 与 usesGeminiStyleForm，ProviderCard 同时含
+        fork 徽章与上游 extractAgyModel，misc.rs 同时含 AGY 命令与 fork tunecc
+        URL；版本与锁文件、locale、release.yml、README 的差异均为规格登记的叠加或刻意取舍，最终态冲突标记零命中。
+    - id: A4
+      status: implemented-with-evidence
+      evidence:
+        - package.json:3、src-tauri/tauri.conf.json:4、src-tauri/Cargo.toml:3、src-tauri/Cargo.lock:761
+          均为 4.0.18-1
+        - "src-tauri/src/database/mod.rs:54 SCHEMA_VERSION: i32 = 22"
+        - schema.rs 迁移臂 set_user_version 19/20/21/22 依次位于
+          574/586/631/648；create_tables 的 mcp_servers/skills 的 enabled_agy 位于
+          72/104；v20→21 加 agy 位于 613/627，v21→22 幂等补列位于 643
+        - 上游测试
+          agy_migration_preserves_existing_flags_and_defaults_to_disabled（3977）、agy_clean_database_persists_independent_mcp_and_skill_flags（4042）与新增
+          fork_v21_migration_adds_agy_flags_idempotently（3999）均通过
+        - cargo test 17 个测试二进制 4187 passed / 0 failed
+      note: 四处版本号统一 4.0.18-1；SCHEMA_VERSION=22；v18→19 保持 fork website_url_2 与 mcode
+        并存，v19→20 为上游 pi，v20→21 合并 fork mcode/pi 修复与上游 enabled_agy，v21→22 幂等补
+        enabled_agy；全新库建表含 agy 列，上游断言改用 SCHEMA_VERSION。
+    - id: A5
+      status: implemented-with-evidence
+      evidence:
+        - git grep -I -l
+          命中文件数：__CCS_FORK_BUILD__=2、__CCS_DEV_PANEL__=2、DevPanel=3、visibleSidebarPanels=4、batchConnectivityTest=4、extractModelBadgeForProvider=3、ModelQuickSwitchDialog=4、websiteUrl2=27、website_url_2=17、toggle_main_window=2、hide_main_window=1、panel_visible=2、show_menu_on_left_click(false)=2、connectivity_test_provider_models=5、connectivity_probe_provider=5、filterForkPresets(=4、ProviderImportEntry=7
+        - git diff --quiet v4.0.18 HEAD -- .github/workflows/ci.yml /
+          release.yml 均 exit 1（fork 裁剪版保留）
+        - tauri_plugin_updater / updater_builder 在 src-tauri 命中
+          0；tauri-plugin-updater 在 Cargo.toml/Cargo.lock 命中
+          0；createUpdaterArtifacts=false
+        - git grep -n tunecc/cc-switch/releases HEAD --
+          src-tauri/src/commands/misc.rs 命中 5 处
+      note: fork 魔改保留清单逐项在位：产品名与
+        DevPanel、侧边面板可见性、模型徽章与快捷切换、右键置顶/置底、官方预设过滤、逐模型连通性测试、双官网链接、跨应用导入、禁用更新器、fork
+        CI 与 README 差异说明；可见性、徽章、连通性、双官网与导入的取证命中数与规格一致。
+    - id: A6
+      status: implemented-with-evidence
+      evidence:
+        - git diff --quiet pre-sync-v418 HEAD -- .comet/config.yaml = exit 0
+        - ".comet/config.yaml:4 default_workflow: native；:7-8 workflows 含 native
+          与 classic"
+        - git diff --stat pre-sync-v418 HEAD --
+          src/config/forkOfficialAllowlist.ts = 1 insertion（仅 Q1 授权的 agy 条目）
+      note: .comet/config.yaml 相对 pre-sync-v418 逐字节未变；fork 白名单文件唯一的改动是 Q1 确认的 agy
+        行，没有被上游内容或重放覆盖。
+    - id: A7
+      status: implemented-with-evidence
+      evidence:
+        - docs/HOW_TO_REBASE_UPSTREAM.md:293 新增 §4.5「v4.0.18 轮的叠加要点（2026-10-22
+          同步实测）」
+        - diff -q
+          docs/comet/changes/sync-upstream-v418/specs/upstream-sync/spec.md
+          docs/comet/specs/upstream-sync/spec.md = 0（两份各 250 行，内容一致）
+        - 规格含重放映射实测、19 处 patch-id 归类、45 文件冲突清单、27/15 行落地保真逐行归因；HOW_TO §4.5 同步登记
+        - brief 的重叠面口径已在 7f1a510c5 更正为 pre-sync-v418 / fork 457 文件，与规格一致
+      note: HOW_TO §4.5、本 change 完整目标规格与全局 upstream-sync
+        规格已重写为同步后的完整状态；重放映射、冲突清单与落地保真数字在三处一致，brief 的陈旧 HEAD 口径已修正。
+    - id: A8
+      status: implemented-with-evidence
+      evidence:
+        - pnpm typecheck 真实退出码 0
+        - 无 TS2300/TS2339/TS2353；AppId/VisibleApps/McpApps 的 agy 字段无重复声明
+      note: "`pnpm typecheck`（tsc --noEmit）在终态工作树通过，退出码 0；AGY 的 AppId
+        扩散面（APP_IDS、Record<AppId,…>、VisibleApps/McpApps）全部补齐且无重复声明。"
+    - id: A9
+      status: implemented-with-evidence
+      evidence:
+        - pnpm test:unit：Test Files 262 passed (262)，Tests 3372 passed
+          (3372)，退出码 0
+        - 上游新增用例
+          AgyOAuthSection.test.tsx、GeminiFormFields.test.tsx、ProviderCard.agyModel.test.tsx、ProviderForm.agyLogin.test.tsx、agyLocales.test.ts、useGeminiConfigState.test.tsx
+          均在套件内通过
+        - 本机时钟不在 00:00–00:30 窗口
+      note: "`pnpm test:unit` 全绿：262 个测试文件、3372 个用例；上游 AGY 新用例与 fork 既有用例同时通过，未使用
+        --skip。"
+    - id: A10
+      status: implemented-with-evidence
+      evidence:
+        - pnpm format:check：All matched files use Prettier code style!，退出码 0
+        - 4 个 locale 的三方合并与共享文件手工拼接后均通过 prettier
+      note: "`pnpm format:check` 通过；locale 与 JSX/Rust 合并未引入格式漂移。"
+    - id: A11
+      status: implemented-with-evidence
+      evidence:
+        - pnpm build:renderer：✓ built，退出码 0
+        - tray-panel 入口仍被 vite 构建（tray-panel chunk 命中）
+      note: "`pnpm build:renderer` 通过，渲染层与托盘面板入口均成功产出。"
+    - id: A12
+      status: implemented-with-evidence
+      evidence:
+        - cargo check --all-targets 退出码 0
+        - git diff --numstat pre-sync-v418 HEAD -- src-tauri/Cargo.lock = 2/1（仅
+          cc-switch 版本行 4.0.17-1→4.0.18-1 与 tokio 的 signal-hook-registry 行）
+        - tauri-plugin-updater 在 src-tauri/Cargo.lock 与 src-tauri/Cargo.toml 命中 0
+        - src-tauri/Cargo.toml:46 tokio features 含 process
+      note: "`cargo check --all-targets` 通过；锁文件相对 pre-sync 只多了版本号与
+        signal-hook-registry 两处；相对 v4.0.18 的其余差异是 fork 刻意不引入 updater 依赖，锁文件内无
+        tauri-plugin-updater 条目。"
+    - id: A13
+      status: implemented-with-evidence
+      evidence:
+        - cargo test 从 src-tauri 运行，退出码 0
+        - 17 个测试二进制，4187 passed / 0 failed（另 9 ignored）
+        - test tray::tests::tray_left_click_never_opens_the_menu ... ok（定向复跑
+          running 1 test / 1 passed）
+        - database 的
+          agy_migration_preserves_existing_flags_and_defaults_to_disabled、agy_clean_database_persists_independent_mcp_and_skill_flags、fork_v21_migration_adds_agy_flags_idempotently
+          通过；tests/mcp_commands.rs 通过
+      note: "`cargo test` 全绿：17 个测试二进制、4187 passed、0 failed，含 fork 托盘源码护栏、上游 agy
+        迁移/持久化用例与 mcp_commands；未使用 --skip，未出现环境性失败。"
+    - id: A14
+      status: implemented-with-evidence
+      evidence:
+        - 四 ref 归一化行多重集脚本：213 个上游文件全部参与，其余 205 个文件双侧缺失为 0
+        - 上游新增行缺失 27 行 / 8 文件；fork 新增行缺失 15 行 / 12 文件
+        - 计算在终态 HEAD=4047eff0b 执行；之后 4 个提交只改 Markdown，不在 213 个文件内
+        - 规格「落地保真核对」节逐行归因；HOW_TO §4.5:312 同步登记
+      note: 落地保真按固定四 ref 口径复算：上游缺失 27 行（README 赞助商表 12、版本号 4、settings.rs updater hunk
+        9、SCHEMA_VERSION 与断言各 1），fork 缺失 15 行（版本流转、schema
+        21→22、日志/注释扩写、usesGeminiStyleForm 取代旧 gemini 分支、aria-required 可配置化、上游已删
+        etok）；全部为刻意取舍或预期流转，无未归因缺失。
+    - id: A15
+      status: implemented-with-evidence
+      evidence:
+        - en/zh/ja/zh-TW：上游新增 47 键全部在位且取值一致（missing=0、mismatch=0），删除 17
+          键无残留（leftover=0）
+        - 按对象作用域查重：en/zh/ja/zh-TW/tr 的 dup 均为 0
+        - tr.json 与 v4.0.18 逐字节一致（byte_same=True；新增 0、删除 17）
+        - 4 个 locale 的 fork 覆盖键 provider.connectivityCheck 与
+          settings.general.trayStyleHelp 均在位
+      note: 4 个 locale 的上游 47 个新键全部落地且取值逐字节一致，17 个删除键无残留，无重复键；fork 专属覆盖保持 fork
+        文案；tr.json 与上游 tag 逐字节一致。
+    - id: A16
+      status: implemented-with-evidence
+      evidence:
+        - git grep -l tauri_plugin_updater / updater_builder HEAD -- src-tauri =
+          0
+        - tauri-plugin-updater 在 src-tauri/Cargo.toml = 0、src-tauri/Cargo.lock =
+          0
+        - "src-tauri/tauri.conf.json:40 createUpdaterArtifacts: false"
+        - src-tauri/src/commands/settings.rs:265 install_update_and_restart 返回
+          Ok(false)；:271 check_app_update_available 返回版本号
+      note: 应用内更新器保持禁用：无插件/依赖/AIP，createUpdaterArtifacts 为 false，两个命令保持空壳接口；上游
+        installer_arg hunk 未采纳，MSI REBOOT 改由 release.yml 断言兜底。
+    - id: A17
+      status: implemented-with-evidence
+      evidence:
+        - src/config/appConfig.tsx:19-31 APP_IDS 为 11 个应用且含
+          agy；DEFAULT_VISIBLE_APPS 含 agy
+        - AGY
+          后端文件在位：agy_config.rs、commands/agy_account.rs、services/agy_account/{mod,oauth,keychain,quota,tests}.rs、services/provider/agy_direct.rs、session_usage_agy.rs、subscription_agy.rs、session_manager/providers/agy.rs、mcp/agy.rs
+        - '前端 AgyAccountQuotaFooter.tsx、AgyOAuthSection.tsx、antigravity.svg
+          在位；ProviderForm.tsx:1028 preferConfigModel: appId ===
+          "agy"；ProviderCard.tsx:161/244 extractAgyModel'
+        - settings.rs:57 VisibleApps.agy、:597 current_provider_agy、:1372
+          AppType::Agy 读取；database/dao/mcp.rs:12/100/129 enabled_agy；mcp/agy.rs
+          投影
+        - 授权中心 Antigravity
+          分组：AuthCenterPanel.tsx:21、AgyOAuthSection.tsx:32/102/106、AccountQuota.tsx:343；切号受
+          macOS 钥匙串约束（keychain.rs 的 cfg(target_os="macos")）
+        - 会话/用量：sessions/utils.ts:19/38/45、SessionItem.tsx:109、RequestLogTable.tsx:105、usage/providerLabel.ts:18；Apps
+          页 useToolManagement.ts:51/195/214、toolUninstallCommands.ts:85
+        - 上游 AGY 测试全部在 pnpm test:unit 262 文件内通过；agy 迁移测试在 cargo test 通过
+      note: 上游 AGY 能力完整落地：11 个应用、Gemini 形状表单与 preferConfigModel、官方卡绑定授权中心（切号仅
+        macOS）、授权中心分组与额度、会话/用量归属、MCP/Skills 开关、enabled_agy 持久化与 v20→22
+        迁移；上游新增测试与迁移用例全部通过。
+    - id: A18
+      status: implemented-with-evidence
+      evidence:
+        - 'src/config/forkOfficialAllowlist.ts:23 agy: ["Google Official"]'
+        - ProviderForm.tsx:934 usesGeminiStyleForm 分支调用 entriesFor(appId,
+          geminiProviderPresets, "gemini", false)：白名单键 agy、id 前缀 gemini-
+        - ProviderForm.tsx:911-929 entriesFor 先 map 原数组下标生成 id，再过滤 hidden
+          与白名单；filterForkPresets 实现在 forkPresetFilter.ts:10-19
+        - pnpm test:unit 262 文件 / 3372 用例通过（含预设选择与 AGY 表单相关用例）
+      note: Q1 生效：agy 白名单仅 Google Official；agy 复用 gemini 预设数组，id 仍为
+        gemini-<原始下标>，entriesFor 保持编号先于 hidden、先于白名单过滤；第三方/赞助商预设在 fork 构建下被过滤。
+    - id: A19
+      status: implemented-with-evidence
+      evidence:
+        - src/utils/providerModelUtils.ts:13 ModelCapableAppId 仅
+          claude/codex/gemini/grokbuild；:21 MODEL_CAPABLE_APPS 不含 agy
+        - ProviderCard.tsx:161-169 extractAgyModel 先取 config.model.name，再取
+          env.GEMINI_MODEL；:244 仅在 appId === "agy" 时计算；:515-518 渲染模型行
+        - 徽章与快捷切换由 isModelCapableApp
+          控制：ProviderCard.tsx:406/698、ModelQuickSwitchDialog.tsx:96
+        - ProviderCard.agyModel.test.tsx 在 test:unit 中通过
+      note: Q2 生效：agy 使用上游 extractAgyModel 模型行（config.model.name →
+        env.GEMINI_MODEL），不进入 MODEL_CAPABLE_APPS，因此没有模型徽章与快捷切换；4 个既有 app
+        的徽章/快捷切换路径未改。
+    - id: A20
+      status: implemented-with-evidence
+      evidence:
+        - src/utils/providerImport.ts:137/310/448 为 agy 的读/建/改分支，按 Gemini 形状使用
+          env.GOOGLE_GEMINI_BASE_URL / GEMINI_API_KEY / GEMINI_MODEL
+        - providerImport.ts:217-221 DEFAULT_MODEL_SUPPORT =
+          claude/codex/gemini/agy
+        - ProviderForm.tsx:492/933/1027/1049/1653 的 Gemini 分支改用
+          usesGeminiStyleForm(appId)；:2403 useProviderImportSources(appId)、:2507
+          ProviderImportEntry 接线，未排除 agy
+        - pnpm typecheck 与 pnpm test:unit 通过（含
+          GeminiFormFields/ProviderForm.agyLogin 用例）
+      note: Q3 生效：agy 作为来源与目标都可用，读/建/改按 Gemini 形状，默认模型迁移集合含 agy；ProviderForm 的扁平 state
+        同步改用 usesGeminiStyleForm，导入不会把 agy 写成空配置；导入入口与来源枚举未排除 agy。
+    - id: A21
+      status: implemented-with-evidence
+      evidence:
+        - cargo test --lib tray_left_click_never_opens_the_menu：running 1 test /
+          test tray::tests::tray_left_click_never_opens_the_menu ... ok / 1
+          passed
+        - src-tauri/src/lib.rs:1240 与 src-tauri/src/tray.rs:2642 均为
+          .show_menu_on_left_click(false)；护栏断言位于 tray.rs:3344/3360
+        - src-tauri/src/lib.rs:1193 TrayIconEvent::Click 分支保留 fork 四条分派
+        - native_menu_on_left_click 在 src-tauri 仅 5
+          处命中，全部是注释/护栏断言文本（tray.rs:2638/3329/3345/3354/3355），函数定义与代码调用点为 0
+      note: fork 左键契约的源码级护栏通过：两处 show_menu_on_left_click(false) 固定，lib.rs 的 Click 分支保持
+        fork 四条语义，上游 native_menu_on_left_click 未复活（只存在于注释与断言文本）。
+    - id: A22
+      status: implemented-with-evidence
+      evidence:
+        - Unix 文件描述符上限：lib.rs:365 raise_open_file_limit，:567 启动时调用
+        - Unix 登录 shell PATH：commands/misc.rs:398 login_shell_path(None)
+        - Windows 终端不等待：commands/misc.rs:5847-5870
+          run_windows_start_command_with_env 使用 Stdio::null 与 .status()
+        - MSI REBOOT：wix/per-user-main.wxs:42 <Property Id="REBOOT"
+          Value="ReallySuppress" />；release.yml:177 Property 断言
+        - 桌面快捷方式可选：per-user-main.wxs:62/71/103 DESKTOPSHORTCUTEXISTS
+        - Claude /cd 归组：session_manager/providers/claude.rs:235，测试 :1909；Codex
+          未用量窗口隐藏倒计时：services/subscription.rs:1043-1050；deepseek-v4.1-flash
+          定价：database/schema.rs:2467；用量应用筛选：UsageDashboard.tsx:525
+        - cargo test / pnpm test:unit 全部通过
+      note: 上游本轮稳定性与修复全部落地：Unix fd 上限与登录 shell PATH、Windows 终端非阻塞启动、MSI REBOOT 与
+        release.yml 断言、可选桌面快捷方式、Claude /cd 归组、Codex
+        未用量窗口隐藏倒计时、deepseek-v4.1-flash 定价、用量只列可见应用；相关 Rust/vitest 用例通过。
+    - id: A23
+      status: implemented-with-evidence
+      evidence:
+        - git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' HEAD -- src src-tauri
+          tests docs README.md | wc -l = 0
+      note: 最终态冲突标记零命中（exit 1 / 0 行）。
+  checks:
+    - name:
+        text: pnpm typecheck
+        truncated: false
+      result: passed
+      note:
+        text: tsc --noEmit，退出码 0
+        truncated: false
+    - name:
+        text: pnpm test:unit
+        truncated: false
+      result: passed
+      note:
+        text: 262 文件 / 3372 用例全绿，含上游 AGY 新增用例
+        truncated: false
+    - name:
+        text: pnpm format:check
+        truncated: false
+      result: passed
+      note:
+        text: prettier 全量检查通过
+        truncated: false
+    - name:
+        text: pnpm build:renderer
+        truncated: false
+      result: passed
+      note:
+        text: 渲染层与 tray-panel 入口构建成功，退出码 0
+        truncated: false
+    - name:
+        text: cargo check --all-targets
+        truncated: false
+      result: passed
+      note:
+        text: 退出码 0；锁文件相对 pre-sync 仅 2/1 允许行
+        truncated: false
+    - name:
+        text: cargo test
+        truncated: false
+      result: passed
+      note:
+        text: 17 个测试二进制 / 4187 passed / 0 failed，含托盘护栏与 agy 迁移用例
+        truncated: false
+    - name:
+        text: 落地保真四 ref 脚本
+        truncated: false
+      result: passed
+      note:
+        text: 213 个上游文件：上游缺 27 行/8 文件、fork 缺 15 行/12 文件，逐行归类见规格
+        truncated: false
+    - name:
+        text: locale 键位与重复键查重
+        truncated: false
+      result: passed
+      note:
+        text: en/zh/ja/zh-TW 新增 47、删除 17、缺失/不一致/残留/重复均为 0；tr 与上游逐字节一致
+        truncated: false
+    - name:
+        text: 冲突标记扫描
+        truncated: false
+      result: passed
+      note:
+        text: git grep 最终态 0 命中
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: fork 交付尚未执行：推 main 与打 tag v4.0.18-1 属归档之后的步骤，按 Q4 授权在验收被用户接受并归档后进行。
+      truncated: false
+    - text: 落地保真的上游缺失 27 行与 fork 缺失 15 行均为刻意取舍或预期流转：README 赞助商表 12 行（fork README
+        整文件重写）、四处版本号、commands/settings.rs 的 updater hunk 9 行、SCHEMA_VERSION 与
+        schema 断言各 1 行；fork 侧为版本流转、schema 21→22、日志/注释扩写、usesGeminiStyleForm 取代旧
+        gemini 分支、可配置 aria-required、上游已删 etok。逐行清单与理由在规格「落地保真核对」节。
+      truncated: false
+    - text: native_menu_on_left_click 的名字仍出现在 tray.rs 的 5 处注释/护栏断言文本中，函数定义与代码调用点为
+        0，不是功能回退。
+      truncated: false
+    - text: 上游自带的 src/hooks/useStreamCheck.ts 与 src/lib/api/connectivity-check.ts 仍写着
+        stream_check_provider，但 fork 已删该后端命令且无组件调用，属既有死代码，不是本轮丢失。
+      truncated: false
+    - text: services/session_usage_codex.rs 的
+        test_parent_rollout_is_cached_once_across_fork_cutoffs 是上游自带 CI 竞态；本地
+        cargo test 全绿，若 fork CI 单条红需按既有取证顺序（与上游逐字节相同 → 上游同用例是否同样红 → 本地重复跑）判断。
+      truncated: false
+    - text: 本地时钟不在 00:00–00:30 窗口；若 Verifier 复跑 pnpm test:unit
+        时进入该窗口，tests/components/SessionManagerPage.test.tsx
+        的分桶用例会因日历日分桶而失败，属已知时钟坑。
+      truncated: false
+    - text: 托盘左键、面板弹出/收起与轻量模式释放 WebView 是 GUI
+        运行时行为，无法在本机自动化验证；本轮以源码分支、护栏用例与六项检查作为证据，真实点击行为需用户在本机 app 内复核。
+      truncated: false
+    - text: AGY 的 OAuth 登录、钥匙串读写、账号切换与额度查询需要 macOS GUI/真实登录态，未做手工端到端验证；以上游单元测试与 cargo
+        test 覆盖为准，切号仅 macOS 的限制由 keychain 的 cfg(target_os="macos") 保证。
+      truncated: false
+    - text: fork v22 数据库被上游 v4.0.18（v21）打开会报「数据库版本过新」，与上游自身策略一致，按规格不做降级兼容。
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-10-22T14:07:05.251Z
+blockers: []
+verification:
+  candidate_id: d9995605-39d3-46f0-92e1-10a766977215
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:03a25e0c-8db3-450b-8a15-852eea134a78
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: C1
+      name:
+        text: pnpm typecheck
+        truncated: false
+      argv_display:
+        - text: typecheck
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 14291
+    - id: C2
+      name:
+        text: pnpm format:check
+        truncated: false
+      argv_display:
+        - text: format:check
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 5168
+    - id: C3
+      name:
+        text: pnpm test:unit
+        truncated: false
+      argv_display:
+        - text: test:unit
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 61043
+    - id: C4
+      name:
+        text: pnpm build:renderer
+        truncated: false
+      argv_display:
+        - text: build:renderer
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7991
+    - id: C5
+      name:
+        text: cargo check --all-targets
+        truncated: false
+      argv_display:
+        - text: check
+          truncated: false
+        - text: --all-targets
+          truncated: false
+      argv_truncated: false
+      cwd_ref: src-tauri
+      status: passed
+      exit_code: 0
+      duration_ms: 46502
+    - id: C6
+      name:
+        text: cargo test
+        truncated: false
+      argv_display:
+        - text: test
+          truncated: false
+      argv_truncated: false
+      cwd_ref: src-tauri
+      status: passed
+      exit_code: 0
+      duration_ms: 43755
+  summary:
+    text: "Verdict pass: all 23 acceptance items independently verified against HEAD
+      7f1a510 (candidate d9995605). Git state (merge-base cb90a2440, 173-commit
+      replay, 0-line subject diff, 154 identical patch-ids + 19 classified
+      differences), overlap 45 files, versions 4.0.18-1, SCHEMA_VERSION 22 with
+      the four-step chain, six Runtime checks green, landing fidelity
+      independently recomputed at 27 upstream-missing / 15 fork-missing lines
+      with exact per-file attribution, locale key audit clean (47 added / 17
+      removed per locale, 0 duplicates, two fork overrides, tr byte-identical),
+      fork features (tray contract, presets, dual URL, cross-app import incl.
+      agy, updater disabled, CI) and upstream fixes all present."
+    truncated: false
+  risks:
+    - text: GUI tray click behavior is guarded only by the source-level Rust test; no
+        automated GUI exercise.
+      truncated: false
+    - text: AGY OAuth/keychain flows and quota calls were not runtime-tested on this
+        machine (only compile/unit coverage).
+      truncated: false
+    - text: README 12 sponsor-table lines and the 9-line commands/settings.rs updater
+        hunk are intentional documented drops.
+      truncated: false
+    - text: Fork v22 databases are not downgrade-compatible with upstream v4.0.18
+        (v21), by design.
+      truncated: false
+    - text: C5/C6 emit one pre-existing unused-import warning in
+        services/provider/live.rs test module.
+      truncated: false
+    - text: Replay-count acceptance is met with 177 current commits (173 replay + 4
+        recorded this-round commits); the spec records 173 at replay completion.
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-10-22T15:02:35.945Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native Shape artifacts changed
+      truncated: false
+    completed_at: 2026-10-22T13:17:15.339Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: "Verdict pass: all 23 acceptance items independently verified against HEAD
+        7f1a510 (candidate d9995605). Git state (merge-base cb90a2440,
+        173-commit replay, 0-line subject diff, 154 identical patch-ids + 19
+        classified differences), overlap 45 files, versions 4.0.18-1,
+        SCHEMA_VERSION 22 with the four-step chain, six Runtime checks green,
+        landing fidelity independently recomputed at 27 upstream-missing / 15
+        fork-missing lines with exact per-file attribution, locale key audit
+        clean (47 added / 17 removed per locale, 0 duplicates, two fork
+        overrides, tr byte-identical), fork features (tray contract, presets,
+        dual URL, cross-app import incl. agy, updater disabled, CI) and upstream
+        fixes all present."
+      truncated: false
+    completed_at: 2026-10-22T15:02:35.945Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-10-22T11:47:56.509Z
