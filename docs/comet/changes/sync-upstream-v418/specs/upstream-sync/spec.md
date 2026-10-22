@@ -129,7 +129,7 @@ fork 侧对 AGY 的三处交集按 Q1–Q3 处理（见「fork 取舍清单」�
 
 ### 冲突解决（遵循 docs/HOW_TO_REBASE_UPSTREAM.md §3）
 
-本轮重叠面为 45 个文件（实测口径：`comm -12 <(git diff --name-only v4.0.17 v4.0.18 | sort) <(git diff --name-only v4.0.17 HEAD | sort)`；上游 213 文件 + fork 328 文件）。逐文件叠加要求：
+本轮重叠面为 45 个文件（实测口径：`comm -12 <(git diff --name-only v4.0.17 v4.0.18 | sort) <(git diff --name-only v4.0.17 pre-sync-v418 | sort)`；上游 213 文件 + fork 457 文件）。逐文件叠加要求：
 
 #### 版本与工作流（6 个）
 
