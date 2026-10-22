@@ -2430,7 +2430,7 @@ function ProviderFormFull({
           );
           return;
         }
-        if (appId === "gemini") {
+        if (usesGeminiStyleForm(appId)) {
           const env = (settingsConfig.env ?? {}) as Record<string, unknown>;
           // patchImportedSettingsConfig 保留了顶层 config，这里原样喂回去
           const existingConfig = (settingsConfig.config ?? {}) as Record<

@@ -630,6 +630,23 @@ impl Database {
                         }
                         Self::set_user_version(conn, 21)?;
                     }
+                    21 => {
+                        // fork v4.0.17-1 的 v21 只含 mcode/pi 补齐，没有 AGY 列；
+                        // 上游 v4.0.18 的 v21 已带 AGY 列。两侧都在这一步幂等
+                        // 补列后才能统一升到 22，见 docs/HOW_TO_REBASE_UPSTREAM.md §4。
+                        log::info!("迁移数据库从 v21 到 v22（幂等补齐 AGY 列）");
+                        for table in ["mcp_servers", "skills"] {
+                            if Self::table_exists(conn, table)? {
+                                Self::add_column_if_missing(
+                                    conn,
+                                    table,
+                                    "enabled_agy",
+                                    "BOOLEAN NOT NULL DEFAULT 0",
+                                )?;
+                            }
+                        }
+                        Self::set_user_version(conn, 22)?;
+                    }
                     _ => {
                         return Err(AppError::Database(format!(
                             "未知的数据库版本 {version}，无法迁移到 {SCHEMA_VERSION}"
@@ -3962,7 +3979,7 @@ mod tests {
         conn.execute_batch("CREATE TABLE mcp_servers(id TEXT PRIMARY KEY, enabled_gemini BOOLEAN); CREATE TABLE skills(id TEXT PRIMARY KEY, enabled_codex BOOLEAN); INSERT INTO mcp_servers VALUES ('m',1); INSERT INTO skills VALUES ('s',1);")?;
         Database::set_user_version(&conn, 20)?;
         Database::apply_schema_migrations_on_conn(&conn)?;
-        assert_eq!(Database::get_user_version(&conn)?, 21);
+        assert_eq!(Database::get_user_version(&conn)?, SCHEMA_VERSION);
         for (table, flag) in [
             ("mcp_servers", "enabled_gemini"),
             ("skills", "enabled_codex"),
@@ -3974,6 +3991,49 @@ mod tests {
             )?;
             assert_eq!(row, (1, 0));
         }
+        Database::apply_schema_migrations_on_conn(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn fork_v21_migration_adds_agy_flags_idempotently() -> Result<(), AppError> {
+        // fork v4.0.17-1 的 v21 形状：已有 mcode/pi，但没有 enabled_agy
+        let conn = Connection::open_in_memory()?;
+        conn.execute_batch(
+            "CREATE TABLE mcp_servers (
+                id TEXT PRIMARY KEY,
+                enabled_mcode BOOLEAN NOT NULL DEFAULT 0,
+                enabled_pi BOOLEAN NOT NULL DEFAULT 0
+            );
+            CREATE TABLE skills (
+                id TEXT PRIMARY KEY,
+                enabled_mcode BOOLEAN NOT NULL DEFAULT 0
+            );
+            INSERT INTO mcp_servers (id, enabled_mcode, enabled_pi) VALUES ('m', 1, 1);
+            INSERT INTO skills (id, enabled_mcode) VALUES ('s', 1);",
+        )?;
+        Database::set_user_version(&conn, 21)?;
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+
+        assert_eq!(Database::get_user_version(&conn)?, 22);
+        for table in ["mcp_servers", "skills"] {
+            assert!(Database::has_column(&conn, table, "enabled_agy")?);
+        }
+        let mcp_values: (i64, i64, i64) = conn.query_row(
+            "SELECT enabled_mcode, enabled_pi, enabled_agy FROM mcp_servers WHERE id = 'm'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+        assert_eq!(mcp_values, (1, 1, 0));
+        let skill_values: (i64, i64) = conn.query_row(
+            "SELECT enabled_mcode, enabled_agy FROM skills WHERE id = 's'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        assert_eq!(skill_values, (1, 0));
+
+        // 已是 v22 的库重跑迁移必须是 no-op
         Database::apply_schema_migrations_on_conn(&conn)?;
         Ok(())
     }

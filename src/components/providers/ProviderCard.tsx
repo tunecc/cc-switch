@@ -544,7 +544,6 @@ export function ProviderCard({
                 </Fragment>
               ))}
             </div>
-            </div>
           ) : displayUrl ? (
             <button
               type="button"
