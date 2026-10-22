@@ -178,7 +178,7 @@ jobs:
             }
             Write-Host "MSI REBOOT property: $reboot"
 
-            $dest = "CC-Switch-$VERSION-Windows$assetSuffix.msi"
+            $dest = "CC-Switch-$VERSION-Windows.msi"
             Copy-Item $msi.FullName (Join-Path release-assets $dest)
             Write-Host "Installer copied: $dest"
           } else {
