@@ -70,6 +70,9 @@ export function SearchableModelPicker({
           size="icon"
           className="shrink-0"
           type="button"
+          aria-label={t("providerForm.searchModelAriaLabel", {
+            defaultValue: "Select model",
+          })}
         >
           <ChevronDown className="h-4 w-4" />
         </Button>
