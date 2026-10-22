@@ -36,7 +36,7 @@ fork（tunecc/cc-switch）的 main 同步到上游 farion1231/cc-switch 的新�
 ### 修改
 
 - 版本号四处：`package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`（`4.0.17-1` → `4.0.18-1`）与 `src-tauri/Cargo.lock`（`cc-switch` 包条目联动）。上游本轮对 `Cargo.toml` 另加 `tokio` 的 `process` feature；`Cargo.lock` 对应给 tokio 依赖补 `signal-hook-registry`（该包已在锁文件中，不新增包条目）。
-- 45 个上游/fork 重叠文件（实测口径 `comm -12 <(git diff --name-only v4.0.17 v4.0.18 | sort) <(git diff --name-only v4.0.17 HEAD | sort)`；上游 213 文件 + fork 侧 328 文件）。逐文件行数口径（`git diff --numstat v4.0.17 <ref> -- <file>`，上游 / fork）：
+- 45 个上游/fork 重叠文件（实测口径 `comm -12 <(git diff --name-only v4.0.17 v4.0.18 | sort) <(git diff --name-only v4.0.17 pre-sync-v418 | sort)`；上游 213 文件 + fork 侧 457 文件）。逐文件行数口径（`git diff --numstat v4.0.17 <ref> -- <file>`，上游 / fork）：
   - 版本与工作流：`package.json` 1/1、`src-tauri/Cargo.toml` 2/2、`src-tauri/Cargo.lock` 2/1、`src-tauri/tauri.conf.json` 1/1、`.github/workflows/release.yml` 14/0、`README.md` 15/5。
   - 后端：`src-tauri/src/lib.rs` 85/0、`commands/mod.rs` 2/0、`commands/settings.rs` 9/2、`commands/misc.rs` 747/166、`database/mod.rs` 1/1、`database/schema.rs` 68/0、`database/tests.rs` 1/0、`database/dao/mcp.rs` 6/3、`deeplink/provider.rs` 37/4、`provider.rs` 1/1、`proxy/providers/mod.rs` 2/2、`services/mod.rs` 4/0、`services/provider/{live,mod}.rs` 25/1、28/7、`settings.rs` 10/0、`tray.rs` 1/0。
   - 前端：`src/App.tsx` 21/4、`AppId` 相关 `src/config/appConfig.tsx` 23/0、`src/types.ts` 2/0、`src/components/providers/{AddProviderDialog,ProviderCard,ProviderList}.tsx` 2/2、51/10、15/3、`forms/ProviderForm.tsx` 45/13、`forms/PiProviderForm.tsx` 0/16、`forms/shared/EndpointField.tsx` 7/2。
