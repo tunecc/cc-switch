@@ -42,6 +42,7 @@ const allAppsVisible: VisibleApps = {
   pi: true,
   mcode: true,
   agy: true,
+  kimi: true,
 };
 
 const onlyCodexVisible: VisibleApps = {
@@ -56,6 +57,7 @@ const onlyCodexVisible: VisibleApps = {
   pi: false,
   mcode: false,
   agy: false,
+  kimi: false,
 };
 
 beforeAll(async () => {
