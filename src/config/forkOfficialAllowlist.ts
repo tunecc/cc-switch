@@ -28,4 +28,6 @@ export const forkOfficialAllowlist: Record<AppId, string[]> = {
   pi: ["Ollama", "LM Studio", "vLLM"],
   // mcode（MiniMax Code，上游 v4 新增）同样无官方预设
   mcode: [],
+  // Kimi 只保留 4 条官方预设；本机推理（Ollama/LM Studio/vLLM）在 Kimi 的所有入口一律隐藏
+  kimi: ["Kimi", "Kimi Global", "Kimi For Coding", "Kimi For Coding Global"],
 };
