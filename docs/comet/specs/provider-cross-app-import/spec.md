@@ -13,6 +13,7 @@
 - 来源应用的判定同时满足三个条件：该应用在 `settings.visibleApps` 中为启用；该应用的供应商数量 ≥ 1；该应用不是当前正在编辑 / 新建的应用。任一条件不满足时不渲染对应按钮。
 - 全部来源应用都不可用时，整个入口行不渲染。
 - AGY（Antigravity，v4.0.18 起的第 11 个应用）SHALL 作为来源与目标都可用，按 Gemini 形状读写；不对 AGY 做额外排除（2026-10-22 Q3）。
+- Kimi Code（v4.0.19 起的第 12 个应用）SHALL **只作导入来源**（2026-10-24 Q2）：`useProviderImportSources` 按 `APP_IDS` 自动枚举，不对 Kimi 排除；Kimi 表单 `KimiProviderForm` 由 `ProviderForm` 首段早退分流，不渲染 `ProviderImportEntry`，因此 Kimi 永远不是导入目标。
 
 ### 来源选择弹窗
 
@@ -52,6 +53,7 @@
 | hermes | `base_url` | `api_key` | 无 |
 | pi | `baseUrl` | `apiKey` | 无 |
 | mcode | `options.baseURL` | `options.apiKey` | 无 |
+| kimi（仅来源） | `provider.base_url` | `provider.api_key` | 无 |
 
 ### 上游 API 格式迁移
 
@@ -63,7 +65,7 @@
 ### 默认模型名迁移
 
 - 只在 Claude ↔ Codex ↔ Gemini ↔ AGY 之间迁移：`env.ANTHROPIC_MODEL` ↔ TOML 顶层 `model` ↔ `env.GEMINI_MODEL`；AGY 与 Gemini 同形状（2026-10-22 v4.0.18 同步 Q3 决定纳入 AGY）。
-- 读侧同样受此约束：只有 claude / codex / gemini / agy 作为来源时才取默认模型。claude-desktop 的 env 由提交时按 baseUrl / apiKey 重建、从不落 `ANTHROPIC_MODEL`；grokbuild 的 `upstreamModel` 是客户端 profile 的真实模型名而非兜底模型。两者按「无该字段」返回空。
+- 读侧同样受此约束：只有 claude / codex / gemini / agy 作为来源时才取默认模型。claude-desktop 的 env 由提交时按 baseUrl / apiKey 重建、从不落 `ANTHROPIC_MODEL`；grokbuild 的 `upstreamModel` 是客户端 profile 的真实模型名而非兜底模型；Kimi 的配置形状没有默认模型字段（模型由 `models` 表表达）。三者按「无该字段」返回空。
 - 来源或目标没有该字段时，目标模型字段保持为空（Codex 删掉模板自带的 `model` 行，Claude 不落键，Gemini 保存时被丢弃），不填占位值。
 - 不迁移 Claude 的 `ANTHROPIC_DEFAULT_*_MODEL` 分级、`CLAUDE_CODE_SUBAGENT_MODEL`、Codex 的 `modelCatalog` 与 reasoning 配置。
 
