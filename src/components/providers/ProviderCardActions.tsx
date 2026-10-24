@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import {
   ArrowDown,
   ArrowUp,
-  ChevronDown,
   ChevronRight,
   CircleDot,
   ListMinus,
