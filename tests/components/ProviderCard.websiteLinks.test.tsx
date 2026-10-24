@@ -47,7 +47,6 @@ function renderCard(
           buttons: [],
           showHealth: false,
           dim: false,
-          tone: "neutral",
           deleteDisabledReason: undefined,
         }}
         isCurrent={false}
