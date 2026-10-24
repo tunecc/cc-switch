@@ -11,7 +11,7 @@
 //
 // 刻意不复用 `utils/providerCredentials` 的 `extractCredentials`：那个表的
 // default 分支返回空值，是给「拉取模型列表前的凭据预检」用的（只有支持
-// /models 拉取的应用才填）。导入需要覆盖全部 10 个应用，语义不同，混用会
+// /models 拉取的应用才填）。导入需要覆盖全部 12 个应用，语义不同，混用会
 // 让其中一侧的行为被另一侧静默改变。
 
 import type { AppId } from "@/lib/api/types";
@@ -172,6 +172,15 @@ function readConfigFields(
       return {
         baseUrl: asTrimmedString(config.baseUrl),
         apiKey: asTrimmedString(config.apiKey),
+        defaultModel: "",
+      };
+    }
+    case "kimi": {
+      // Kimi 只作导入来源；配置形状是 { provider: { base_url, api_key }, models }。
+      const provider = asRecord(asRecord(settingsConfig)?.provider) ?? {};
+      return {
+        baseUrl: asTrimmedString(provider.base_url),
+        apiKey: asTrimmedString(provider.api_key),
         defaultModel: "",
       };
     }
