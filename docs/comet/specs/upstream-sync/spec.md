@@ -6,7 +6,7 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 
 本轮同步基线为 tag `v4.0.19`（annotated tag 对象 `319fbfd`，剥离提交 `d8983bb`）；fork 版本号 `4.0.18-1` → `4.0.19-1`。推送与 tag 属交付步骤，按 Q4 授权在验收通过并归档之后执行。
 
-上游 `v4.0.18..v4.0.19` 共 47 个提交、215 个文件、+16010/−2351（35 新增 / 1 删除 / 179 修改），与 fork 的重叠面为 47 个文件（fork 侧自 `v4.0.18` 起改动 461 个文件）。本轮主轴是 **Kimi Code 成为第 12 个应用**：它与 fork 的「预设白名单」「跨应用导入」「模型徽章/快捷切换」三处正面相交，且上游把数据库 schema 从 21 升到 22（`mcp_servers`/`skills` 加 `enabled_kimi`），与 fork 已是 22 的 schema 撞车——fork 升到 23 并保留自己的 v21→v22 AGY 幂等补齐。上游同时重构了用量页（删除 `UsageDataSourcesSheet`，新增 `UsageSettingsSheet`/`ChecklistMenu`/`RequestLogColumnsMenu`）、给卡片更多菜单加「设为默认 + 默认模型子菜单」、给 Pi 表单补 providerKey 常显与重复校验。
+上游 `v4.0.18..v4.0.19` 共 47 个提交、215 个文件、+16010/−2351（35 新增 / 1 删除 / 179 修改），与 fork 的重叠面为 47 个文件（fork 侧自 `v4.0.18` 起改动 461 个文件）。本轮主轴是 **Kimi Code 成为第 12 个应用**：它与 fork 的「预设白名单」「跨应用导入」「模型徽章/快捷切换」三处正面相交，且上游把数据库 schema 从 21 升到 22（`mcp_servers`/`skills` 加 `enabled_kimi`），与 fork 已是 22 的 schema 撞车——fork 必须升到 23 并保留自己的 v21→v22 AGY 幂等补齐。上游同时重构了用量页（删除 `UsageDataSourcesSheet`，新增 `UsageSettingsSheet`/`ChecklistMenu`/`RequestLogColumnsMenu`）、给卡片更多菜单加「设为默认 + 默认模型子菜单」、给 Pi 表单补 providerKey 常显与重复校验。本规格描述 Q1–Q4 确认后的完整同步后状态。
 
 **上游是否重写了 fork 已有功能——本轮结论：没有完全重复实现。** 上游的「设为默认/默认模型子菜单」是 OpenCode/OpenClaw 的**应用级**默认语义，fork 的模型快捷切换改的是**供应商自身 settingsConfig**，应用集合与写入目标都不同，两份实现并存；上游的 Pi providerKey 重复校验与 fork 的 Pi 预设白名单/本地预设入口互补；Kimi 是新增应用，与 fork 三项功能的交集按 Q1–Q3 处理。
 
@@ -16,25 +16,16 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 
 - `main` 分支基于 tag `v4.0.19` 剥离出的提交 `d8983bb`。
 - `git merge-base main v4.0.19` == `d8983bb`；`git log v4.0.19..main` 仅含 fork 作者 `Tune` 的提交。
-- 同步前 178 个 fork 提交（`git rev-list --count v4.0.18..HEAD`，起点 `b893ec999` = origin/main）按原顺序重放，外加本轮的同步终态提交、文档收尾提交与归档提交。
+- 同步前 178 个 fork 提交（`git rev-list --count v4.0.18..HEAD`，起点 `b893ec999` = origin/main）按原顺序重放，外加本轮的同步终态提交与归档提交。
 - 重放映射核对口径（与历轮一致）：重放前后 `git rev-list --count` 之差只允许来自「被 git 判定为空而丢弃」或「本轮新增提交」；`git log --format='%s' --reverse` 主题序列逐行 diff 为 0 行差异；patch-id 对照走 stdin（`git show <c> | git patch-id --stable`），不同的提交逐个归类为「仅 hunk 位移」或「冲突停车」，不允许「fork 语义丢失」。
 - 同步前起点由安全分支 `pre-sync-v419`（= `b893ec999`）固定记录。
 - 上一轮基线 tag `v4.0.18` = `81096e4`（剥离 `cb90a2440`）与 fork 发布 tag `v4.0.18-1` 保持不变。
-- `upstream/main` 与剥离提交一致（`v4.0.19..upstream/main` 为 0 提交），本轮不存在 tag 之后的上游提交需要排除。
+- `upstream/main` 当前与剥离提交一致（`v4.0.19..upstream/main` 为 0 提交），本轮不存在 tag 之后的上游提交需要排除。
 - 重放开始前先提交 `.gitignore` 里 Comet Runtime 追加的托管忽略块（archive staging / runtime lock 等），使工作树干净；上游本轮不触碰 `.gitignore`。
-
-#### 本轮实测（2026-10-24）
-
-- 同步前 `git rev-list --count v4.0.18..pre-sync-v419` = **178**。
-- 重放后（代码终态 `31dc62f48`）`git rev-list --count v4.0.19..HEAD` = **180**：178 个重放提交 + 2 个本轮新增提交（`fc69fbc83` `chore(native): ignore Comet managed runtime state`、`31dc62f48` `feat(fork): sync v4.0.19-1 with schema 23 and Kimi fork semantics`）；**无提交被 git 判空丢弃**。文档收尾与归档提交另计，不改变 178 个重放提交的 1:1 映射。
-- `git merge-base main v4.0.19` == `d8983bb10b82a1ccc15ae5f44ab070902623e990`；`git log --format='%an <%ae>' v4.0.19..HEAD | sort -u` 只有 `Tune <176898395+tunecc@users.noreply.github.com>`。
-- 主题序列 `git log --format='%s' --reverse` 逐行 diff = **0 行**。
-- patch-id 差异 = **11 处**：仅 hunk 位移 1 处（#72），冲突停车 10 处（#2、#30、#43、#69、#74、#101、#117、#128、#137、#174）；其余 167 个提交与重放前逐字相同。
-- `git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' HEAD -- src src-tauri tests docs README.md` 0 命中。
 
 ### 同步范围（v4.0.18..v4.0.19：47 提交、215 文件、+16010/−2351）
 
-上游本轮改动按功能分组（详细到提交号，便于后续核对落地保真）：
+上游本轮改动按功能分组如下（详细到提交号，便于 Build 阶段核对落地保真）：
 
 1. **Kimi Code 接入（11 提交）**：`e4873bc8a`（Kimi Code 支持）、`7da255387`（官方 OAuth 登录与供应商切换）、`07265bc97`（授权中心支持多个官方账号）、`cdd2190df`（官方账号识别、删除与额度）、`c49c2be94`（授权中心用共享账号组渲染）、`44e0fc963`（多账号命名 `Kimi 订阅 <nickname>`）、`d6a232419`（卡片真实添加/删除动作）、`b61e2767c`（拉取模型列表并用 models.dev 补参数）、`8969264b9`（说明不直观的模型能力）、`b96ff6182`（请求头折叠进高级选项）、`0f7682900`（编辑器布局对齐 Pi/OpenCode）。
 2. **用量页重构与修复（6 提交）**：`79ba7982a`（布局重构：删除 `UsageDataSourcesSheet`，新增 `UsageSettingsSheet`/`ChecklistMenu`/`RequestLogColumnsMenu`/`usageRange`）、`29f8bef37`（总数缩小时 clamp 请求日志页码）、`c6f85464e`（恢复趋势图/热力图原始配色）、`50e091b05`（7/14/30 天预设按日历日跨 DST 回退）、`e53ca7e82`（收紧请求日志列间距）、`e88ff5404`（Codex 父缓存计数断言按测试目录隔离）。
@@ -59,12 +50,11 @@ Kimi Code 是第 12 个应用、第 11 个 CLI 工具，行为属于「共存式
 - **MCP/Skills**：`McpServerSpec.apps.kimi`/`SkillApps.kimi`、`mcp/kimi.rs` 投影、数据库 `enabled_kimi` 两列、`Unknown` 工具之外的第 11 个 CLI 工具。
 - **Apps 页**：Kimi Code 安装/升级（Unix `code.kimi.com/kimi-code/install.sh` 脚本、Windows `install.ps1`；升级 `kimi upgrade --yes`）、`~/.kimi-code` 数据目录、npm 包 `@moonshot-ai/kimi-code`、图标 `kimi`。
 - **会话/用量**：Kimi 会话解析（`session_manager/providers/kimi.rs`）、用量归属（`session_usage_kimi.rs`）、定价/额度展示。
+- **Q1 白名单**：fork 构建下目录只显示 `Kimi`/`Kimi Global`/`Kimi For Coding`/`Kimi For Coding Global` 四条；三条本机推理预设以及赞助商/聚合站/`Meta Model API` 等未列入白名单的条目在所有 Kimi 入口不可见；官方账号卡 `Kimi Official` 始终保留。
+- **Q2 导入**：Kimi 只作跨应用导入来源。`readConfigFields("kimi", …)` 读 `settingsConfig.provider.base_url`/`provider.api_key`，身份字段（名称/备注/官网）照常复制，`defaultModel` 为空；Kimi 不作导入目标（无导入入口），官方账号卡作来源时连接字段为空。
+- **Q3 模型**：Kimi 不进入 `MODEL_CAPABLE_APPS`/模型徽章/快捷切换；默认模型由上游「更多 → 设为默认」与表单模型表管理。
 
-#### fork 对 Kimi 的三处取舍（Q1–Q3，2026-10-24 已确认）
-
-- **Q1 白名单**：fork 构建下目录只显示 `Kimi`/`Kimi Global`/`Kimi For Coding`/`Kimi For Coding Global` 四条；三条本机推理预设（`Ollama`/`LM Studio`/`vLLM`）以及赞助商/聚合站/`Meta Model API` 等未列入白名单的条目在所有 Kimi 入口不可见；官方账号卡 `Kimi Official` 始终保留。过滤只作用于 `KimiProviderForm` 内**已编号的 entries**（按 `preset.name` 对照 `forkOfficialAllowlist.kimi`），不改 `kimiProviderPresets.ts` 的条目与顺序。
-- **Q2 导入**：Kimi 只作跨应用导入来源。`readConfigFields("kimi", …)` 读 `settingsConfig.provider.base_url`/`provider.api_key`，身份字段（名称/备注/官网）照常复制，`defaultModel` 为空；Kimi 不作导入目标（`KimiProviderForm` 不渲染导入入口），官方账号卡作来源时连接字段为空。
-- **Q3 模型**：Kimi 不进入 `MODEL_CAPABLE_APPS`/模型徽章/快捷切换；默认模型由上游 provider 级「更多 → 设为默认」与表单模型表管理。
+fork 侧对 Kimi 的三处交集按 Q1–Q3 处理（见「fork 取舍清单」）。
 
 ### 数据库 schema 终态（23）
 
@@ -77,7 +67,7 @@ Kimi Code 是第 12 个应用、第 11 个 CLI 工具，行为属于「共存式
   - v22→v23：幂等补 `enabled_kimi`（两张表），set 23。用于「已升级到 fork v4.0.18-1（user_version=22、有 agy、无 kimi 列）」的库。
 - `create_tables` 的 `mcp_servers` 与 `skills` 均含 `enabled_agy` 与 `enabled_kimi BOOLEAN NOT NULL DEFAULT 0`。
 - 上游迁移测试（`kimi_migration_preserves_existing_flags_and_defaults_to_disabled`、`kimi_clean_database_persists_mcp_and_skill_flags_independently`、`agy_migration_preserves_existing_flags_and_defaults_to_disabled`、`agy_clean_database_persists_independent_mcp_and_skill_flags`）使用 `SCHEMA_VERSION` 常量，自然跟随 23；v21 库走 21→22（agy+kimi）→22→23（kimi 幂等），v20 库走 20→21（fork 修复+agy）→21→22（agy 幂等+kimi）→22→23（kimi 幂等）。
-- v22→v23 幂等用例：模拟 fork v22（有 agy、无 kimi）→ 23 补 kimi；模拟上游 v22（有 kimi）→ 23 不变；重复调用幂等。
+- 新增 v22→v23 幂等用例：模拟 fork v22（有 agy、无 kimi）→ 23 补 kimi；模拟上游 v22（有 kimi）→ 23 不变；重复调用幂等。
 - 降级：fork v23 库被上游 v4.0.19（v22）打开会报「数据库版本过新」，与上游自身策略一致，不做兼容。
 
 ### 托盘、更新器与 Windows 终态
@@ -93,14 +83,57 @@ Kimi Code 是第 12 个应用、第 11 个 CLI 工具，行为属于「共存式
   - locale 行登记：fork 专属覆盖仍为 `provider.connectivityCheck` 与 `settings.general.trayStyleHelp`；上游本轮删除的 8 个 usage 键与新增 52 键按上游落地。
   - 新增 §4.6「v4.0.19 轮的叠加要点」：Kimi 三类交集（Q1–Q3 结论）、schema 23 的两步迁移、Kimi 预设 id 与账号预设、`CardTone.neutral` 移除、`AuthCenterTarget` 类型、用量页重构。
 - `docs/comet/specs/database-schema-migrations/spec.md`：登记 SCHEMA_VERSION 23 与 21→22（fork AGY 幂等 + 上游 Kimi 列合并）/ 22→23（Kimi 列幂等补齐）两步、降级不兼容。
-- `docs/comet/specs/provider-cross-app-import/spec.md`：登记 Kimi 仅作来源、读取 `provider.base_url`/`provider.api_key`、`defaultModel` 为空、不作目标。
-- `docs/comet/specs/provider-model-quick-view-switch/spec.md`：登记 Kimi 不进入快捷切换、使用上游 provider 级「设为默认」与表单模型表。
-- 本规格即 `docs/comet/specs/upstream-sync/spec.md`：已更新为本轮同步后的完整状态。
+- `docs/comet/specs/provider-cross-app-import/spec.md`：按 Q2 结果登记 Kimi 仅作来源、读取 `provider.base_url`/`provider.api_key`、`defaultModel` 为空、不作目标。
+- `docs/comet/specs/provider-model-quick-view-switch/spec.md`：按 Q3 结果登记 Kimi 不进入快捷切换、使用上游 provider 级「设为默认」与表单模型表。
+- 全局能力规格 `docs/comet/specs/upstream-sync/spec.md`：归档时更新为本轮同步后的完整状态。
 
-### 落地保真核对（实测，2026-10-24，代码终态 `HEAD` = `31dc62f48`）
+### 重放映射（口径与记录要求，实测数字在 Build 阶段回填）
 
-- 算法（固定口径）：对上游 `v4.0.18..v4.0.19` 改动过的每个文件（215 个，覆盖 47 个重叠文件的全部）取 `git diff v4.0.18 v4.0.19 -- f` 的增/删行、`git diff v4.0.18 pre-sync-v419 -- f` 的 fork 增行，与 `git show HEAD:f` 的实际内容；行先 strip、去掉一个尾逗号、丢弃空行与纯符号噪声行，再做多重集差得「上游新增行缺失」与「fork 新增行缺失」。
-- 实测合计：**上游新增行缺失 30 行（7 个文件），fork 新增行缺失 9 行（7 个文件）**；215 个上游文件全部参与计算，其余 208 个上游文件双侧缺失均为 0。计算在版本/文案/schema/合并提交落完之后、代码终态 `HEAD` = `31dc62f48` 上进行；其后的文档提交只改 `docs/**` 与 Markdown，不在 215 个文件内，故数字不变。
+- 同步前 `git rev-list --count v4.0.18..pre-sync-v419` 预期 == 178。
+- 重放后 `git rev-list --count v4.0.19..HEAD` 与 178 的差值只允许来自「被 git 判定为空而丢弃」或「本轮新增提交」；逐条记录。
+- tag `v4.0.19` 是 annotated tag：tag 对象 `319fbfd`，剥离提交 `d8983bb`；`git merge-base main v4.0.19` == `d8983bb`；`git log --format='%an <%ae>' v4.0.19..HEAD | sort -u` 只有 `Tune <176898395+tunecc@users.noreply.github.com>`。
+- 提交主题序列逐行 diff（重放前 `v4.0.18..pre-sync-v419` 与重放后 `v4.0.19..HEAD`）差异必须为 0 行。
+- patch-id 对照（stdin 口径）逐个归类：与重放前完全相同 / 仅 hunk 位移 / 冲突停车；冲突停车逐条记录归属与解法。预期的主要停车面：`database/schema.rs`（SCHEMA_VERSION、21/22 迁移臂）、`database/mod.rs`、`lib.rs`（Kimi 注册 vs fork 托盘/更新器）、`commands/misc.rs`（上游 Kimi hunk vs fork URL）、`services/provider/mod.rs`、`ProviderForm.tsx`（Kimi 早退 + fork 导入）、`ProviderCard.tsx`（Kimi 额度 footer + `CardTone.neutral` 移除）、`ProviderList.tsx`、`App.tsx`、`ProviderPresetSelector.tsx`（`barAction` vs `extraActions`）、4 个 locale、`README.md`、4 个版本文件、`tests/components/ProviderList.test.tsx`/`ProviderPresetSelector.test.tsx`/`AppsPage.test.tsx`。
+- 冲突停车清单（交互式）在 Build 阶段逐条记录；rerere 复用的解法必须逐个复核。
+- `git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' HEAD -- src src-tauri tests docs README.md` 必须 0 命中（exit 1）。
+- 重放中途不跑 `cargo test`（fork 历史提交自带冲突标记）；最终态必须对冲突标记零命中。
+
+#### 本轮实测（2026-10-24，重放完成时）
+
+- 同步前 `git rev-list --count v4.0.18..pre-sync-v419` = **178**。
+- 重放后（代码终态 `31dc62f48`）`git rev-list --count v4.0.19..HEAD` = **180**：178 个重放提交 + 2 个本轮新增提交（`fc69fbc83` `chore(native): ignore Comet managed runtime state`、`31dc62f48` `feat(fork): sync v4.0.19-1 with schema 23 and Kimi fork semantics`）；**无提交被 git 判空丢弃**。Build 收尾的文档提交另计（不改变 178 个重放提交的映射）。
+- `git merge-base main v4.0.19` = `d8983bb10b82a1ccc15ae5f44ab070902623e990`；`git log --format='%an <%ae>' v4.0.19..HEAD | sort -u` 只有 `Tune <176898395+tunecc@users.noreply.github.com>`。
+- 主题序列 `git log --format='%s' --reverse` 逐行 diff = **0 行**。
+- patch-id 差异 = **11 处**；仅 hunk 位移 = **1 处**（#72）；冲突停车 = **10 处**，逐条归属与解法见下；其余 167 个提交与重放前逐字相同。
+- 冲突停车清单：
+  - #2 `b3badbe75→c268503d1`（版本四文件）：`package.json`/`src-tauri/Cargo.toml`/`src-tauri/tauri.conf.json` 版本行，取 fork 侧历史值（文件集 4=4、增删行 5/9=5/9）。
+  - #30 `17f87f4a6→34e9efffe`（模型徽章）：`ProviderCard.tsx`/`ProviderCardActions.tsx`；保留 fork 徽章与快捷切换，适配上游 Kimi 官方额度、`CardTone` 无 `neutral` 与子菜单结构；重放提交导入块多一行 `ChevronDown,`，由后续 fork 提交 #128 删除，终态一致。
+  - #43 `f696aeb32→61beb2f1e`（README 重写）：`README.md` 整文件取 fork 版；删除行集合差异来自上游 v4.0.19 README 的 Kimi/赞助商改写。
+  - #69 `b5f435756→ede15f059`（连通性组件与文案）：`src/i18n/locales/{ja,zh-TW,zh}.json`；保留 fork connectivity 键段，叠加上游 v4.0.19 新增键；历史提交里的重复 `inactiveFieldsHint` 已按 HEAD 侧清理。
+  - #74 `6399cf61a→0d5061a24`（移除 stream_check）：`src-tauri/Cargo.lock` 的 `cc-switch` 版本行，取 fork 侧历史值；增删行集合仅该行不同（352/352、628/628）。
+  - #101 `acb55f137→a4a0cebea`（跨应用导入）：`ProviderPresetSelector.tsx`；终态保留 fork `extraActions`/`categoryHint` 与上游 `barAction`，两个插槽并存（`action={barAction}` 行随上游落入该提交）。
+  - #117 `b36ef14aa→bec254cfc`（v20→v21 修复迁移）：`src-tauri/src/database/dao/mcp.rs`；合并上游 `enabled_kimi` 列与 fork `website_url_2` 列索引后移，增删行集合相同（174/174、12/12）。
+  - #128 `0cce99399→0b2a0585d`（徽章作为快捷切换入口）：`ProviderCard.tsx`；取 fork 的徽章按钮形态，叠加上游 Kimi 官方卡分支与 `neutral` 移除，增删行集合相同（335/335、35/35）。
+  - #137 `f93646f01→48a743119`（删除重复 `inactiveFieldsHint`）：`src/i18n/locales/{zh,zh-TW}.json`；在上游 v4.0.19 新基线下重新删除 9 行重复键（新 added 行集合因此比旧提交多 9 行）。
+  - #174 `4047eff0b→195d1ef55`（v4.0.18 同步提交）：`src-tauri/src/database/schema.rs`；把 fork 的 AGY 幂等臂与上游 Kimi 列合并为 v21→v22 臂，并新增 v22→v23 臂（详见「数据库 schema 终态」），旧提交的 v22 臂/`SCHEMA_VERSION 22` 行被取代。
+  - rerere 复用：#72 `d02b78fd0→08dd0f932`（供应商列表集成）在终端未停车，文件集与增删行集合完全相同（624/624、18/18），仅上下文位移；已复核。
+
+### 落地保真核对（口径，最终态复算）
+
+- 算法（固定口径）：对上游 `v4.0.18..v4.0.19` 改动过的每个文件（215 个，覆盖 47 个重叠文件的全部）取 `git diff v4.0.18 v4.0.19 -- f` 的增/删行、`git diff v4.0.18 pre-sync-v419 -- f` 的 fork 增行，与 `git show HEAD:f` 的实际内容；行先 strip、去掉一个尾逗号、丢弃空行与纯符号噪声行，再做多重集差得「上游新增行缺失」与「fork 新增行缺失」。非重叠的 168 个上游文件 fork 侧缺失应为 0。
+- 计算必须在全部最终态提交（版本、文案、文档、schema、合并）落完之后，对最终 `HEAD` 执行；`HEAD` 之后的归档提交只改 Markdown，不在 215 个文件内，故数字不变。
+- 预期的刻意取舍（逐行归因，具体行数在 Build 后按实测填写）：
+  - `README.md`：fork 是整文件自有的 148 行「与上游的差别」文档；上游本轮 24 增/13 删不落地，全部归因为「fork 整文件替换」。
+  - 版本与锁文件：上游 `"version": "4.0.19"` 行被 fork `4.0.19-1` 取代（4 个文件各 1 行）；fork 的 `4.0.18-1` 行被本轮终态升级（属预期流转）。
+  - `database/mod.rs`：上游 `SCHEMA_VERSION: i32 = 22` 被 fork 23 取代（撞号处理）；fork 的 22 行升级为 23（预期流转）。
+  - `database/schema.rs`：上游 21→22 的 Kimi 列与 `set_user_version(conn, 22)` 保留；fork v21→v22 臂的日志/注释可能因合并改写（语义保留）；新增 22→23 臂属 fork 新增行。
+  - Q1 的 Kimi 白名单：只在 `KimiProviderForm` 的 `PRESETS` 映射后过滤，不改上游 `kimiProviderPresets.ts` 的条目行，故不产生上游行缺失；Q2 的 `readConfigFields("kimi")` 写在 fork 自有文件 `src/utils/providerImport.ts`，不产生上游行缺失。
+  - `ProviderPresetSelector.test.tsx`、`AppsPage.test.tsx` 等 fork 既有断言行若因上游基线（107→109 行、硬编码 10→`TOOL_NAMES.length`）而改写，逐行归因为「跟随上游基线更新」。
+- 任何未说明的非零缺失视为丢语义缺陷；「上游内容零丢失」的旁证用 `git diff --numstat v4.0.19 HEAD -- <file>` 只看 fork 侧新增/删除。
+
+#### 本轮实测（2026-10-24，代码终态 `HEAD` = `31dc62f48`）
+
+- 实测合计：**上游新增行缺失 30 行（7 个文件），fork 新增行缺失 9 行（7 个文件）**；215 个上游文件全部参与计算，其余 208 个上游文件双侧缺失均为 0。计算在本轮版本/文案/schema/合并提交落完之后、代码终态 `HEAD` = `31dc62f48` 上进行；其后的文档提交只改 `docs/**` 与 Markdown，不在 215 个文件内，故数字不变。
 - 上游新增行缺失逐项归因：
   - `README.md` 22 行（Kimi/十一工具说明 8 行、BuyToken/DIT.ai/V-API/FluxA/Shengsuanyun 赞助商行 10 行、表格结构行 4 行）：fork README 整文件重写，不采纳上游表格（刻意取舍）。
   - `package.json` / `src-tauri/Cargo.toml` / `src-tauri/Cargo.lock` / `src-tauri/tauri.conf.json` 各 1 行版本号 `4.0.19`：fork 用 `4.0.19-1` 取代（预期流转）。
@@ -111,8 +144,7 @@ Kimi Code 是第 12 个应用、第 11 个 CLI 工具，行为属于「共存式
   - `src-tauri/src/database/mod.rs` 1 行 `SCHEMA_VERSION = 22`：升为 23。
   - `src-tauri/src/database/schema.rs` 3 行（v21→v22 旧日志、旧断言 `22`、旧注释「已是 v22 的库重跑迁移必须是 no-op」）：合并为「AGY + Kimi」后日志/注释改写、断言改用 `SCHEMA_VERSION`，语义保留并新增 v22→v23 幂等补齐。
   - `src/components/providers/forms/ProviderPresetSelector.tsx` 1 行 `category?: ProviderCategory; // 当前选中的分类`：上游 v4.0.19 改写接口（新增 `barAction`）时该行尾注释消失，属性本身仍在，无行为影响。
-- 任何未说明的非零缺失视为丢语义缺陷；「上游内容零丢失」的旁证用 `git diff --numstat v4.0.19 HEAD -- <file>` 只看 fork 侧新增/删除。
-- 本地化旁证：`tr.json` 与 `v4.0.19` 逐字节一致（`cmp` 通过）；4 个 locale 的 52 个新增叶键全部逐字落地、8 个删除键零残留、3 个改写键逐字取上游；`provider.connectivityCheck` 与 `settings.general.trayStyleHelp` 继续为 fork 文案，不构成缺失。
+- 说明：`tr.json` 与 `v4.0.19` 逐字节一致（`cmp` 通过）；4 个 locale 的 52 个新增叶键全部逐字落地、8 个删除键零残留、3 个改写键逐字取上游；`provider.connectivityCheck` 与 `settings.general.trayStyleHelp` 继续为 fork 文案，不构成缺失。
 
 ### 冲突解决（遵循 docs/HOW_TO_REBASE_UPSTREAM.md §3）
 
@@ -125,10 +157,10 @@ Kimi Code 是第 12 个应用、第 11 个 CLI 工具，行为属于「共存式
 
 #### 后端（15 个）
 
-- **`src-tauri/src/lib.rs`**（+11/−0 / +32/−42）：上游只新增 `kimi_config`/`kimi_session` 模块声明、`KimiOAuthManager` 初始化、`add_provider_to_live_config` 与 `kimi_oauth_*` 命令注册；fork 的无 Updater、托盘左键、connectivity 命令注册三段语义原样保留。grep 确认 `tauri_plugin_updater`/`updater_builder` 命中 0、`.show_menu_on_left_click(false)` 在位、`connectivity_test_provider_models`/`connectivity_probe_provider` 注册在位、Kimi 命令注册在位。
-- **`src-tauri/src/commands/misc.rs`**（+156/−8 / +6/−5）：上游新增 Kimi 安装/升级/版本/启动与测试（`VALID_TOOLS` 11 项含 `kimi`、`KIMI_INSTALL_UNIX/WINDOWS_SCRIPT`、npm 包与版本检查）；fork 只把 `check_for_updates`、`portable_zip_url` 及测试里的 URL 指向 tunecc。逐 hunk 取上游并保留 fork 的 4 处 URL，禁止整文件取一侧；grep `farion1231/cc-switch/releases`（src-tauri）为 0、`tunecc/cc-switch/releases` 在位。
+- **`src-tauri/src/lib.rs`**（+11/−0 / +32/−42）：上游只新增 `kimi_config`/`kimi_session` 模块声明、`KimiOAuthManager` 初始化、`add_provider_to_live_config` 与 `kimi_oauth_*` 命令注册；fork 的无 Updater、托盘左键、connectivity 命令注册三段语义原样保留。解完 grep 确认 `tauri_plugin_updater`/`updater_builder` 命中 0、`.show_menu_on_left_click(false)` 在位、`connectivity_test_provider_models`/`connectivity_probe_provider` 注册在位、Kimi 命令注册在位。
+- **`src-tauri/src/commands/misc.rs`**（+156/−8 / +6/−5）：上游新增 Kimi 安装/升级/版本/启动与测试（`VALID_TOOLS` 11 项含 `kimi`、`KIMI_INSTALL_UNIX/WINDOWS_SCRIPT`、npm 包与版本检查）；fork 只把 `check_for_updates`、`portable_zip_url` 及测试里的 URL 指向 tunecc。冲突时逐 hunk 取上游并保留 fork 的 4 处 URL，禁止整文件取一侧；解完 grep `farion1231/cc-switch/releases` 应为 0（README/文档除外）、`tunecc/cc-switch/releases` 在位。
 - **`src-tauri/src/commands/mod.rs`**（+2/−0 / +2/−2）：上游注册 `kimi_oauth` 模块；fork 的 connectivity/updater 模块声明保留。
-- **`src-tauri/src/settings.rs`**（+6/−2 / +47/−0）：上游加 `VisibleApps.kimi`、`get_current_provider`/`set_current_provider` 的 `AppType::Kimi` 分支（`None`/空操作）；fork 的 `VisibleSidebarPanels` 整段保留，两段并存。上游把 `AppType::Pi | AppType::Mcode` 扩为 `| AppType::Kimi`，fork 若改过同一 match 分支需合并而不是二选一。
+- **`src-tauri/src/settings.rs`**（+6/−2 / +47/−0）：上游加 `VisibleApps.kimi`、`get_current_provider`/`set_current_provider` 的 `AppType::Kimi` 分支（`None`/空操作）；fork 的 `VisibleSidebarPanels` 整段保留，两段并存。注意上游把 `AppType::Pi | AppType::Mcode` 扩为 `| AppType::Kimi`，fork 若改过同一 match 分支需合并而不是二选一。
 - **`src-tauri/src/tray.rs`**（+1/−0 / +75/−6）：只加 `AppType::Kimi => "Kimi Code"`；fork 的 `hide_main_window`/`toggle_main_window`、`apply_tray_style` 的 `set_show_menu_on_left_click(false)` 与源码护栏不动，不得把 `native_menu_on_left_click` 带回。
 - **`src-tauri/src/provider.rs`**（+4/−0 / +45/−1）：上游加 Kimi 的 `provider.base_url`/`provider.api_key` 读取；fork 的 `website_url_2` 字段、`UniversalProvider` 构造与测试字面量保留；合并后 Kimi 分支与 fork 的 `website_url_2` 构造并存。
 - **`src-tauri/src/services/provider/mod.rs`**（+174/−14 / +4/−0）：上游加 Kimi 原生 provider 路径与重复 providerKey 守卫（`save_native_provider` 等）；fork 的 4 行测试字面量 `website_url_2: None` 保留；Kimi 分支不得被 fork 的 Claude 专用逻辑改写。
@@ -144,7 +176,7 @@ Kimi Code 是第 12 个应用、第 11 个 CLI 工具，行为属于「共存式
 #### 前端（12 个）
 
 - **`src/App.tsx`**（+86/−35 / +88/−2）：上游加 Kimi 的添加/切换处理器、授权中心目标、用量设置接线与 `translateKimiProviderMutationError`；fork 的 DevPanel、侧边面板、连接徽章改动保留。
-- **`src/components/providers/AddProviderDialog.tsx`**（+10/−5 / +1/−0）：上游让 Kimi 跳过预设选择、加 `accountLogin` 状态与 `AuthCenterTarget`；fork 改动保留。上游把 `ManagedAuthProvider` 换成 `AuthCenterTarget`，不得从 fork 侧带回旧类型。
+- **`src/components/providers/AddProviderDialog.tsx`**（+10/−5 / +1/−0）：上游让 Kimi 跳过预设选择、加 `accountLogin` 状态与 `AuthCenterTarget`；fork 改动保留。注意上游把 `ManagedAuthProvider` 换成 `AuthCenterTarget`，不要从 fork 侧带回旧类型。
 - **`src/components/providers/EditProviderDialog.tsx`**（+8/−3 / +2/−0）：上游把 Kimi 加入 live-snapshot 排除列表并改用 `AuthCenterTarget`；fork 改动保留。
 - **`src/components/providers/ProviderCard.tsx`**（+24/−5 / +104/−1）：上游加 Kimi 官方额度 footer、`isOfficialAccount` 判定、`onTest` 关闭与官方卡禁复制/禁删；fork 的模型徽章、快捷切换、连接徽章、双官网链接保留。**上游同时从 `CardTone` 移除 `neutral`（`presentation.ts` 不在重叠面、整体取上游），本文件的 `TONE_CLASS` 必须删掉 `neutral` 条目**，否则 typecheck 失败。按 Q3，Kimi 不进入 `isModelCapableApp`。
 - **`src/components/providers/ProviderList.tsx`**（+4/−1 / +229/−10）：上游加 `case "kimi"`（`meta.liveConfigManaged`）、`kimiCurrentId`、Kimi 空状态隐藏导入；fork 的右键置顶/置底、快捷排序、连接检测、apply 逻辑保留。
@@ -207,7 +239,7 @@ Kimi Code 是第 12 个应用、第 11 个 CLI 工具，行为属于「共存式
 
 - 重放涉及该文件或 rebase 完成后，核对 `default_workflow: native` 与 `workflows` 含 native 与 classic；被改写时 `git checkout ORIG_HEAD -- .comet/config.yaml` 恢复。
 
-### 已知流程坑位
+### 已知流程坑位（沿用 + 本轮新增）
 
 - Runtime `verification_checks` 的 `executable` 与 `argv` 分开填、`cwdRef` 必须是真实存在的相对目录；argv 不含程序名、不含 shell 语法。
 - 长重放 git commit 段错误（signal 11）：先核对 `.git/rebase-merge` 与落盘，再 continue。
@@ -232,7 +264,7 @@ Kimi Code 是第 12 个应用、第 11 个 CLI 工具，行为属于「共存式
 
 - 四处文件 `4.0.19-1`；语义：上游版本号 + `-N`，N 为同一上游版本的 fork 构建代数。
 
-### 交付（按 Q4 授权，2026-10-24 已确认）
+### 交付（上传，按 Q4 授权，2026-10-24 已确认）
 
 - 交付是验收通过、用户接受结果并生成归档提交之后的步骤：`git push --force-with-lease origin main`，随后在归档提交上创建 annotated tag `v4.0.19-1` 并 `git push origin v4.0.19-1`（触发 fork Release CI，仅 Windows x64 与 macOS arm64 unsigned）。不创建 PR，不含其他远端引用。
 - 执行后回报：`main`/`origin/main` 一致性、tag 指向的提交、Release run 的 status/conclusion（用 `gh api --repo tunecc/cc-switch` 复核，不信包装工具输出）。
@@ -256,4 +288,4 @@ Kimi Code 是第 12 个应用、第 11 个 CLI 工具，行为属于「共存式
 
 ### fork 魔改保留清单落地取证（`git grep -I -l … HEAD -- src src-tauri tests` 命中文件数）
 
-逐项取证并记录：`__CCS_FORK_BUILD__`、`__CCS_DEV_PANEL__`、`DevPanel`、`visibleSidebarPanels`、`batchConnectivityTest`、`extractModelBadgeForProvider`、`ModelQuickSwitchDialog`、`websiteUrl2`、`website_url_2`、`toggle_main_window`、`hide_main_window`、`panel_visible`、`show_menu_on_left_click(false)`、`connectivity_test_provider_models`、`connectivity_probe_provider`、`filterForkPresets(`、`ProviderImportEntry`、`forkOfficialAllowlist`、`readImportableProviderFields`、`enabled_kimi`；并确认 `native_menu_on_left_click` 仅存注释/护栏断言、`tauri_plugin_updater`/`updater_builder` 在 `src-tauri` 为 0、`tauri-plugin-updater` 在 `Cargo.lock` 为 0、`createUpdaterArtifacts` 为 `false`、`MODEL_CAPABLE_APPS` 不含 `kimi`。
+Build 阶段逐项取证并记录：`__CCS_FORK_BUILD__`、`__CCS_DEV_PANEL__`、`DevPanel`、`visibleSidebarPanels`、`batchConnectivityTest`、`extractModelBadgeForProvider`、`ModelQuickSwitchDialog`、`websiteUrl2`、`website_url_2`、`toggle_main_window`、`hide_main_window`、`panel_visible`、`show_menu_on_left_click(false)`、`connectivity_test_provider_models`、`connectivity_probe_provider`、`filterForkPresets(`、`ProviderImportEntry`、`forkOfficialAllowlist`、`readImportableProviderFields`、`enabled_kimi`；并确认 `native_menu_on_left_click` 仅存注释/护栏断言、`tauri_plugin_updater`/`updater_builder` 在 `src-tauri` 为 0、`tauri-plugin-updater` 在 `Cargo.lock` 为 0、`createUpdaterArtifacts` 为 `false`、`MODEL_CAPABLE_APPS` 不含 `kimi`。
