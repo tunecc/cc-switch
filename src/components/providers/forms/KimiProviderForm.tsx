@@ -42,6 +42,8 @@ import {
   type KimiProviderConfig,
 } from "@/config/kimiProviderPresets";
 import { kimiPresetModelSources } from "@/config/presetModelMetadata";
+import { IS_FORK_BUILD } from "@/config/forkBuild";
+import { forkOfficialAllowlist } from "@/config/forkOfficialAllowlist";
 import {
   findRequestHeaderValue,
   normalizeRequestHeaders,
@@ -92,12 +94,17 @@ const PROVIDER_TYPE_LABELS: Record<
   vertexai: "Google Vertex AI",
 };
 
+const KIMI_ALLOWED_PRESET_NAMES = new Set(forkOfficialAllowlist.kimi);
+
 const PRESETS = [
   { id: KIMI_ACCOUNT_PRESET_ID, preset: kimiAccountPreset },
-  ...kimiProviderPresets.map((preset, index) => ({
-    id: String(index),
-    preset,
-  })),
+  // 先编号再过滤：id 必须保持上游原始数组下标，过滤不得改变编号。
+  ...kimiProviderPresets
+    .map((preset, index) => ({ id: String(index), preset }))
+    .filter(
+      ({ preset }) =>
+        !IS_FORK_BUILD || KIMI_ALLOWED_PRESET_NAMES.has(preset.name),
+    ),
 ];
 
 export function KimiProviderForm({
