@@ -13,7 +13,7 @@
 - claude：`settingsConfig.env.ANTHROPIC_DEFAULT_SONNET_MODEL`，为空回退 `ANTHROPIC_MODEL`
 - codex / grokbuild：settingsConfig.config（TOML）的顶层 `model` 字段
 - gemini：`settingsConfig.env.GEMINI_MODEL`
-- 其余 app（claude-desktop/opencode/openclaw/hermes/pi/mcode/agy）SHALL 不显示徽章。AGY 例外说明：AGY（v4.0.18 起的第 11 个应用）使用上游自带的卡片模型行（`extractAgyModel`：`config.model.name` → `env.GEMINI_MODEL`，显示在徽章位之后的 URL 之前），不进入模型快捷切换体系（2026-10-22 Q2：AGY 无「当前供应商」概念，卡片主操作是 Open Terminal）。
+- 其余 app（claude-desktop/opencode/openclaw/hermes/pi/mcode/agy/kimi）SHALL 不显示徽章。AGY 例外说明：AGY（v4.0.18 起的第 11 个应用）使用上游自带的卡片模型行（`extractAgyModel`：`config.model.name` → `env.GEMINI_MODEL`，显示在徽章位之后的 URL 之前），不进入模型快捷切换体系（2026-10-22 Q2：AGY 无「当前供应商」概念，卡片主操作是 Open Terminal）。Kimi 说明见「Kimi 不进入快捷切换」Requirement（2026-10-24 Q3）。
 
 Claude 卡片在显示模型名的基础上，SHALL 额外标识当前主对话模型是否开启 1M：当 claude 当前主对话模型（`ANTHROPIC_DEFAULT_SONNET_MODEL`，空则回退 `ANTHROPIC_MODEL`）的原始 env 值以 `[1M]` 结尾（大小写不敏感）时，徽章 SHALL 在模型名后显示「1M」小标记；未开启时不显示。其余 3 个核心 app（codex/grokbuild/gemini）SHALL 不显示 1M 标记（1M 语义仅 claude 有）。
 
@@ -80,7 +80,7 @@ Claude 卡片在显示模型名的基础上，SHALL 额外标识当前主对话�
 - label 为「未设置模型」类文案（区别于有模型时的模型名）；
 - 不显示 1M 小标记（无模型即无 1M 状态）。
 
-其余 app（claude-desktop/opencode/openclaw/hermes/pi/mcode/agy）SHALL 不渲染徽章，也不渲染占位按钮。
+其余 app（claude-desktop/opencode/openclaw/hermes/pi/mcode/agy/kimi）SHALL 不渲染徽章，也不渲染占位按钮。
 
 #### Scenario: 无模型时占位可点击
 
@@ -201,6 +201,23 @@ Claude 卡片在显示模型名的基础上，SHALL 额外标识当前主对话�
 
 - **WHEN** Codex 供应商选中 model-y 后应用
 - **THEN** config TOML 的 model = "model-y"，其余 TOML 字段不变
+
+### Requirement: Kimi 不进入快捷切换
+
+Kimi Code（v4.0.19 起的第 12 个应用）SHALL NOT 进入模型快捷切换体系（2026-10-24 Q3）：`MODEL_CAPABLE_APPS` 保持 claude/codex/gemini/grokbuild 四项，Kimi 卡片不渲染模型徽章、不渲染占位按钮、不挂载 ModelQuickSwitchDialog。Kimi 的模型信息与默认模型由上游既有机制承担：
+
+- 卡片「设为默认」是 provider 级切换（`switchProvider`），把该供应商写为 Kimi 当前供应商，不带模型参数；
+- 具体模型由 `KimiProviderForm` 的模型表（`config.models` 键值表）增删改，并随表单提交持久化。
+
+#### Scenario: Kimi 卡片无模型入口
+
+- **WHEN** 查看 Kimi app 的供应商卡片
+- **THEN** 卡片名称右侧既不显示模型徽章也不显示占位按钮，更多菜单中没有模型快捷切换项
+
+#### Scenario: Kimi 的默认动作走 provider 级切换
+
+- **WHEN** 用户在 Kimi 卡片上执行「设为默认」
+- **THEN** 调用 provider 级切换把该供应商设为当前供应商，不写入任何模型字段
 
 ### Requirement: fork 专属目录与上游零影响
 
