@@ -11,7 +11,7 @@
 //
 // 刻意不复用 `utils/providerCredentials` 的 `extractCredentials`：那个表的
 // default 分支返回空值，是给「拉取模型列表前的凭据预检」用的（只有支持
-// /models 拉取的应用才填）。导入需要覆盖全部 12 个应用，语义不同，混用会
+// /models 拉取的应用才填）。导入需要覆盖全部 13 个应用，语义不同，混用会
 // 让其中一侧的行为被另一侧静默改变。
 
 import type { AppId } from "@/lib/api/types";
@@ -167,7 +167,8 @@ function readConfigFields(
         defaultModel: "",
       };
     }
-    case "pi": {
+    case "pi":
+    case "omp": {
       const config = asRecord(settingsConfig) ?? {};
       return {
         baseUrl: asTrimmedString(config.baseUrl),
@@ -352,6 +353,7 @@ export function buildImportedSettingsConfig(
         api_key: apiKey,
       };
     case "pi":
+    case "omp":
       return buildPiSettingsConfig({
         passthrough: {},
         baseUrl,
@@ -486,7 +488,8 @@ export function patchImportedSettingsConfig(
       setOrDelete(next, "api_key", apiKey);
       return next;
     }
-    case "pi": {
+    case "pi":
+    case "omp": {
       setOrDelete(next, "baseUrl", baseUrl);
       setOrDelete(next, "apiKey", apiKey);
       return next;
