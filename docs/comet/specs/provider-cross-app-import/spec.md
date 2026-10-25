@@ -14,6 +14,7 @@
 - 全部来源应用都不可用时，整个入口行不渲染。
 - AGY（Antigravity，v4.0.18 起的第 11 个应用）SHALL 作为来源与目标都可用，按 Gemini 形状读写；不对 AGY 做额外排除（2026-10-22 Q3）。
 - Kimi Code（v4.0.19 起的第 12 个应用）SHALL **只作导入来源**（2026-10-24 Q2）：`useProviderImportSources` 按 `APP_IDS` 自动枚举，不对 Kimi 排除；Kimi 表单 `KimiProviderForm` 由 `ProviderForm` 首段早退分流，不渲染 `ProviderImportEntry`，因此 Kimi 永远不是导入目标。
+- Oh My Pi（omp，v4.0.20 起的第 13 个应用）SHALL 作为来源与目标都可用（2026-10-25 Q2），与 Pi 完全对齐：omp 复用 Pi 表单，`PiProviderForm` 在 `isOmp` 下以 `appId="omp"` 渲染 `ProviderImportEntry` 并以 `useProviderImportSources("omp")` 枚举来源；读侧 `readConfigFields("omp", …)` 与 Pi 同形状（顶层 `baseUrl`/`apiKey`），写侧新建/编辑均复用 `buildPiSettingsConfig` / Pi 的补丁形状；`defaultModel` 为空（omp 的默认模型在 `config.yml`，不在供应商 `settingsConfig`）。不对 omp 做额外排除。
 
 ### 来源选择弹窗
 
@@ -52,6 +53,7 @@
 | openclaw | `baseUrl` | `apiKey` | 无 |
 | hermes | `base_url` | `api_key` | 无 |
 | pi | `baseUrl` | `apiKey` | 无 |
+| omp | `baseUrl` | `apiKey` | 无 |
 | mcode | `options.baseURL` | `options.apiKey` | 无 |
 | kimi（仅来源） | `provider.base_url` | `provider.api_key` | 无 |
 
