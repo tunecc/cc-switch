@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { AppId } from "@/lib/api";
-import { isAdditiveAppId } from "@/config/appConfig";
+import { isAdditiveAppId, isPiFamilyApp } from "@/config/appConfig";
 
 interface OpenClawDefaultModelOption {
   id: string;
@@ -201,7 +201,7 @@ export function ProviderActions({
           "bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700",
         icon: <Plus className="h-4 w-4" />,
         text:
-          appId === "pi"
+          appId && isPiFamilyApp(appId)
             ? t("provider.enable", { defaultValue: "启用" })
             : t("provider.addToConfig", { defaultValue: "添加" }),
       };
@@ -264,7 +264,7 @@ export function ProviderActions({
   const buttonState = getMainButtonState();
   const canDelete =
     !isReadOnly &&
-    (appId === "pi"
+    (appId && isPiFamilyApp(appId)
       ? !isStateChangeProtected
       : isOmo || isAdditiveMode
         ? true
@@ -273,7 +273,7 @@ export function ProviderActions({
     defaultValue: "由 Hermes 管理，请在 Hermes Web UI 中编辑",
   });
   const deleteHint =
-    appId === "pi" && isStateChangeProtected
+    appId && isPiFamilyApp(appId) && isStateChangeProtected
       ? piStateChangeHint
       : isReadOnly
         ? readOnlyHint

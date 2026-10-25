@@ -130,7 +130,6 @@ import {
   DEFAULT_VISIBLE_SIDEBAR_PANELS,
   isModeAppId,
   isPiFamilyApp,
-  isProxyAppId,
   orderAppIds,
 } from "@/config/appConfig";
 import type { PiFamilyAppId } from "@/lib/api/pi";
