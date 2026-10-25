@@ -43,6 +43,7 @@ const allAppsVisible: VisibleApps = {
   mcode: true,
   agy: true,
   kimi: true,
+  omp: true,
 };
 
 const onlyCodexVisible: VisibleApps = {
@@ -58,6 +59,7 @@ const onlyCodexVisible: VisibleApps = {
   mcode: false,
   agy: false,
   kimi: false,
+  omp: false,
 };
 
 beforeAll(async () => {
@@ -110,9 +112,7 @@ describe("Codex add form: cross-app import", () => {
     });
     renderCodexForm();
 
-    expect(
-      await screen.findByLabelText("搜索预设供应商"),
-    ).toBeInTheDocument();
+    expect(await screen.findByLabelText("搜索预设供应商")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /导入/ }),
     ).not.toBeInTheDocument();
@@ -174,7 +174,9 @@ describe("Codex add form: cross-app import", () => {
     );
     await screen.findByText("Relay One");
 
-    expect(document.body.textContent).not.toContain("sk-secret-should-not-leak");
+    expect(document.body.textContent).not.toContain(
+      "sk-secret-should-not-leak",
+    );
   });
   it("imports into an existing Codex provider without changing its id or category", async () => {
     const user = userEvent.setup();
@@ -260,7 +262,9 @@ describe("Codex add form: cross-app import", () => {
       config?: string;
     };
     expect(parsed.auth?.OPENAI_API_KEY).toBe("sk-secret-should-not-leak");
-    expect(parsed.config).toContain('base_url = "https://relay.example.com/api"');
+    expect(parsed.config).toContain(
+      'base_url = "https://relay.example.com/api"',
+    );
   });
   it("edit mode preserves providerKey, model catalog and extra env keys", async () => {
     const user = userEvent.setup();
@@ -315,7 +319,9 @@ describe("Codex add form: cross-app import", () => {
     expect(parsed.modelCatalog).toEqual({ models: [{ model: "gpt-5.6-sol" }] });
     expect(parsed.auth.auth_mode).toBe("chatgpt");
     expect(parsed.auth.OPENAI_API_KEY).toBe("sk-secret-should-not-leak");
-    expect(parsed.config).toContain('base_url = "https://relay.example.com/api"');
+    expect(parsed.config).toContain(
+      'base_url = "https://relay.example.com/api"',
+    );
     // 来源有模型时覆盖目标模型；保留 TOML 其余行
     expect(parsed.config).toContain('model = "claude-sonnet-4-5"');
     expect(parsed.config).toContain('model_reasoning_effort = "high"');
@@ -373,7 +379,9 @@ describe("Codex add form: cross-app import", () => {
     expect(submitted.notes).toBe("主力通道");
     expect(submitted.websiteUrl).toBe("https://relay.example.com");
     expect(parsed.auth?.OPENAI_API_KEY).toBe("sk-secret-should-not-leak");
-    expect(parsed.config).toContain('base_url = "https://relay.example.com/api"');
+    expect(parsed.config).toContain(
+      'base_url = "https://relay.example.com/api"',
+    );
     expect(parsed.config).toContain('model = "claude-sonnet-4-5"');
     expect(parsed.config).toContain('wire_api = "responses"');
   });
