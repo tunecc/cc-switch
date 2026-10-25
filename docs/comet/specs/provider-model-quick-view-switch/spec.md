@@ -13,7 +13,7 @@
 - claude：`settingsConfig.env.ANTHROPIC_DEFAULT_SONNET_MODEL`，为空回退 `ANTHROPIC_MODEL`
 - codex / grokbuild：settingsConfig.config（TOML）的顶层 `model` 字段
 - gemini：`settingsConfig.env.GEMINI_MODEL`
-- 其余 app（claude-desktop/opencode/openclaw/hermes/pi/mcode/agy/kimi）SHALL 不显示徽章。AGY 例外说明：AGY（v4.0.18 起的第 11 个应用）使用上游自带的卡片模型行（`extractAgyModel`：`config.model.name` → `env.GEMINI_MODEL`，显示在徽章位之后的 URL 之前），不进入模型快捷切换体系（2026-10-22 Q2：AGY 无「当前供应商」概念，卡片主操作是 Open Terminal）。Kimi 说明见「Kimi 不进入快捷切换」Requirement（2026-10-24 Q3）。
+- 其余 app（claude-desktop/opencode/openclaw/hermes/pi/omp/mcode/agy/kimi）SHALL 不显示徽章。AGY 例外说明：AGY（v4.0.18 起的第 11 个应用）使用上游自带的卡片模型行（`extractAgyModel`：`config.model.name` → `env.GEMINI_MODEL`，显示在徽章位之后的 URL 之前），不进入模型快捷切换体系（2026-10-22 Q2：AGY 无「当前供应商」概念，卡片主操作是 Open Terminal）。Kimi 说明见「Kimi 不进入快捷切换」Requirement（2026-10-24 Q3）；omp 说明见「Oh My Pi 不进入快捷切换」Requirement（2026-10-25 Q3）。
 
 Claude 卡片在显示模型名的基础上，SHALL 额外标识当前主对话模型是否开启 1M：当 claude 当前主对话模型（`ANTHROPIC_DEFAULT_SONNET_MODEL`，空则回退 `ANTHROPIC_MODEL`）的原始 env 值以 `[1M]` 结尾（大小写不敏感）时，徽章 SHALL 在模型名后显示「1M」小标记；未开启时不显示。其余 3 个核心 app（codex/grokbuild/gemini）SHALL 不显示 1M 标记（1M 语义仅 claude 有）。
 
@@ -218,6 +218,23 @@ Kimi Code（v4.0.19 起的第 12 个应用）SHALL NOT 进入模型快捷切换�
 
 - **WHEN** 用户在 Kimi 卡片上执行「设为默认」
 - **THEN** 调用 provider 级切换把该供应商设为当前供应商，不写入任何模型字段
+
+### Requirement: Oh My Pi 不进入快捷切换
+
+Oh My Pi（omp，v4.0.20 起的第 13 个应用）SHALL NOT 进入模型快捷切换体系（2026-10-25 Q3）：`MODEL_CAPABLE_APPS` 保持 claude/codex/gemini/grokbuild 四项，omp 卡片不渲染模型徽章、不渲染占位按钮、不挂载 ModelQuickSwitchDialog。omp 与 Pi 同管线，默认模型写在 `~/.omp/agent/config.yml`、不在供应商 `settingsConfig` 里，且 omp 供应商配置由上游表单的模型表/拉取模型弹窗管理：
+
+- 表单模型表（`models.yml`/`models.json` 的键值表）与「拉取模型」弹窗由上游 Pi 家族表单承载；
+- 供应商级「设为默认」沿用上游 Pi 家族语义，不带模型参数。
+
+#### Scenario: omp 卡片无模型入口
+
+- **WHEN** 查看 omp app 的供应商卡片
+- **THEN** 卡片名称右侧既不显示模型徽章也不显示占位按钮，更多菜单中没有模型快捷切换项
+
+#### Scenario: 核心 4 app 行为不变
+
+- **WHEN** 查看 claude/codex/gemini/grokbuild 的供应商卡片
+- **THEN** 模型徽章、占位按钮与快捷切换弹窗行为与本轮同步前一致
 
 ### Requirement: fork 专属目录与上游零影响
 
