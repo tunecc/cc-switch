@@ -814,6 +814,66 @@ export function ClaudeFormFields({
           ? t("providerForm.apiHintGeminiNative")
           : t("providerForm.apiHint");
 
+  const copilotRoutingNotice = isCopilotPreset && (
+    <p className="text-xs leading-relaxed text-fg-2">
+      {t("copilot.automaticFormatHint")}
+    </p>
+  );
+
+  const apiFormatControl = (
+    <div className="flex items-end gap-1">
+      <Select
+        value={apiFormat}
+        onValueChange={onApiFormatChange}
+        disabled={isCopilotPreset}
+      >
+        <SelectTrigger
+          id="apiFormat"
+          className="w-[280px] shrink-0"
+          aria-label={t("providerForm.apiFormat", {
+            defaultValue: "上游格式",
+          })}
+        >
+          <SelectValue>
+            {isCopilotPreset ? t("copilot.automaticFormat") : undefined}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="anthropic">
+            {t("providerForm.apiFormatAnthropic", {
+              defaultValue: "Anthropic Messages (原生)",
+            })}
+          </SelectItem>
+          <SelectItem value="openai_chat">
+            {t("providerForm.apiFormatOpenAIChat", {
+              defaultValue: "OpenAI Chat Completions (需转换)",
+            })}
+          </SelectItem>
+          <SelectItem value="openai_responses">
+            {t("providerForm.apiFormatOpenAIResponses", {
+              defaultValue: "OpenAI Responses API (需转换)",
+            })}
+          </SelectItem>
+          <SelectItem value="gemini_native">
+            {t("providerForm.apiFormatGeminiNative", {
+              defaultValue: "Gemini Native generateContent (需转换)",
+            })}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <HelpTip
+        title={t("providerForm.apiFormat", {
+          defaultValue: "上游格式",
+        })}
+      >
+        {t("providerForm.apiFormatHelp", {
+          defaultValue:
+            "看供应商原生支持哪种协议：Anthropic Messages 原样转发、不转换格式；其余三种由路由转成 Anthropic Messages。",
+        })}
+      </HelpTip>
+    </div>
+  );
+
   const endpointSection = (
     <>
       {/* Base URL 输入框 + 上游格式选择（仅非云服务商显示） */}
@@ -831,64 +891,10 @@ export function ClaudeFormFields({
               showEndpointTools ? () => onEndpointModalToggle(true) : undefined
             }
             rightSlot={
-              category !== "cloud_provider" ? (
-                <div className="flex items-end gap-1">
-                  <Select
-                    value={apiFormat}
-                    onValueChange={onApiFormatChange}
-                    disabled={isCopilotPreset}
-                  >
-                    <SelectTrigger
-                      id="apiFormat"
-                      className="w-[280px] shrink-0"
-                      aria-label={t("providerForm.apiFormat", {
-                        defaultValue: "上游格式",
-                      })}
-                    >
-                      <SelectValue>
-                        {isCopilotPreset
-                          ? t("copilot.automaticFormat")
-                          : undefined}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="anthropic">
-                        {t("providerForm.apiFormatAnthropic", {
-                          defaultValue: "Anthropic Messages (原生)",
-                        })}
-                      </SelectItem>
-                      <SelectItem value="openai_chat">
-                        {t("providerForm.apiFormatOpenAIChat", {
-                          defaultValue: "OpenAI Chat Completions (需转换)",
-                        })}
-                      </SelectItem>
-                      <SelectItem value="openai_responses">
-                        {t("providerForm.apiFormatOpenAIResponses", {
-                          defaultValue: "OpenAI Responses API (需转换)",
-                        })}
-                      </SelectItem>
-                      <SelectItem value="gemini_native">
-                        {t("providerForm.apiFormatGeminiNative", {
-                          defaultValue:
-                            "Gemini Native generateContent (需转换)",
-                        })}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <HelpTip
-                    title={t("providerForm.apiFormat", {
-                      defaultValue: "上游格式",
-                    })}
-                  >
-                    {t("providerForm.apiFormatHelp", {
-                      defaultValue:
-                        "看供应商原生支持哪种协议：Anthropic Messages 原样转发、不转换格式；其余三种由路由转成 Anthropic Messages。",
-                    })}
-                  </HelpTip>
-                </div>
-              ) : undefined
+              category !== "cloud_provider" ? apiFormatControl : undefined
             }
           />
+          {copilotRoutingNotice}
           {directModeFormatNotice && apiFormat !== "anthropic" && (
             <DirectModeFormatWarning notice={directModeFormatNotice} />
           )}
@@ -896,6 +902,14 @@ export function ClaudeFormFields({
       )}
     </>
   );
+
+  const copilotFormatFallback =
+    !shouldShowSpeedTest && isCopilotPreset ? (
+      <div className="space-y-2">
+        {apiFormatControl}
+        {copilotRoutingNotice}
+      </div>
+    ) : null;
 
   const fallbackModelLabel = t("providerForm.fallbackModelLabel", {
     defaultValue: "默认兜底模型",
@@ -1163,6 +1177,7 @@ export function ClaudeFormFields({
     return (
       <>
         {oauthSections}
+        {copilotFormatFallback}
         {apiKeySection}
         {showAuthField && authFieldSelect}
         {templateSection}
@@ -1219,6 +1234,7 @@ export function ClaudeFormFields({
   return (
     <>
       {oauthSections}
+      {copilotFormatFallback}
       {apiKeySection}
       {templateSection}
       {endpointSection}

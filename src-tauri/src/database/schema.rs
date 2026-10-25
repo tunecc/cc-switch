@@ -689,8 +689,17 @@ impl Database {
                         Self::set_user_version(conn, 23)?;
                     }
                     23 => {
+                        // 两侧的 v23 形状不同：fork v4.0.19-1 已有 Kimi 列、没有 omp；
+                        // 上游 v4.0.20 已有 omp、没有 Kimi。幂等补齐后才能统一升到 24。
+                        log::info!("迁移数据库从 v23 到 v24（幂等补齐 Kimi、OMP 与 DSH 列）");
                         for table in ["mcp_servers", "skills"] {
                             if Self::table_exists(conn, table)? {
+                                Self::add_column_if_missing(
+                                    conn,
+                                    table,
+                                    "enabled_kimi",
+                                    "BOOLEAN NOT NULL DEFAULT 0",
+                                )?;
                                 Self::add_column_if_missing(
                                     conn,
                                     table,
@@ -698,6 +707,15 @@ impl Database {
                                     "BOOLEAN NOT NULL DEFAULT 0",
                                 )?;
                             }
+                        }
+                        // Oh My Pi：只有 MCP 存开关；Skills 的启用状态按原生目录现算（同 Pi）。
+                        if Self::table_exists(conn, "mcp_servers")? {
+                            Self::add_column_if_missing(
+                                conn,
+                                "mcp_servers",
+                                "enabled_omp",
+                                "BOOLEAN NOT NULL DEFAULT 0",
+                            )?;
                         }
                         // DSH 用量导入：游标处未完成请求的解析上下文
                         if Self::table_exists(conn, "session_log_sync")? {
@@ -4242,7 +4260,7 @@ mod tests {
         )?;
         assert_eq!(skill_values, (1, 0));
 
-        // 已是 v23 的库重跑迁移必须是 no-op
+        // 已是 v24 的库重跑迁移必须是 no-op
         Database::apply_schema_migrations_on_conn(&conn)?;
         Ok(())
     }
@@ -4286,8 +4304,10 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )?;
         assert_eq!(skill_values, (1, 1, 0));
+        assert!(Database::has_column(&conn, "mcp_servers", "enabled_omp")?);
+        assert!(!Database::has_column(&conn, "skills", "enabled_omp")?);
 
-        // 已是 v23 的库重跑迁移必须是 no-op
+        // 已是 v24 的库重跑迁移必须是 no-op
         Database::apply_schema_migrations_on_conn(&conn)?;
         Ok(())
     }
@@ -4323,6 +4343,91 @@ mod tests {
             )?;
             assert_eq!(flags, (1, 1));
         }
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn upstream_v23_migration_adds_kimi_flags_and_keeps_omp() -> Result<(), AppError> {
+        // 上游 v4.0.20 的 v23 形状：已有 omp，但没有 enabled_kimi
+        let conn = Connection::open_in_memory()?;
+        conn.execute_batch(
+            "CREATE TABLE mcp_servers (
+                id TEXT PRIMARY KEY,
+                enabled_codex BOOLEAN NOT NULL DEFAULT 0,
+                enabled_omp BOOLEAN NOT NULL DEFAULT 0
+            );
+            CREATE TABLE skills (
+                id TEXT PRIMARY KEY,
+                enabled_codex BOOLEAN NOT NULL DEFAULT 0
+            );
+            INSERT INTO mcp_servers (id, enabled_codex, enabled_omp) VALUES ('m', 1, 1);
+            INSERT INTO skills (id, enabled_codex) VALUES ('s', 1);",
+        )?;
+        Database::set_user_version(&conn, 23)?;
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+
+        assert_eq!(Database::get_user_version(&conn)?, SCHEMA_VERSION);
+        for table in ["mcp_servers", "skills"] {
+            assert!(Database::has_column(&conn, table, "enabled_kimi")?);
+        }
+        let mcp_values: (i64, i64, i64) = conn.query_row(
+            "SELECT enabled_codex, enabled_omp, enabled_kimi FROM mcp_servers WHERE id = 'm'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+        assert_eq!(mcp_values, (1, 1, 0));
+        let skill_values: (i64, i64) = conn.query_row(
+            "SELECT enabled_codex, enabled_kimi FROM skills WHERE id = 's'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        assert_eq!(skill_values, (1, 0));
+        assert!(!Database::has_column(&conn, "skills", "enabled_omp")?);
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn fork_v23_migration_adds_omp_flag_and_keeps_kimi() -> Result<(), AppError> {
+        // fork v4.0.19-1 的 v23 形状：已有 Kimi，但没有 enabled_omp
+        let conn = Connection::open_in_memory()?;
+        conn.execute_batch(
+            "CREATE TABLE mcp_servers (
+                id TEXT PRIMARY KEY,
+                enabled_codex BOOLEAN NOT NULL DEFAULT 0,
+                enabled_kimi BOOLEAN NOT NULL DEFAULT 0
+            );
+            CREATE TABLE skills (
+                id TEXT PRIMARY KEY,
+                enabled_codex BOOLEAN NOT NULL DEFAULT 0,
+                enabled_kimi BOOLEAN NOT NULL DEFAULT 0
+            );
+            INSERT INTO mcp_servers (id, enabled_codex, enabled_kimi) VALUES ('m', 1, 1);
+            INSERT INTO skills (id, enabled_codex, enabled_kimi) VALUES ('s', 1, 1);",
+        )?;
+        Database::set_user_version(&conn, 23)?;
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+
+        assert_eq!(Database::get_user_version(&conn)?, SCHEMA_VERSION);
+        assert!(Database::has_column(&conn, "mcp_servers", "enabled_omp")?);
+        assert!(!Database::has_column(&conn, "skills", "enabled_omp")?);
+        let mcp_values: (i64, i64, i64) = conn.query_row(
+            "SELECT enabled_codex, enabled_kimi, enabled_omp FROM mcp_servers WHERE id = 'm'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+        assert_eq!(mcp_values, (1, 1, 0));
+        let skill_values: (i64, i64) = conn.query_row(
+            "SELECT enabled_codex, enabled_kimi FROM skills WHERE id = 's'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        assert_eq!(skill_values, (1, 1));
 
         Database::apply_schema_migrations_on_conn(&conn)?;
         Ok(())

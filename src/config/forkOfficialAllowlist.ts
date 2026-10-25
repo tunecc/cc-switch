@@ -26,6 +26,8 @@ export const forkOfficialAllowlist: Record<AppId, string[]> = {
   openclaw: ["LM Studio", "llama.cpp", "vLLM"],
   hermes: ["Ollama", "LM Studio", "llama.cpp", "vLLM"],
   pi: ["Ollama", "LM Studio", "vLLM"],
+  // omp 也是本机推理三条（Q1）；omp 目录由 Pi 目录派生，名称一致
+  omp: ["Ollama", "LM Studio", "vLLM"],
   // mcode（MiniMax Code，上游 v4 新增）同样无官方预设
   mcode: [],
   // Kimi 只保留 4 条官方预设；本机推理（Ollama/LM Studio/vLLM）在 Kimi 的所有入口一律隐藏
