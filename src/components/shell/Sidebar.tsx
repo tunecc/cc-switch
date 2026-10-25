@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import type { AppId } from "@/lib/api";
 import type { VisibleApps, VisibleSidebarPanels } from "@/types";
-import { APP_IDS, orderAppIds } from "@/config/appConfig";
+import { orderAppIds } from "@/config/appConfig";
 import type { GlobalPage, SettingsSection, View } from "@/lib/navigation";
 import { isAppPage } from "@/lib/navigation";
 import { SkillsIcon } from "@/components/BrandIcons";
