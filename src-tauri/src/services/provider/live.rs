@@ -1739,7 +1739,6 @@ fn remove_openclaw_provider_from_live(provider_id: &str) -> Result<(), AppError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::database::Database;
     use serde_json::json;
 
     #[test]
