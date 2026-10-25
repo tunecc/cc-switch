@@ -1050,7 +1050,7 @@
     "copyToolUninstallCommand": "复制 {{tool}} 的卸载命令",
     "uninstallCommandCopied": "卸载命令已复制",
     "uninstallCommandCopyFailed": "复制失败，请手动选择并复制命令。",
-    "oneClickInstallHint": "安装或升级 Claude Code / Codex / Gemini CLI / Grok Build / OpenCode / OpenClaw / Hermes / Pi / MiniMax Code",
+    "oneClickInstallHint": "安装或升级 Claude Code / Codex / Gemini CLI / Grok Build / OpenCode / OpenClaw / Hermes / Pi / MiniMax Code / Oh My Pi",
     "localEnvCheck": "本地环境检查",
     "updateAllTools": "全部升级（{{count}}）",
     "currentVersion": "当前版本",
@@ -1261,9 +1261,9 @@
       "contextWindow": "上下文长度",
       "maxTokens": "最大输出 Token 数",
       "compatibility": "接口兼容性",
-      "compatibilityHint": "调整兼容端点或本地服务的请求行为。",
+      "compatibilityHint": "只在接口自称兼容 OpenAI、却拒收某些请求时才需要填。每一项说明这家接口的一个特殊之处，比如 supportsDeveloperRole 填 false 表示它不认 developer 角色，maxTokensField 填 max_tokens 表示它只认旧的字段名。选预设时需要的项会自动填好；留空就按默认处理。",
       "addCompatibilityOption": "添加",
-      "noCompatibilityOptions": "暂无兼容性选项",
+      "noCompatibilityOptions": "未设置，按默认处理",
       "optionKey": "选项",
       "optionValue": "值",
       "removeCompatibilityOption": "移除兼容性选项",
@@ -1810,8 +1810,7 @@
       "grooroute": "GrooRoute Pro 是可靠流畅的 AI API 中转服务平台，接入 OpenAI、Claude、DeepSeek 等主流大模型，支持按量计费与订阅套餐。CC Switch 用户通过此链接注册即可获得免费 5 元体验额度！",
       "dit": "DIT.ai 是面向多供应商低价路由的 AI Token 交易市场：一个 OpenAI 兼容 API 即可调用 GPT、Claude、Gemini、DeepSeek、Grok、Llama 等 50 多个主流模型，160 多条线路实时竞价，价格通常比官方低 30–70%。CC Switch 用户通过此链接注册并使用优惠码 \"ccswitch\"，可领取 5 美元新人券！",
       "buytoken": "BuyToken 提供 Claude Code、Codex、DeepSeek 等各类中转服务，支持企业级并发、可极速开票，专注做稳定长久站。CC Switch 用户通过此链接注册可得 3 元体验额度，首充享 9 折！",
-      "vapi": "V-API 是三年老品牌，为个人、开发者和企业提供稳定、快速、安全的高品质大语言模型 API 服务，支持合同签约、正规开票（普票 / 专票）。CC Switch 用户通过此链接注册，首单立减 2 元并享 9 折优惠！",
-      "everyapi": "EveryAPI 自带桌面客户端，Claude Code、Codex、Cursor 等 20 多个工具一键自动配置；一把密钥直接调用 Claude、GPT、DeepSeek、GLM、MiniMax、Kimi、豆包，换模型不用改配置。注册即送 14 元额度，GPT 低至 1.5 折；CC Switch 用户专享：首充时使用折扣码 \"ccswitch\" 享 20% 优惠，不限时！"
+      "vapi": "V-API 是三年老品牌，为个人、开发者和企业提供稳定、快速、安全的高品质大语言模型 API 服务，支持合同签约、正规开票（普票 / 专票）。CC Switch 用户通过此链接注册，首单立减 2 元并享 9 折优惠！"
     },
     "presets": {
       "ucloud": "优云智算",
@@ -4707,7 +4706,7 @@
     "usedUp": "已用完",
     "balance": "余额 {{value}}",
     "planExpired": "套餐已过期",
-    "failed": "额度没查到",
+    "failed": "额度查询失败",
     "reason": {
       "loginExpired": "登录已过期",
       "tokenRefreshPending": "令牌待刷新"
@@ -4737,8 +4736,7 @@
     "windows": {
       "title": "各档额度",
       "showAll": "查看各档额度"
-    },
-    "balanceUsedUp": "余额已用完"
+    }
   },
   "appMatrix": {
     "clearSearch": "清空搜索",
@@ -5226,7 +5224,7 @@
       "primaryHidden": "Kimi Code 自己的登录已移出列表，重新登录同一账号即可找回",
       "removeCurrentHint": "这个账号正在使用，请先切换到其他账号再删除",
       "manageAccounts": "管理 Kimi 账号",
-      "managedHint": "请在授权中心管理 Kimi 官方账号。",
+      "managedHint": "先移除这个官方账号，或到授权中心删除它（连登录一起删）。",
       "connectionManaged": "连接和登录由授权中心管理，这里只编辑模型。拉取模型会读取这个账号当前可用的官方模型。",
       "current": "Kimi 在用",
       "primaryShort": "Kimi Code 自己的登录",

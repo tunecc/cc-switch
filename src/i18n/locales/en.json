@@ -1050,7 +1050,7 @@
     "copyToolUninstallCommand": "Copy the uninstall command for {{tool}}",
     "uninstallCommandCopied": "Uninstall command copied",
     "uninstallCommandCopyFailed": "Copy failed. Please select and copy the command manually.",
-    "oneClickInstallHint": "Install or upgrade Claude Code / Codex / Gemini CLI / Grok Build / OpenCode / OpenClaw / Hermes / Pi / MiniMax Code",
+    "oneClickInstallHint": "Install or upgrade Claude Code / Codex / Gemini CLI / Grok Build / OpenCode / OpenClaw / Hermes / Pi / MiniMax Code / Oh My Pi",
     "localEnvCheck": "Local environment check",
     "updateAllTools": "Update All ({{count}})",
     "currentVersion": "Current Version",
@@ -1261,9 +1261,9 @@
       "contextWindow": "Context window",
       "maxTokens": "Max output tokens",
       "compatibility": "Compatibility",
-      "compatibilityHint": "Adjust request behavior for compatible or local endpoints.",
+      "compatibilityHint": "Only needed when an endpoint claims to be OpenAI-compatible but rejects some requests. Each option describes one quirk of the endpoint: for example, supportsDeveloperRole = false means it doesn't accept the developer role, and maxTokensField = max_tokens means it only accepts the older field name. Presets fill in what they need; leave it empty to use the defaults.",
       "addCompatibilityOption": "Add",
-      "noCompatibilityOptions": "No compatibility options configured",
+      "noCompatibilityOptions": "Not set — defaults apply",
       "optionKey": "Option",
       "optionValue": "Value",
       "removeCompatibilityOption": "Remove compatibility option",
@@ -1810,8 +1810,7 @@
       "grooroute": "GrooRoute Pro is a reliable AI API relay with access to OpenAI, Claude, DeepSeek, and other mainstream models, offering pay-as-you-go and subscription plans. CC Switch users get ¥5 in free trial credit by registering via this link!",
       "dit": "DIT.ai is an AI token exchange for lower-cost multi-provider routing: one OpenAI-compatible API reaches 50+ leading models including GPT, Claude, Gemini, DeepSeek, Grok, and Llama, with providers competing across 160+ routes, typically 30–70% below official pricing. CC Switch users can register via this link and use promo code \"ccswitch\" to claim a $5 welcome coupon!",
       "buytoken": "BuyToken offers relay access for Claude Code, Codex, DeepSeek, and more, with enterprise-grade concurrency and fast invoicing, built to be a stable, long-running service. CC Switch users who register via this link get ¥3 in trial credit and 10% off their first top-up!",
-      "vapi": "V-API is a three-year-old brand offering stable, fast, and secure high-quality LLM API services for individuals, developers, and businesses, with formal contracts and official invoices (general / special VAT). CC Switch users who register via this link get ¥2 off and 10% off their first order!",
-      "everyapi": "EveryAPI ships its own desktop client that auto-configures Claude Code, Codex, Cursor, and 20+ other tools in one click; one key reaches Claude, GPT, DeepSeek, GLM, MiniMax, Kimi, and Doubao, so switching models needs no config changes. Get ¥14 in free credit on sign-up, with GPT models from just 15% of the official price. Exclusive for CC Switch users: use the code \"ccswitch\" on your first top-up for 20% off, with no expiry!"
+      "vapi": "V-API is a three-year-old brand offering stable, fast, and secure high-quality LLM API services for individuals, developers, and businesses, with formal contracts and official invoices (general / special VAT). CC Switch users who register via this link get ¥2 off and 10% off their first order!"
     },
     "presets": {
       "ucloud": "Compshare",
@@ -4737,8 +4736,7 @@
     "windows": {
       "title": "All limits",
       "showAll": "Show all limits"
-    },
-    "balanceUsedUp": "Balance used up"
+    }
   },
   "appMatrix": {
     "clearSearch": "Clear search",
@@ -5226,7 +5224,7 @@
       "primaryHidden": "Kimi Code's own login was removed from the list; sign in to the same account to bring it back",
       "removeCurrentHint": "This account is in use. Switch to another account before removing it.",
       "manageAccounts": "Manage Kimi accounts",
-      "managedHint": "Manage official Kimi accounts in the Authorization Center.",
+      "managedHint": "Remove this official account first, or delete it (with its login) in the Authorization Center.",
       "connectionManaged": "The connection and login are managed in the Authorization Center; edit only the models here. Fetching models reads the official models currently available to this account.",
       "current": "In use by Kimi",
       "primaryShort": "Kimi Code's own login",

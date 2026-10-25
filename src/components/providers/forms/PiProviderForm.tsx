@@ -870,9 +870,10 @@ export function PiProviderForm({
   const presetEntries = useMemo(() => {
     // 先按原数组下标编号再过滤 fork 白名单：添加对话框按 id 里的下标回查预设
     const forkAllowed = new Set(
-      filterForkPresets(isOmp ? "omp" : "pi", presets).map(
-        (preset) => preset.name,
-      ),
+      filterForkPresets(
+        isOmp ? "omp" : "pi",
+        presets as { name: string }[],
+      ).map((preset) => preset.name),
     );
     return presets
       .map((preset, index) => ({
@@ -952,9 +953,9 @@ export function PiProviderForm({
   // 所以导入走同一条路径。编辑模式下 patchImportedSettingsConfig 保留了
   // models / providerKey 等键，applySettingsConfig 从同一份配置重建扁平 state，
   // 模型表因此不会丢。
-  const importSources = useProviderImportSources("pi");
+  const importSources = useProviderImportSources(appId);
   const handleProviderImport = useProviderImportApply({
-    appId: "pi",
+    appId,
     form,
     isEditMode: isEdit,
     // category 会作为 presetCategory 提交，编辑模式不能顺手改成 custom。
@@ -983,7 +984,7 @@ export function PiProviderForm({
   });
   const importEntry = (
     <ProviderImportEntry
-      appId="pi"
+      appId={appId}
       sources={importSources}
       isEditMode={isEdit}
       onImport={handleProviderImport}
