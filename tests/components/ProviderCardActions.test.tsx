@@ -142,11 +142,12 @@ describe("ProviderCardActions — mode items in the more menu", () => {
       "provider.duplicate",
       "provider.connectivityCheck",
       "provider.configureUsage",
-      "provider.openTerminal",
       "common.delete",
     ]);
     // 模型快捷切换已从更多菜单移除，改由卡片上的模型徽章承担
     expect(labels).not.toContain("providerModel.title");
+    // 打开终端也自 v4.0.21 起改由卡片图标按钮承担
+    expect(labels).not.toContain("provider.openTerminal");
     expect(menu.querySelector("svg.lucide-boxes")).toBeNull();
   });
 });
