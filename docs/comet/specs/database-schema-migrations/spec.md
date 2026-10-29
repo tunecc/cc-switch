@@ -64,5 +64,12 @@
 `docs/HOW_TO_REBASE_UPSTREAM.md` §4 共享文件表中 `schema.rs` 行 SHALL 记录 v21 修复迁移、21→22、22→23 与 23→24 幂等迁移的存在与动机（v19 双语义历史缺口、v4.0.18 的 v21 撞号、v4.0.19 的 v22 撞号、v4.0.20 的 v23 撞号），使后续上游同步 rebase 解决 schema.rs 冲突时不丢失这些步骤。
 
 #### Scenario: 手册含修复迁移条目
-- **WHEN** 查看 `docs/HOW_TO_REBASE_UPSTREAM.md` §4 共享文件语义表与 §4.7
-- **THEN** `schema.rs` 行与 §4.7 包含 v21 修复迁移（mcp_servers.enabled_mcode/enabled_pi、skills.enabled_mcode）、v21→v22 AGY+Kimi 合并臂、v22→v23 Kimi+omp 合并臂、v23→v24 Kimi+omp 补列及 v19 双语义/v21/v22/v23 撞号背景说明
+- **WHEN** 查看 `docs/HOW_TO_REBASE_UPSTREAM.md` §4 共享文件语义表与 §4.7 / §4.8
+- **THEN** `schema.rs` 行与对应小节包含 v21 修复迁移（mcp_servers.enabled_mcode/enabled_pi、skills.enabled_mcode）、v21→v22 AGY+Kimi 合并臂、v22→v23 Kimi+omp 合并臂、v23→v24 Kimi+omp 补列及 v19 双语义/v21/v22/v23 撞号背景说明
+
+### Requirement: v4.0.21 轮无新增迁移臂
+fork 在 v4.0.21 轮同步中 SHALL 保持 `SCHEMA_VERSION = 24` 与既有迁移链不变：上游 `v4.0.21` 的 `SCHEMA_VERSION` 仍为 23，本轮只改动 `database/dao/providers.rs`（新增 `update_provider_sort_indexes`），未触碰 `database/schema.rs` 或 `database/mod.rs`。`pre-sync-v421..HEAD` 对 `schema.rs` 与 `database/mod.rs` 的 diff MUST 为空，`create_tables` 列集（`mcp_servers` 含 `enabled_agy`/`enabled_kimi`/`enabled_omp`，`skills` 含 `enabled_agy`/`enabled_kimi`）MUST 保持不变。
+
+#### Scenario: 同步后 schema 未被改动
+- **WHEN** 在同步到 `v4.0.21` 的 fork 终态上执行 `git diff pre-sync-v421 HEAD -- src-tauri/src/database/schema.rs src-tauri/src/database/mod.rs`
+- **THEN** 输出为空；`SCHEMA_VERSION` 仍为 24；`cargo test` 中 v21/v22/v23→24 的各形状与幂等用例全部通过；fork v24 库被上游 v4.0.21（v23）构建打开仍报「数据库版本过新」
