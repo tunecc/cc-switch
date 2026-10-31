@@ -18,6 +18,7 @@ import {
   dshProviderPresets,
 } from "@/config/dshProviderPresets";
 import { mcodePresetModelSources } from "@/config/presetModelMetadata";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 import { BasicFormFields } from "./BasicFormFields";
 import { OpenCodeFormFields } from "./OpenCodeFormFields";
 import { ProviderPresetSelector } from "./ProviderPresetSelector";
@@ -87,15 +88,20 @@ export function McodeProviderForm({
 }: ProviderFormProps) {
   const { t } = useTranslation();
   const presets = appId === "dsh" ? dshProviderPresets : mcodeProviderPresets;
+  // 编号按上游原始数组下标，fork 白名单过滤排在编号之后；mcode 目录沿用既有
+  // 未过滤口径（上游与本 fork 均未过滤），只有 dsh 目录套用白名单。
+  const directoryEntries = presets
+    .map((preset, index) => ({ id: String(index), preset }))
+    .filter(
+      ({ preset }) =>
+        appId !== "dsh" || filterForkPresets("dsh", [preset]).length > 0,
+    );
   const presetEntries = [
     // DeepSeek 账号和 Kimi 一样放在「账号登录」组：选中后去授权中心登录，不新建供应商
     ...(appId === "dsh"
       ? [{ id: DSH_ACCOUNT_PRESET_ID, preset: dshAccountPreset }]
       : []),
-    ...presets.map((preset, index) => ({
-      id: String(index),
-      preset,
-    })),
+    ...directoryEntries,
   ];
   const isDarkMode = useDarkMode();
   const [config, setConfig] = useState<McodeConfig>(

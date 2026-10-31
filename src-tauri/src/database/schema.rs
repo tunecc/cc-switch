@@ -728,6 +728,31 @@ impl Database {
                         }
                         Self::set_user_version(conn, 24)?;
                     }
+                    24 => {
+                        // 上游 v4.0.22 与 fork v4.0.20-1 的 v24 形状不同：上游已有
+                        // DSH 列与 parser_state，fork 侧没有。幂等补齐后统一升到 25。
+                        log::info!("迁移数据库从 v24 到 v25（幂等补齐 DSH 列与 parser_state）");
+                        for table in ["mcp_servers", "skills"] {
+                            if Self::table_exists(conn, table)? {
+                                Self::add_column_if_missing(
+                                    conn,
+                                    table,
+                                    "enabled_dsh",
+                                    "BOOLEAN NOT NULL DEFAULT 0",
+                                )?;
+                            }
+                        }
+                        // DSH 用量导入：游标处未完成请求的解析上下文
+                        if Self::table_exists(conn, "session_log_sync")? {
+                            Self::add_column_if_missing(
+                                conn,
+                                "session_log_sync",
+                                "parser_state",
+                                "TEXT",
+                            )?;
+                        }
+                        Self::set_user_version(conn, 25)?;
+                    }
                     _ => {
                         return Err(AppError::Database(format!(
                             "未知的数据库版本 {version}，无法迁移到 {SCHEMA_VERSION}"
@@ -4428,6 +4453,99 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?)),
         )?;
         assert_eq!(skill_values, (1, 1));
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn fork_v24_migration_adds_dsh_flags_and_parser_state() -> Result<(), AppError> {
+        // fork v4.0.20-1 的 v24 形状：已有 Kimi / OMP，但没有 DSH 列与 parser_state
+        let conn = Connection::open_in_memory()?;
+        conn.execute_batch(
+            "CREATE TABLE mcp_servers (
+                id TEXT PRIMARY KEY,
+                enabled_codex BOOLEAN NOT NULL DEFAULT 0,
+                enabled_kimi BOOLEAN NOT NULL DEFAULT 0,
+                enabled_omp BOOLEAN NOT NULL DEFAULT 0
+            );
+            CREATE TABLE skills (
+                id TEXT PRIMARY KEY,
+                enabled_codex BOOLEAN NOT NULL DEFAULT 0,
+                enabled_kimi BOOLEAN NOT NULL DEFAULT 0
+            );
+            CREATE TABLE session_log_sync (
+                file_path TEXT PRIMARY KEY
+            );
+            INSERT INTO mcp_servers (id, enabled_codex, enabled_kimi, enabled_omp) VALUES ('m', 1, 1, 1);
+            INSERT INTO skills (id, enabled_codex, enabled_kimi) VALUES ('s', 1, 1);
+            INSERT INTO session_log_sync VALUES ('dsh:test');",
+        )?;
+        Database::set_user_version(&conn, 24)?;
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+
+        assert_eq!(Database::get_user_version(&conn)?, SCHEMA_VERSION);
+        for table in ["mcp_servers", "skills"] {
+            assert!(Database::has_column(&conn, table, "enabled_dsh")?);
+        }
+        let mcp_values: (i64, i64, i64, i64) = conn.query_row(
+            "SELECT enabled_codex, enabled_kimi, enabled_omp, enabled_dsh FROM mcp_servers WHERE id = 'm'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )?;
+        assert_eq!(mcp_values, (1, 1, 1, 0));
+        let skill_values: (i64, i64, i64) = conn.query_row(
+            "SELECT enabled_codex, enabled_kimi, enabled_dsh FROM skills WHERE id = 's'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+        assert_eq!(skill_values, (1, 1, 0));
+        assert!(Database::has_column(&conn, "session_log_sync", "parser_state")?);
+
+        // 已是 v25 的库重跑迁移必须是 no-op
+        Database::apply_schema_migrations_on_conn(&conn)?;
+        Ok(())
+    }
+
+    #[test]
+    fn upstream_v24_migration_keeps_dsh_flags_and_parser_state() -> Result<(), AppError> {
+        // 上游 v4.0.22 的 v24 形状：DSH 列与 parser_state 已存在，升级到 25 不得改写
+        let conn = Connection::open_in_memory()?;
+        conn.execute_batch(
+            "CREATE TABLE mcp_servers (
+                id TEXT PRIMARY KEY,
+                enabled_dsh BOOLEAN NOT NULL DEFAULT 0
+            );
+            CREATE TABLE skills (
+                id TEXT PRIMARY KEY,
+                enabled_dsh BOOLEAN NOT NULL DEFAULT 0
+            );
+            CREATE TABLE session_log_sync (
+                file_path TEXT PRIMARY KEY,
+                parser_state TEXT
+            );
+            INSERT INTO mcp_servers VALUES ('m', 1);
+            INSERT INTO skills VALUES ('s', 1);
+            INSERT INTO session_log_sync VALUES ('claude:test', '{\"k\":1}');",
+        )?;
+        Database::set_user_version(&conn, 24)?;
+
+        Database::apply_schema_migrations_on_conn(&conn)?;
+
+        assert_eq!(Database::get_user_version(&conn)?, SCHEMA_VERSION);
+        let mcp_dsh: i64 = conn.query_row(
+            "SELECT enabled_dsh FROM mcp_servers WHERE id = 'm'",
+            [],
+            |row| row.get(0),
+        )?;
+        assert_eq!(mcp_dsh, 1);
+        let parser_state: Option<String> = conn.query_row(
+            "SELECT parser_state FROM session_log_sync WHERE file_path = 'claude:test'",
+            [],
+            |row| row.get(0),
+        )?;
+        assert_eq!(parser_state.as_deref(), Some("{\"k\":1}"));
 
         Database::apply_schema_migrations_on_conn(&conn)?;
         Ok(())
