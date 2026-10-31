@@ -34,7 +34,7 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 
 ### 同步范围（v4.0.21..v4.0.22：58 提交、228 文件、+15909/−1177）
 
-上游本轮改动按功能分组如下（详细到提交号，便于核对落地保真）：
+上游本轮改动按功能分组如下（详细到提交号，便于 Build 阶段核对落地保真）：
 
 1. **DSH 应用接入（6 提交）**：`3fc8794cf`（集成 DSH）、`6fa328f3b`（Web/Desktop 并行管理、账号登录、用量导入）、`2baa68621`（DeepSeek 官方账号登录）、`efb955bd1`（账号区去掉横幅、共享列表写入标题）、`f283a55f6`（侧栏显示全名）、`dfa291237`（共享模型编辑器对齐 Pi/Kimi）。
 2. **终端（3 提交）**：`ebb00da11`（追加自定义参数）、`03b475fb8`（跳过权限提示选项）、`6776bc06b`（Codex 供应商卡打开终端）。
@@ -154,34 +154,22 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 - `docs/comet/specs/upstream-sync/spec.md`：归档时更新为本轮同步后的完整状态（重放映射、冲突清单、落地保真核对与逐行归类）。
 - `docs/comet/specs/database-schema-migrations/spec.md`：登记「v4.0.22 轮上游 schema 24 与 fork 24 碰撞，fork 升 25；23→24 臂合并 dsh/parser_state，新增 24→25 幂等臂」。
 
-### 重放映射（口径与实测）
+### 重放映射（口径与记录要求，实测数字在 Build 阶段记录，不回写本规格）
 
 - 同步前 `git rev-list --count v4.0.21..pre-sync-v422` 预期 == 183。
 - 重放后 `git rev-list --count v4.0.22..HEAD` 与 183 的差值只允许来自「被 git 判定为空而丢弃」或「本轮新增提交」；逐条记录。
 - tag `v4.0.22` 是 annotated tag：tag 对象 `ab9205961…`，剥离提交 `b76426741…`；`git merge-base main v4.0.22` == `b76426741…`；`git log --format='%an <%ae>' v4.0.22..HEAD | sort -u` 只有 `Tune <176898395+tunecc@users.noreply.github.com>`。
 - 提交主题序列逐行 diff（重放前 `v4.0.21..pre-sync-v422` 与重放后 `v4.0.22..HEAD`）差异必须为 0 行。
 - patch-id 对照（stdin 口径）逐个归类：与重放前完全相同 / 仅 hunk 位移 / 冲突停车；冲突停车逐条记录归属与解法。预期的主要停车面：版本四文件、`README.md`、`src-tauri/src/lib.rs`、`tray.rs`、`commands/misc.rs`、`database/{schema,mod}.rs`、`database/tests.rs`、`provider.rs`、`services/provider/{mod,live}.rs`、`settings.rs`、`App.tsx`、`ProviderCard.tsx`、`ProviderList.tsx`、`McodeProviderForm.tsx`、`ProviderForm.tsx`、6 个预设文件、4 个 locale、`tests/components/{ProviderList,ProviderPresetSelector}.test.tsx`。
-- 冲突停车清单（交互式）已逐条记录（见下）；rerere 复用的解法必须逐个复核。
+- 冲突停车清单（交互式）在 Build 阶段逐条记录；rerere 复用的解法必须逐个复核。
 - `git grep -I -l -e '^<<<<<<<' -e '^>>>>>>> ' HEAD -- src src-tauri tests docs README.md` 必须 0 命中（exit 1）。
 - 重放中途不跑 `cargo test`（fork 历史提交自带冲突标记）；最终态必须对冲突标记零命中。
-
-#### 本轮实测（Build 阶段回填）
-
-- 同步前 `git rev-list --count v4.0.21..pre-sync-v422` = **183**。
-- 重放后（代码终态 `HEAD` = `8aaa362cd`）`git rev-list --count v4.0.22..HEAD` = **184** = 183 个重放提交 + 1 个本轮新增提交（`8aaa362cd` `feat(fork): sync v4.0.22-1 with schema 25 and DSH support`）。Build 收尾的文档提交（只改 `docs/**` 与 Markdown）使最终 `HEAD` 计数为 **185** = 183 + 2，不改变重放映射。
-- 被 git 判空丢弃的提交 = **0 个**（183 → 183）。
-- 主题序列 `git log --format='%s' --reverse` 逐行 diff（`v4.0.21..pre-sync-v422` vs `v4.0.22..HEAD` 剔除本轮新增提交后）= **0 行**。
-- `git merge-base main v4.0.22` = `b76426741ef93069e2f374ac01ca7ef5760e1d0e`（= `v4.0.22^{}`，annotated tag 对象 `ab92059613455b5bb6751f16f87817eb731a55e4`）；`git log --format='%an <%ae>' v4.0.22..HEAD | sort -u` 只有 `Tune <176898395+tunecc@users.noreply.github.com>`。
-- patch-id 差异 = **13 处**（170 个与重放前逐字相同）：
-  - **12 处为冲突停车**（全部在 reflog 留下今日的 `rebase (continue)` 记录，重放位置 31、46、48、49、67、70、87、97、106、113、157、178，逐条见下）；
-  - **1 处未停车**：`a4bda4bcb→a22a67ddf`（模型徽章与快捷切换入口），文件集与增删行数完全相同，属三方自动合并后内容随新基线上下文位移。
-- rerere：全程开启，今日新增 44 个文件级条目；12 个停车点全部按最终树逐条复核（见下方冲突清单），最终 `pnpm typecheck`、`pnpm test:unit`、`cargo test` 全绿。
 
 ### 落地保真核对（口径，最终态复算）
 
 - 算法（固定口径）：对上游 `v4.0.21..v4.0.22` 改动过的每个文件（228 个，覆盖 45 个重叠文件的全部）取 `git diff v4.0.21 v4.0.22 -- f` 的增/删行、`git diff v4.0.21 pre-sync-v422 -- f` 的 fork 增行，与 `git show HEAD:f` 的实际内容；行先 strip、去掉一个尾逗号、丢弃空行与纯符号噪声行，再做多重集差得「上游新增行缺失」与「fork 新增行缺失」。非重叠的 183 个上游文件 fork 侧缺失应为 0。
 - 计算必须在全部最终态提交（版本、文案、文档、schema、DSH 与其它交集、合并、测试断言修正）落完之后，对最终代码终态 `HEAD` 执行；其后的归档提交只改 Markdown，不在 228 个文件内，故数字不变。
-- 预期的刻意取舍（逐行归因，具体行数见下方「本轮实测」）：
+- 预期的刻意取舍（逐行归因，具体行数在 Build 后按实测记录到归档产物与 `verification.md`）：
   - `README.md`：fork 是整文件自有的「与上游的差别」文档；上游本轮新增/删除行不落地，全部归因为「fork 整文件替换」。
   - 版本与锁文件：上游 `4.0.22` 行被 fork `4.0.22-1` 取代（4 个文件各 1 行）；fork 的 `4.0.21-1` 行被本轮终态升级（属预期流转）。
   - `src-tauri/Cargo.toml` / `Cargo.lock`：上游新增 `subtle` 依赖行按上游落地，fork 移除的 updater 行不得出现。
@@ -192,23 +180,6 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
   - 6 个预设文件：目录内容整份取上游，fork 各保留 `hidden?: boolean` 两行，不产生上游行缺失。
   - 4 个 locale：上游新增 72 行/删除 14 行全部按上游落地；fork 键段不产生上游缺失；`tr.json` 与上游逐字节一致。
 - 任何未说明的非零缺失视为丢语义缺陷；「上游内容零丢失」的旁证用 `git diff --numstat v4.0.22 HEAD -- <file>` 只看 fork 侧新增/删除。
-
-#### 本轮实测（Build 阶段回填）
-
-- 实测合计：**上游新增行缺失 25 行（8 个文件），fork 新增行缺失 27 行（8 个文件）**；228 个上游文件全部参与计算（45 个重叠文件 + 183 个非重叠文件），非重叠上游文件的 fork 新增行缺失为 **0**。计算在代码终态 `HEAD` = `8aaa362cd` 上执行（含 `ProviderCard` 用量自动刷新语义修正与 `McodeProviderForm`/`ProviderCard` 合并）；其后的文档提交只改 `docs/**` 与 Markdown，不在 228 个文件内，数字不变。
-- 上游新增行缺失逐项归因：
-  - `README.md` 13 行（PatewayAI / DIT.ai / AIGoCode / OspreyAI 赞助商 `tr`/`td` 行）：fork README 整文件重写，不采纳上游赞助商表（刻意取舍）。
-  - `package.json` / `src-tauri/Cargo.toml` / `src-tauri/Cargo.lock` / `src-tauri/tauri.conf.json` 各 1 行（共 4 行）版本号 `4.0.22`：fork 用 `4.0.22-1` 取代（预期流转）。
-  - `src-tauri/src/database/mod.rs` 1 行 `pub(crate) const SCHEMA_VERSION: i32 = 24;`：fork 因 24 同号碰撞升为 25（见 schema 终态）。
-  - `src-tauri/src/tray.rs` 4 行（`if cfg!(target_os = "windows") && *button == MouseButton::Left {`、`crate::tray_panel::hide_panel(tray.app_handle());`、`show_main_window(tray.app_handle());`、`} else if !crate::tray_panel::uses_native_menu() {`）：按 D2 不采纳上游「Windows 左键只显示主窗口」分支，fork 四条分支保留；`show_main_window` 的可见效果由 fork `toggle_main_window` 承载（合并等价）。
-  - `src/components/providers/forms/McodeProviderForm.tsx` 3 行（`...presets.map((preset, index) => ({`、`id: String(index)`、`preset`）：上游目录表达式被 fork 的 `directoryEntries ... .filter(... filterForkPresets("dsh", ...))` 包裹，编号仍在过滤之前（过滤接线等价）。
-- fork 新增行缺失逐项归因：
-  - 版本四文件各 1 行（共 4 行）`4.0.21-1`：本轮终态升级为 `4.0.22-1`（预期流转）。
-  - `src-tauri/src/database/mod.rs` 1 行 `pub(crate) const SCHEMA_VERSION: i32 = 24;`：本轮终态为 25（预期流转）。
-  - `src-tauri/src/database/schema.rs` 1 行（`log::info!("迁移数据库从 v23 到 v24（幂等补齐 Kimi 与 OMP 列）");`）：合并上游 `enabled_dsh` 后改写为「幂等补齐 Kimi、OMP 与 DSH 列」（语义等价）。
-  - `src-tauri/src/lib.rs` 19 行（托盘 `MouseButton`/`MouseButtonState`/`TrayIconEvent` 导入与 `TrayIconEvent::Click` 处理代码）：上游把事件处理抽到 `tray.rs`，这些行按原语义迁入 `tray::handle_tray_icon_event`（现位于 `tray.rs:21` 与 `tray.rs:2691–2703`），`lib.rs` 只挂 `.on_tray_icon_event`（合并等价）。
-  - `src/components/providers/forms/McodeProviderForm.tsx` 2 行（`const importEntry = (`、注释 `// 结构留给用户继续填（与 choosePreset 同一套入口）。`）：导入块改为 `appId === "mcode"` 条件表达式，注释并入上方导入说明（结构改写等价）。
-- 说明：`tr.json` 与 `v4.0.22` 逐字节一致（`cmp` 通过）；4 个 locale 与上游的 72/14 行差异全部按上游落地，fork 键段保留，按对象作用域查重为 0 重复。
 
 ### 冲突解决（遵循 docs/HOW_TO_REBASE_UPSTREAM.md §3）
 
@@ -277,24 +248,9 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 - **`src-tauri/src/commands/connectivity_test.rs`**、**`src-tauri/src/services/connectivity_test/`**：不在上游本轮改动面，保持不动。
 - **`src/utils/providerImport.ts`**、**`ProviderImportEntry.tsx`**、**`hooks/useProviderImportApply.ts`**：不在上游本轮改动面，保持不动。
 
-#### 冲突停车清单（本轮实测 12 处，按重放顺序）
+#### 冲突停车清单（Build 阶段实测记录）
 
-「差异面」= 该提交重放前后 `git show --numstat` 不一致的文件（冲突解决实际落点）；未列出的提交与重放前逐字相同（另有 1 处未停车但 patch-id 不同，见「重放映射」实测）。
-
-| # | 提交（旧 → 新） | 差异面 | 解法 |
-| --- | --- | --- | --- |
-| 31 | `b47ac25bf→92f057fb8`（模型徽章对齐上游 `extractModelBadge`） | `ProviderCard.tsx`（14/10 → 30/18） | 按 v4.0.22 卡片骨架重排模型徽章与快捷切换入口；`providerModelUtils.ts` 76 行按原内容落地，差异仅为上下文行数扩增 |
-| 46 | `e05453b77→b0bd0409f`（右键置顶/置底 + 新建插第二位） | `ProviderList.tsx`（numstat 相同，内容随基线重排） | 保留 fork 右键菜单与插入位置逻辑；locale 4 键与两处测试断言取合并后语义 |
-| 48 | `44aef003f→8491875a0`（归档 claude-model-quick-access） | `ProviderCard.tsx`、`ClaudeFormFields.tsx` 等（numstat 相同） | 归档提交的代码改动按 v4.0.22 基线重放：徽章/快捷切换与上游终端/用量行共存，表单与侧栏改动原样保留 |
-| 49 | `efbdbb698→55d86586a`（README fork 构建说明） | `README.md`（96/539 → 96/544） | 整文件取 fork；本提交新增的 5 行按 fork README 文案落位 |
-| 67 | `c72eba099→bda48753a`（连通性测试弹窗/详情/徽标 + 四语言文案） | 4 个 locale（numstat 相同） | fork 连通性文案与上游本轮 locale 新增键并存，按对象作用域查重 dup=0 |
-| 70 | `4ce83b404→86fce76a8`（供应商列表集成） | `ProviderActions.tsx`、`ProviderCard.tsx`、`ProviderList.tsx` 等（numstat 相同） | fork 列表/卡片改造叠加到 v4.0.22 基线；DSH 账号卡、live 错误提示与 fork 徽标/右键接线并存 |
-| 87 | `aebe3aa81→a5d637e9a`（托盘左键切换主窗口） | `lib.rs`（31/28 → 6/16）、`tray.rs`（32/0 → 45/5） | 上游把内联托盘处理抽为 `handle_tray_icon_event`；fork 事件处理随之迁入 `tray.rs`，`lib.rs` 只保留 builder 挂载与 `TrayIconBuilder` 导入 |
-| 97 | `190d6e00c→14c20ab2d`（跨应用导入） | `McodeProviderForm.tsx`（49/1 → 51/1） | 上游 DSH 表单结构与 fork 导入入口并存；`importEntry` 只在 `appId === "mcode"` 渲染 |
-| 106 | `00768d6bb→e76db69b0`（v4.0.1 CI 修复） | `lib.rs`（1/3 → 无） | 该提交原本修改的 `lib.rs` 片段已被上游托盘抽取移走，重放后不再需要；其余文件按原内容落地 |
-| 113 | `f5fa9bb07→58f308e55`（v20→v21 修复迁移） | `schema.rs`（171/9，numstat 相同）、`dao/mcp.rs`、`docs` | v21 修复臂并入 v4.0.22 迁移链；`docs/HOW_TO_REBASE_UPSTREAM.md` 两行按本轮文档终态落位 |
-| 157 | `f7f2f0eff→f25551a59`（托盘原生菜单左键契约） | `tray.rs`（6/6，numstat 相同） | 「原生菜单样式左键切换主窗口」分支落在 `handle_tray_icon_event` 内，右键 `mark_feedback_seen` 语义不变 |
-| 178 | `82d44d39d→3b68c215d`（v4.0.20-1 同步） | 版本四文件、`database/mod.rs`、`schema.rs`、4 个 locale | 版本行重放期取上游 `4.0.22`、收尾统一为 `4.0.22-1`；v23→v24 臂合并上游 `enabled_dsh`/`parser_state` 并新增 v24→v25 幂等臂；locale 保留 fork 键段 |
+「差异面」= 该提交重放前后 `git show --numstat` 不一致的文件（冲突解决实际落点）；未列出的提交与重放前逐字相同。预期停车面见「重放映射」；实际清单在 Build 阶段逐条记录，rerere 复用必须复核。
 
 ### fork 取舍清单
 
@@ -345,9 +301,9 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 - **托盘合并**：上游把 handler 移入 `tray.rs` 并重新加入 `native_menu_on_left_click`、Windows 左键单分支；fork 必须保留 handler 入口与四条分支、删除 `native_menu_on_left_click`、保留 `set_show_menu_on_left_click(false)` 与护栏；`tray_compat` 只能作为事件传输；`lib.rs` 中不再使用的 `TrayIconEvent` 导入要清理。
 - **`McodeProviderForm`**：上游删除了顶层 `PRESET_ENTRIES` 常量并改为按 `appId` 选择；fork 的导入入口必须保留；DSH 过滤在编号后执行；`DSH_ACCOUNT_PRESET_ID` 不得参与 `Number(id)` 查表，否则得到 `NaN`。
 - **`ProviderCard` / `ProviderList`**：上游移除 `isInConfig`、改变自动查询语义、加入 DSH 账号卡与 live 错误提示；fork 的徽章/双链接/右键/列表改造必须保留，测试按合并后接口调整。
-- **`UsageFooter` / `ProviderCard` 用量 props**：v4.0.22 起 `UsageFooter` 不再接收 `isCurrent`/`isInConfig`，卡片 `autoQueryInterval` 无条件取 `usage_script` 配置；重放时若把 fork 旧接口整段保留，会出现 `TS2322` 与 `tests/components/UsagePolling.test.tsx` 失败。最终树必须与上游一致（本轮已在收尾修正）。
 - **`commands/misc.rs`** 上游改动面 747 行；fork 只有 tunecc URL，逐 hunk 取上游 + 保留 URL，禁止整文件取一侧。
 - **`database/dao/mcp.rs`** 的列顺序与行索引必须与 `schema.rs` 的 DDL 一致（`enabled_dsh` 在 `enabled_omp` 之后）。
+- **`services/stream_check.rs` 是孤儿文件**：fork 在 `c618f2ab3` 移除了旧探测链路（`services/mod.rs`/`commands/mod.rs`/`lib.rs` 均不声明或注册），文件仍在树上。上游后续对该文件的修改会逐字重放到孤儿文件（本轮即 `ed494fbc7`），**不得**因此重新接线、补 UI 或把它当作可用功能验收；也不为「消除 stream_check 字样」删除或改写它。若未来给逐模型连通性测试接入 OpenCode，另开 change。
 - **`AppType` 穷尽匹配**：`app_config.rs` 为非重叠文件整体取上游；重叠的 `settings.rs`、`tray.rs`、`provider.rs`、`deeplink/provider.rs`、`services/provider/{live,mod}.rs` 必须补齐 `Dsh` 分支，否则编译失败。
 - `Cargo.toml` / `Cargo.lock` 采纳 `subtle`；不得出现 updater 包。
 - `tr.json` 不要因为 fork 缺键而回写；逐字节一致是验收项。
