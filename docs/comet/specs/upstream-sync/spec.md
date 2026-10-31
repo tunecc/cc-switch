@@ -8,7 +8,7 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 
 本轮同步基线为 annotated tag `v4.0.22`（tag 对象 `ab92059613455b5bb6751f16f87817eb731a55e4`，剥离提交 `b76426741ef93069e2f374ac01ca7ef5760e1d0e`）；fork 版本号 `4.0.21-1` → `4.0.22-1`。`upstream/main` 比 tag 多 10 个提交（最新 `ba3d80d87`），按「只锁已发布 tag」约定不纳入。推送与 tag 属交付步骤，在验收通过并归档之后单独取得用户授权再执行。
 
-上游 `v4.0.21..v4.0.22` 共 58 个提交、228 个文件、+15909/−1177（37 新增 / 1 删除 / 190 修改），与 fork 的重叠面为 45 个文件（fork 相对该基线的自有改动面为 474 个文件、+60318/−2783）。本轮主轴是 **DeepSeek Harness（DSH）作为第 14 个应用整体接入**：Web 与 Desktop 配置并行管理，供应商页支持 live 托管、模型编辑器专用的 `dsh` 方言、DeepSeek 官方账号登录（授权中心）与用量导入，MCP/Skills 开关、侧栏、可见应用设置同步接入；预设目录由 Pi 目录派生，只保留三种 wire protocol 兼容的条目，官方账号卡 `dsh-official-account` 独立于目录。上游同时带来终端增强（追加自定义参数、跳过权限提示、Codex 供应商卡直接打开终端）、用量与额度修复（OMP/DSH 用量导入、非当前供应商余额刷新、绑号 Claude 账号额度进入托盘与用量设置、MiniMax 周窗口、错误信息写入上限、侧栏用量对齐）、代理修复（xAI Responses include、Gemini skip signature / thoughtSignature / 尾部文本、WebSearch blocked_domains、Copilot Claude 原生 `/v1/messages`、常量时间 token、`x-api-key`、回环地址守卫）、Skills 增强（打开安装目录、复制名称、Discover 打开文档、只发现变更仓库）、WebDAV 清空配置、应用/配置修复（live 配置读取失败提示、Kimi 安装器重跑、CLI 无版本判定、OpenCode V2 baseURL、TOML 数组表头、Claude Desktop 模型顺序、AGY transcript、Codex 模型列表日志）、Claude 账号修复（子进程代理、超大凭据 keychain、过期账号引导、授权中心滚动、WSL 提示）、预设/赞助商刷新（OspreyAI、Astron、TokenFlux、StreamLake、AIGoCode/PatewayAI/DIT.ai 物料）、Windows 第三方托盘宿主兼容，以及 schema 24（`enabled_dsh` 两表 + `session_log_sync.parser_state`）、`subtle` 依赖与 v4.0.22 发布物料。
+上游 `v4.0.21..v4.0.22` 共 58 个提交、228 个文件、+15909/−1177（37 新增 / 1 删除 / 190 修改），与 fork 的重叠面为 45 个文件（fork 相对该基线的自有改动面为 474 个文件、+60318/−2783）。本轮主轴是 **DeepSeek Harness（DSH）作为第 14 个应用整体接入**：Web 与 Desktop 配置并行管理，供应商页支持 live 托管、模型编辑器专用的 `dsh` 方言、DeepSeek 官方账号登录（授权中心）与用量导入，MCP/Skills 开关、侧栏、可见应用设置同步接入；预设目录由 Pi 目录派生，只保留三种 wire protocol 兼容的条目，官方账号卡 `dsh-official-account` 独立于目录。上游同时带来终端增强（追加自定义参数、跳过权限提示、Codex 供应商卡直接打开终端）、用量与额度修复（OMP/DSH 用量导入、非当前供应商余额刷新、绑号 Claude 账号额度进入托盘与用量设置、MiniMax 周窗口、错误信息写入上限、侧栏用量对齐）、代理修复（xAI Responses include、Gemini skip signature / thoughtSignature / 尾部文本、WebSearch blocked_domains、Copilot Claude 原生 `/v1/messages`、常量时间 token、`x-api-key`、回环地址守卫）、Skills 增强（打开安装目录、复制名称、Discover 打开文档、只发现变更仓库）、WebDAV 清空配置、应用/配置修复（live 配置读取失败提示、Kimi 安装器重跑、CLI 无版本判定、TOML 数组表头、Claude Desktop 模型顺序、AGY transcript、Codex 模型列表日志；OpenCode V2 baseURL 的宿主 `stream_check` 已由 fork 移除，见「fork 取舍清单」）、Claude 账号修复（子进程代理、超大凭据 keychain、过期账号引导、授权中心滚动、WSL 提示）、预设/赞助商刷新（OspreyAI、Astron、TokenFlux、StreamLake、AIGoCode/PatewayAI/DIT.ai 物料）、Windows 第三方托盘宿主兼容，以及 schema 24（`enabled_dsh` 两表 + `session_log_sync.parser_state`）、`subtle` 依赖与 v4.0.22 发布物料。
 
 **上游是否重写了 fork 已有功能——本轮结论：没有重复实现，不构成「保留上游 or 保留 fork」的二选一。** 同域交集与处理：
 
@@ -41,7 +41,7 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 3. **用量与额度（6 提交）**：`accc44898`（OMP 会话用量导入）、`67cce7ad3`（绑号 Claude 账号额度进托盘与用量设置）、`869c0b27f`（非当前供应商也刷新余额）、`32db0e576`（MiniMax 周窗口用尽后保持可见）、`f19b3898c`（`error_message` 写入上限）、`7f82b85b5`（侧栏今日用量文字对齐）。
 4. **代理（9 提交）**：`8355f1f1f`（xAI Responses include 过滤）、`df753b5ef`（Gemini Native skip signature 回退）、`6282108e0`（thoughtSignature 移到 Part 级）、`064ae4220`（Gemini 函数响应尾部文本拆分）、`326b394be`（Claude WebSearch blocked_domains 映射）、`9403960f8`（Copilot Claude 走原生 Messages）、`1718a2619`（常量时间 token 校验）、`33833a6a6`（`x-api-key` 网关认证）、`cd9c72108`（拒绝回环到代理自身的上游 URL）。
 5. **Skills（3 提交）**：`9077b4326`（只发现变更仓库）、`6d6b7162f`（打开安装目录、复制名称）、`0b8a53e37`（Discover 列表打开文档）。
-6. **应用、配置与表单（9 提交）**：`c1933fd04`（live 配置读取失败提示）、`da2635118`（Kimi CLI 旧版本重跑安装器）、`e78f641ca`（CLI 存在但无版本判为不可运行）、`ed494fbc7`（OpenCode V2 `settings.baseURL`）、`ddcb11176`（TOML 数组表头识别）、`983113a13`（Claude Desktop `inferenceModels` 按 UI 顺序）、`4ed071500`（AGY transcript 路径按 Path 比较）、`115677a1c`（AGY transcript 优先于其它根的索引条目）、`11485ee78`（Codex 官方模型列表失败记录根因）。
+6. **应用、配置与表单（9 提交）**：`c1933fd04`（live 配置读取失败提示）、`da2635118`（Kimi CLI 旧版本重跑安装器）、`e78f641ca`（CLI 存在但无版本判为不可运行）、`ed494fbc7`（OpenCode V2 `settings.baseURL`；宿主 `stream_check` 已由 fork 移除，文件随上游逐字重放但不编译，见 D9）、`ddcb11176`（TOML 数组表头识别）、`983113a13`（Claude Desktop `inferenceModels` 按 UI 顺序）、`4ed071500`（AGY transcript 路径按 Path 比较）、`115677a1c`（AGY transcript 优先于其它根的索引条目）、`11485ee78`（Codex 官方模型列表失败记录根因）。
 7. **Claude 账号与授权中心（7 提交）**：`33aaf8e74`（子进程继承全局代理）、`6c998b4dc`（超大凭据经 argv 写 keychain）、`16b6575d0`（过期托管账号指向 Accounts）、`144c41b96`（授权中心只滚动面板主体）、`d288057f3`（Claude 订阅账号切换指南）、`dd81bc95b`（v4.0.21 notes 链接指南）、`0133facca`（配置目录在 WSL 时提示不支持 Claude 账号）。
 8. **预设与赞助商（8 提交）**：`9433caabe`（OspreyAI）、`839efbe24`（TokenFlux 域名与回退）、`ebdedbee4`（StreamLake 渠道跟踪）、`12e9fe53f`（Astron Coding Plan）、`ee8ee25eb`（DIT.ai 位置）、`03e19fe73`（DIT.ai 文案）、`c2aa4e0b2`（PatewayAI 文案）、`3e75b96e1`（AIGoCode 物料）。
 9. **托盘（1 提交）**：`e55d8a21b`（Windows 第三方托盘宿主点击兼容）。
@@ -100,7 +100,8 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 - **Skills**：Discover 只扫描发生变更的仓库（不再每次全量）；已安装技能可打开安装目录、复制名称；Discover 列表可打开技能文档；新增 `discover_repo_skills` 与 `open_skill_dir` 命令并在 `lib.rs` 注册。
 - **WebDAV**：新增 `webdav_sync_clear_settings` 命令与「清空配置」入口，清空后同步状态与表单一起复位；自动同步 worker 与既有上传/下载逻辑不变。
 - **live 配置读取失败**：opencode / openclaw / hermes 的 live 成员查询出错时，供应商列表顶部显示警告，说明修好配置前添加/移除都会失败，不再表现为「空列表」。
-- **应用管理**：Kimi CLI 版本早于支持 `upgrade --yes` 时重跑官方安装器；CLI 存在但拿不到版本时报告为不可运行并给出探测详情；OpenCode 连通性检测读取 V2 `settings.baseURL`；TOML 段落识别支持数组表头；Claude Desktop 的 `inferenceModels` 按 UI 层级顺序写入；AGY transcript 路径按 `Path` 比较（Windows 分隔符），transcript 优先于其它根的索引条目；Codex 官方模型列表拉取失败时记录底层原因。
+- **应用管理**：Kimi CLI 版本早于支持 `upgrade --yes` 时重跑官方安装器；CLI 存在但拿不到版本时报告为不可运行并给出探测详情；TOML 段落识别支持数组表头；Claude Desktop 的 `inferenceModels` 按 UI 层级顺序写入；AGY transcript 路径按 `Path` 比较（Windows 分隔符），transcript 优先于其它根的索引条目；Codex 官方模型列表拉取失败时记录底层原因。
+- **OpenCode V2 baseURL（不适用）**：上游 `ed494fbc7` 的修复只改 `src-tauri/src/services/stream_check.rs`，而该供应商卡探测链路已由 fork 移除（`c618f2ab3`）并被逐模型连通性测试取代。文件在树上是未编译孤儿：`services/mod.rs` 不声明 `stream_check`、`stream_check_provider` 未注册、`TargetBuilder::for_app` 对 OpenCode 返回 `None`、`shouldShowTestEntry` 只放行 claude/codex。该项按 D9 登记为不适用，不要求功能可用或测试覆盖；未来接入 OpenCode 探测另开 change。
 - **UI**：修复重复 tooltip，约束帮助卡尺寸。
 
 ### Claude 账号与授权中心终态
@@ -304,6 +305,7 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 | 用量自动刷新（移除 `isInConfig`） | 行为变更 | 取上游 | fork 未实现该逻辑，上游为预期修复 |
 | 绑号 Claude 账号额度（托盘/用量设置） | 新增 | 全量保留 | 无 fork 对应实现 |
 | 代理/Skills/WebDAV/应用配置修复 | 新增 | 全量保留 | 无冲突 |
+| OpenCode V2 baseURL 修复（`stream_check`） | 新增 | 不适用：保持 fork 移除，文件未编译、命令不注册 | 宿主探测链路已被 fork 的逐模型连通性测试取代（D9） |
 | 托盘 handler 抽取 + Windows 兼容 | 新增 | 采纳抽取与 `tray_compat`；左键语义保留 fork 四条分支 | fork 契约优先，兼容层只做事件传输 |
 | schema 24 | 新增 | fork 升 25，合并 dsh/parser_state 并新增幂等臂 | 版本号碰撞，保留双方迁移历史 |
 | 预设 OspreyAI/Astron/TokenFlux/StreamLake | 新增 | 全量取上游目录，fork 构建继续隐藏第三方 | 延续 fork 收敛口径 |
