@@ -4514,7 +4514,11 @@ mod tests {
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )?;
         assert_eq!(skill_values, (1, 1, 0));
-        assert!(Database::has_column(&conn, "session_log_sync", "parser_state")?);
+        assert!(Database::has_column(
+            &conn,
+            "session_log_sync",
+            "parser_state"
+        )?);
 
         // 已是 v25 的库重跑迁移必须是 no-op
         Database::apply_schema_migrations_on_conn(&conn)?;
