@@ -915,23 +915,23 @@ export function ClaudeFormFields({
             }
           />
           {copilotRoutingNotice}
-          {category !== "cloud_provider" &&
-            !isXaiOauthPreset &&
-            !isCodexOauthPreset &&
-            !isCopilotPreset &&
-            (apiFormat === "openai_chat" ||
-              apiFormat === "openai_responses") && (
-              <ClaudeReasoningEffortField
-                id="claudeReasoningEffort"
-                value={reasoningEffort}
-                onChange={onReasoningEffortChange}
-              />
-            )}
           {directModeFormatNotice && apiFormat !== "anthropic" && (
             <DirectModeFormatWarning notice={directModeFormatNotice} />
           )}
         </>
       )}
+      {/* fork 把上游格式选择器移进了端点行，但思考档位要像上游一样与是否显示测速无关 */}
+      {category !== "cloud_provider" &&
+        !isXaiOauthPreset &&
+        !isCodexOauthPreset &&
+        !isCopilotPreset &&
+        (apiFormat === "openai_chat" || apiFormat === "openai_responses") && (
+          <ClaudeReasoningEffortField
+            id="claudeReasoningEffort"
+            value={reasoningEffort}
+            onChange={onReasoningEffortChange}
+          />
+        )}
     </>
   );
 

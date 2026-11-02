@@ -10,15 +10,32 @@
 import type { AppId } from "@/lib/api";
 
 export const forkOfficialAllowlist: Record<AppId, string[]> = {
-  claude: ["Claude Official", "Ollama", "LM Studio", "llama.cpp", "vLLM"],
-  "claude-desktop": [
-    "Claude Desktop Official",
+  // v4.0.24 起上游把 OpenAI 平台 API Key（api.openai.com，cn_official）加进目录：
+  // fork 只在与该厂商官方卡同源的应用收录，聚合式目录（openclaw/opencode/mcode）继续只留本机推理。
+  claude: [
+    "Claude Official",
+    "OpenAI API",
     "Ollama",
     "LM Studio",
     "llama.cpp",
     "vLLM",
   ],
-  codex: ["OpenAI Official", "Ollama", "LM Studio", "llama.cpp", "vLLM"],
+  "claude-desktop": [
+    "Claude Desktop Official",
+    "OpenAI API",
+    "Ollama",
+    "LM Studio",
+    "llama.cpp",
+    "vLLM",
+  ],
+  codex: [
+    "OpenAI Official",
+    "OpenAI API",
+    "Ollama",
+    "LM Studio",
+    "llama.cpp",
+    "vLLM",
+  ],
   gemini: ["Google Official"],
   agy: ["Google Official"],
   grokbuild: ["Grok Official"],
