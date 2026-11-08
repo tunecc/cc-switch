@@ -279,7 +279,7 @@ describe("buildImportedSettingsConfig", () => {
     expect(toml).toContain('api_key = "sk-grok"');
     // grokbuild 没有默认模型字段，来源模型不得悄悄落到 upstreamModel 上
     expect(toml).not.toContain("claude-sonnet-4-5");
-    expect(toml).toContain('model = "grok-4.5"');
+    expect(toml).toContain('model = "grok-4.7"');
   });
 
   it("writes opencode / mcode options", () => {
