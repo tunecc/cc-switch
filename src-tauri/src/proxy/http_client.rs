@@ -304,6 +304,9 @@ pub fn no_redirect() -> Result<Client, String> {
 }
 
 /// 不跟随重定向、按目标地址选代理的客户端：本机地址直连，其余同 [`no_redirect`]。
+// fork：该 helper 仅供孤儿文件 services/stream_check.rs（fork 已移除接线）调用，
+// 在 fork 构建里没有调用方；保留与上游一致的实现，加 allow 避免新增 dead_code 告警。
+#[allow(dead_code)]
 pub fn no_redirect_for_url(url: &str) -> Result<Client, String> {
     if is_loopback_url(url) {
         base_builder()
