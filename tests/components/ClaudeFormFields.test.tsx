@@ -262,7 +262,12 @@ describe("ClaudeFormFields", () => {
       );
     });
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Select model" })[0]);
+    // fork：模型选择器在兜底直达区按行渲染，主模型（ANTHROPIC_MODEL）行在前，
+    // 上游用例的意图是往 Sonnet 档选模型；按行定位（同文件既有用例的 within 模式）。
+    const sonnetRow = screen.getByText("Sonnet").parentElement!;
+    fireEvent.click(
+      within(sonnetRow).getByRole("button", { name: "Select model" }),
+    );
     fireEvent.click(screen.getByText("chat-model-b"));
     expect(onModelChange).toHaveBeenCalledWith(
       "ANTHROPIC_DEFAULT_SONNET_MODEL",
