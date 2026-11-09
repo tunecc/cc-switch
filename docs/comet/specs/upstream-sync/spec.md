@@ -1,22 +1,22 @@
-# 完整目标规格：upstream-sync（v4.0.26 轮，当前基线）
+# 完整目标规格：upstream-sync（v4.0.28 轮）
 
-> 本文件是 upstream-sync 能力的累积规格，随每轮同步整体重写；当前内容对应 fork 已同步到上游发布头 tag `v4.0.26`（fork 版本 `4.0.26-1`）的状态，取代此前的 v4.0.25 轮版本。历轮的同步范围、冲突停车清单与落地保真数字保留在各 change 的归档产物 `docs/comet/archive/<date>-sync-upstream-*/` 中。本轮的验收记录见 `docs/comet/archive/2026-11-08-sync-upstream-v426/verification.md`。
+> 本文件是 `sync-upstream-v428` 的完整目标规格，描述本轮同步**之后** upstream-sync 能力应当处于的完整状态（不是相对旧文本的差异清单）。归档时用它整体重写 `docs/comet/specs/upstream-sync/spec.md`。上一轮（v4.0.26）的完整状态与实测数字保留在 `docs/comet/archive/2026-11-08-sync-upstream-v426/`。
 
 ## 概述
 
-fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/cc-switch 发布头之上」的同步状态。本轮把 main 同步到上游发布 annotated tag `v4.0.26`（tag 对象 `8e975496f2e172230a509a2a5961899a926f5525`，剥离提交 `f621d4216189ef06bcc6acd3588c84937b9794e1`），fork 版本号 `4.0.25-1` → `4.0.26-1`。同步后 fork main = 上游 v4.0.26 内容 + fork 全部魔改提交（按原顺序重放），无丢失、无行为回归。
+fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/cc-switch 发布头之上」的同步状态。本轮把 main 同步到上游发布 annotated tag `v4.0.28`（tag 对象 `9bd119930cc4fc56b46415e88215d20eeab96726`，剥离提交 `8656ebd91f3eba631837126e29df71e8353b7e43`），fork 版本号 `4.0.26-1` → `4.0.28-1`。同步后 fork main = 上游 v4.0.28 内容 + fork 全部魔改提交（按原顺序重放），无丢失、无行为回归。
 
-上游 `v4.0.25..v4.0.26` 共 39 个提交、184 个文件、+8562/−1571（15 新增 / 0 删除 / 169 修改）。本轮主轴是**性能（渲染、数据库、代理、运行时维护）与官方账号体系展示**：App.tsx 懒加载次级页与供应商编辑器（#9181）；供应商端点批量读取与跳过未变保存（#9180）；维护任务延后到阻塞线程、隐藏/最小化窗口暂停 Query（#9182）；会话转录零拷贝（#9183）；剩余等库锁同步命令改 async（#9178）；官方供应商卡副标题显示套餐、Auth Center 显示账户订阅套餐、Copilot 额度全量 capped 展示并改称 Credits；deeplink 导入扩展至 Claude Desktop 与 Pi 系（mcode/kimi/dsh/omp）；Codex 卡片新增官方 Fast 档位开关（默认关）；DSH 主目录覆盖；系统代理劫持本地路由警告；classifier 重试循环停止（#9201）；IPv6 不可达时 race IPv4；Copilot Responses 复用 Grok 兼容层并修复重复回复；MCP 401 显示「需要登录」；Claude Desktop 自动填充菜单名跟随模型编辑（#9203）；npm bin 冲突追加可执行提示（#9173/#9196）；WebDAV skills 归档保留符号链接名（#9197）；对话框居中改不用 translate（1x 屏清晰）；macOS 原始输入不自动大写；预设默认模型刷新与 TeamoRouter 域名 .cn→.com；Linux AppImage 排除 libwayland-client（#9229，落在 fork 已裁段）；stapler 重试（落在 fork 已裁段）。
+上游 `v4.0.26..v4.0.28` 共 63 个提交、214 个文件、+12086/−1347（35 新增 / 178 修改 / 1 重命名）。本轮横跨 v4.0.27（2026-11-07 发布）与 v4.0.28（2026-11-08 发布）两个发布点。v4.0.27 主轴是**会话正文搜索（FTS5）、界面密度与缩放、Skills 已安装页重排、定价表搜索、Grok Build 终端、供应商图标随主题**；v4.0.28 主轴是**适配 Codex 11-08 不兼容更新（会话分组、暂停官方登录、额度保护默认开）与应用页安装进度**。
 
 **上游是否重写了 fork 已有功能——本轮结论：没有同域重复，不产生二选一。** 取证与逐项分析：
 
-1. **deeplink 导入扩展 ≠ fork 跨应用导入**：上游 `51b464bd3` 扩的是 `ccswitch://` 链接解析的 app 白名单（`src-tauri/src/deeplink/provider.rs` +251/−48）；fork 的跨应用导入是 ProviderForm 内从其他应用已存供应商配置导入（`ProviderImportEntry` + `useProviderImportSources`/`useProviderImportApply`）。机制（URL 协议 vs 表单内读取本地配置）、入口（系统 deeplink vs 预设按钮区上方按钮行）、数据来源（链接参数 vs 其他应用供应商库）三者均不同。fork 在 `deeplink/provider.rs` 的全部语义只有 1 行 `website_url_2: None`。
-2. **套餐/额度展示为上游单向新增**：`626f0226f`（官方卡副标题套餐，新 `src/lib/query/accountPlans.ts` 的 `useQuotaPlan` 读各额度 footer 同款查询缓存）、`cf3c86fe5`（Auth Center 账户套餐）、`78971d563`（Copilot 全量 capped 额度、premium 改称 Credits，含 `tray.rs` 的 `tier_premium` 文案与 `plan_line`）。fork 没有自己的套餐显示实现；fork 的 ProviderCard 副标题优先级链（Codex 账号行 → 绑号 Claude 账号行（不显示官网链接）→ AGY 当前模型 → fork 双官网链接 → 单官网链）、模型徽章与快捷切换按精确键名读 `*_MODEL`，均不受影响。
-3. **Codex Fast 档位是新开关**：`62688ab38` 新增 `modelCatalog.officialSpeedTiers`（默认 false），只在原生 Responses profile 的直连/route 模式把官方 GPT 行的 `service_tiers`/`additional_speed_tiers` 还原；Chat 转换、Copilot 自建目录不受影响。fork 的快捷切换/1M 改写是 Claude 系 env 键链路，无对应实现。
-4. **窗口隐藏暂停不碰 fork 托盘契约**：`50a51b867` 在 lib.rs 4 处 show/hide 补 `main-window-visibility-changed` emit；`windowActivity.ts`（fork 零语义，不在重叠面）重写为「隐藏/最小化才暂停 Query，焦点只控制装饰心跳」，visibility 判定挂原生 `onFocusChanged`/`onResized` + `isVisible`/`isMinimized` 轮询与自定义事件。fork 托盘 `show_main_window`/`hide_main_window` 会触发原生 focus/resize；上游自己的 `tray.rs` 同位置也不 emit 该事件，fork 不补 emit 即与上游逐点一致。`tray.rs` 本轮上游 diff（+46/−29）只含 TrayTexts 的 `tier_premium` 文案与 `plan_line`，`TrayIconEvent::Click`、`show_menu_on_left_click` 零命中。
-5. **fork 高频魔改文件本轮上游零改动**：`ProviderList.tsx`、`ProviderCardActions.tsx`、`Sidebar.tsx`、`SettingsPage.tsx`、`GeneralSection.tsx`、`AboutSection.tsx`、`forkOfficialAllowlist.ts`、`forkPresetFilter.ts`、`ModelQuickSwitch/`、`providerModelUtils.ts`、`providerImport.ts`、`ProviderImportEntry.tsx`、`services/connectivity_test/`、`commands/connectivity_test.rs`、`.github/workflows/ci.yml`（以上游 diff 名单实测为准）。
-6. **上游本轮净新增预设为 0**：只有既有预设内模型刷新（`kimi-k3.1-pro`、`qwen3.7-plus`、`grok-4.7`）与域名变更（TeamoRouter .cn→.com 共 6 个目录、官方卡 `claude.ai/download`→`claude.com/download`）；白名单无收录决定。
-7. **release.yml 上游 hunks 落在 fork 已裁段**：`c70d61de0` 的 Linux AppImage `LINUXDEPLOY_EXCLUDED_LIBRARIES` 与 `7afceec14` 的两段 stapler 重试，对应 fork 裁剪版中不存在的 Linux build 与公证段（fork 只构建 macOS/Windows，macOS runner 锁 `macos-14`）；fork 裁剪版整文件保留。
+1. **同名域「连通性测试」是孤儿文件维护，不是重复实现**：上游 `1d6efa644`（#9253）修复 stream_check 的 reachability 不跟随重定向，落点 `services/stream_check.rs`（+45）与 `proxy/http_client.rs`（+13 no-redirect client helper）。fork 早已整体移除 stream_check 可达链路（`services/mod.rs` 无模块声明、`commands/stream_check.rs` 与 dao 文件不存在、`stream_check_provider` 0 命中），fork 的供应商逐模型连通性测试（`services/connectivity_test/` + 两命令注册）是独立实现。按历轮孤儿豁免口径：修复落进孤儿文件、链路保持不可达。
+2. **AGY 每周 Argon 额度不碰 fork 卡片副标题**：`4aa554ad2` 改 `services/agy_account/quota.rs`、`subscription_agy.rs`、`SubscriptionQuotaFooter.tsx`、`quota/quotaRules.ts`；fork 的 ProviderCard 副标题链（Codex 账号行 → 绑号 Claude 账号行 → AGY 当前模型 → 双官网链接 → 单官网链）位于 `ProviderCard.tsx`，两者无交集。
+3. **Codex 切换提示与 fork 快捷切换互不干扰**：`c7f7caf26`/`e499d1f03` 的分桶提示走 `useProviderActions.ts`（fork 零语义）与 `SwitchResult.codex_history_split` 新字段；fork 的 `ModelQuickSwitch/`、模型徽章、1M 改写（`model_mapper.rs` 的 `strip_one_m_suffix*`）保持原样；上游新函数 `map_codex_failover_model`（`e9285cf18`）是故障转移换家时的模型映射，独立于 1M 链。
+4. **Linux 托盘面板修复不触 fork 左键契约**：`cb2f23891`（轻量模式不透明画布 + `linux_fix.rs` webview 配置插件）、`c88d7cc17`（TrayPanel.tsx DPR 坐标）、`6a3a7a449`（注释）只动 `tray_panel.rs` 的 Linux 分支与前端面板；`tray.rs` 本轮上游零改动，fork 的 `TrayIconEvent::Click` 四分支、`set_show_menu_on_left_click(false)`、`panel_visible()` 不受影响。
+5. **37 个重叠文件全部为不同行区域的机械叠加或上游单向新增**：`lib.rs`（上游 Linux webview 插件 + FTS5 三命令注册 + 迁移注释 vs fork updater 移除/托盘语义/connectivity 注册/Reopen 复用）；`misc.rs`（上游工具进度 + Grok 终端 vs fork 4 处 tunecc URL）；`settings.rs`、`commands/settings.rs`（上游密度/会话搜索/暂停登录/额度保护/迁移完成事件 vs fork `VisibleSidebarPanels` + updater 桩）；`GeneralSection.tsx`（上游密度设置区 vs fork 面板可见性区，顶部 import 行合并取并集）；`Sidebar.tsx`（上游 3 处 `h-nav-row` vs fork 过滤段）；`ProviderCard.tsx`（上游密度 token + 图标主题，行区间 403-438 vs fork 381-387 与 445+，实测不相交）；`provider.rs`/`deeplink/provider.rs`/`UniversalProviderFormModal.tsx`（上游删 `disable_response_storage` 模板行 vs fork `website_url_2` 字段）；`services/provider/mod.rs`（上游 `SwitchResult` 新字段 vs fork 测试补列）；`forwarder.rs`（上游 37 hunks vs fork 2326 注释/4855 测试补列）；`model_mapper.rs`（上游新函数+新测试 vs fork 2 处测试补列）；`tray_panel.rs`；`capabilities/default.json`（上游加 zoom 权限 vs fork 无 updater 权限）；`tauri.conf.json`/`Cargo.toml`/`Cargo.lock`/`package.json`/`release.yml`（版本与物料）；4 个 locale、4 个预设文件、5 个测试文件（golden 快照两侧改不同条目）。
+6. **预设白名单维持过滤（用户 Q1 确认，2026-11-09）**：上游解隐藏 Mistral AI 并新增 TokenPlus、Genesis；三个都不进 `forkOfficialAllowlist.ts`，fork 构建下不可见，上游构建不受影响；`forkPresetFilter.ts` 判定实现不改。
+7. **上游本轮零新增 Rust 依赖**（`Cargo.lock` 仅 cc-switch 版本行），`pnpm-lock.yaml` 上游零改动；`62de0f3e9` 把 `crate-type` 收敛为 `["rlib"]`（移动端才需要 staticlib/cdylib），fork 仅发桌面版，取上游。
 
 因此本轮全部上游功能按上游落地（fork 已裁/已移除段除外），fork 魔改一律保留，无需用户做功能级取舍。
 
@@ -24,186 +24,112 @@ fork（tunecc/cc-switch）维持「始终可干净 rebase 到上游 farion1231/c
 
 ### Git 状态
 
-- `main` 分支基于 tag `v4.0.26` 剥离出的提交 `f621d4216189ef06bcc6acd3588c84937b9794e1`。
-- `git merge-base main v4.0.26^{}` == `f621d4216`；`git log v4.0.26..main` 仅含 fork 作者 `Tune <176898395+tunecc@users.noreply.github.com>` 的提交。
-- 同步前 fork 提交（`git rev-list --count v4.0.25..main`，同步前 main = `7361a9d0c`，即 origin/main 与 fork tag `v4.0.25-1` 指向的提交，写作时实测 203）按原顺序重放，外加本轮的同步终态提交与归档提交；终态计数以现取命令为准，不在本规格写死。
+- `main` 分支基于 tag `v4.0.28` 剥离出的提交 `8656ebd91f3eba631837126e29df71e8353b7e43`。
+- `git merge-base main v4.0.28^{}` == `f621d4216`（v4.0.26 剥离提交）；`git log v4.0.28..main` 仅含 fork 作者 `Tune <176898395+tunecc@users.noreply.github.com>` 的提交。
+- 同步前 fork 提交（`git rev-list --count v4.0.26..main`，同步前 main = `ccc035dd1`，即 origin/main，写作时实测 206）按原顺序重放，外加本轮的同步终态提交与归档提交；终态计数以现取命令为准，不在本规格写死。
 - 重放映射核对口径：重放前后 `git rev-list --count` 之差只允许来自「被 git 判定为空而丢弃」或「本轮新增提交」；`git log --format='%s' --reverse` 主题序列逐行 diff 为 0 行差异（剔除被判空丢弃者后比较）；patch-id 对照走 stdin（`git show <c> | git patch-id --stable`），不同的提交逐个归类为「仅 hunk 位移」或「冲突停车」，不允许「fork 语义丢失」。
-- 同步前起点由安全分支 `pre-sync-v426`（= `7361a9d0c`）固定记录；该分支不推送。
-- 上一轮基线 tag `v4.0.25`（剥离 `a3eafa408`）与 fork 发布 tag `v4.0.25-1` 保持不变、不改写历史。
-- `upstream/main` 在 tag 之后已有 skills 哈希迁移、codex catalog 绝对指针、deeplink 风险分类、会话 FTS5 搜索等提交，按「只锁已发布 tag」约定本轮一律不纳入；不同步其他上游分支。
-- 取证性 fetch 只允许 `git fetch upstream --tags`（不带 `--prune`/`--prune-tags`）或 `git fetch upstream tag <name>`：本轮 Shape 期实测 `--prune --prune-tags` 组合会删除全部 fork 专属本地 tag（已从 origin 恢复并核对）。
-- 重放开始前工作树只允许存在本 change 的 `docs/comet/changes/sync-upstream-v426/` 产物。
+- 同步前起点由安全分支 `pre-sync-v428`（= `ccc035dd1`）固定记录；该分支不推送。
+- 上一轮基线 tag `v4.0.26`（剥离 `f621d4216`）与 fork 发布 tag `v4.0.26-1` 保持不变、不改写历史。
+- `upstream/main` 与 `v4.0.28` 齐平（`git rev-list --count v4.0.28..upstream/main` 现取 0）；不同步其他上游分支。
+- 取证性 fetch 只允许 `git fetch upstream --tags`（不带 `--prune`/`--prune-tags`）或 `git fetch upstream tag <name>`。
+- 重放开始前工作树只允许存在本 change 的 `docs/comet/changes/sync-upstream-v428/` 产物。
 
-### 同步范围（v4.0.25..v4.0.26：39 提交、184 文件、+8562/−1571）
+### 同步范围（v4.0.26..v4.0.28：63 提交、214 文件、+12086/−1347）
 
 上游本轮改动按功能分组（提交号便于 Build 阶段核对落地保真）：
 
-1. **官方账号体系展示（3 提交）**：`cf3c86fe5`（Auth Center 每个账户显示订阅套餐）、`626f0226f`（官方供应商卡副标题末尾套餐：新 `src/lib/query/accountPlans.ts` 的 `useQuotaPlan` 按各额度 footer 同款查询键读缓存，Claude 官方卡仍走 `claudeDefaultPlanLabel`/`ClaudeBoundAccountLine`）、`78971d563`（Copilot 显示每个 capped 额度、premium 改称 Credits：`tray.rs` 的 `tier_premium` 五语言文案与 `plan_line`、相关组件与 `tests/lib/copilotQuota.test.tsx`）。
-2. **deeplink 导入扩展（1 提交）**：`51b464bd3`（claude-desktop/mcode/kimi/dsh/omp 链接不再被解析器 app 列表拒绝；Claude Desktop 只接受 cla-* 模型名——Anthropic 格式且仅 cla-*（或无）模型成直连卡，其余成四档映射卡且不声明 1M；mcode/dsh/omp/kimi 复用 Pi 单模型节点、链接必须带 `model`，Kimi 补 `max_context_size: 131072` 且键为 `<provider id>/<model>`；id 为 ASCII slug+uuid）。
-3. **Codex Fast 档位（1 提交）**：`62688ab38`（新卡片设置 `modelCatalog.officialSpeedTiers` 默认关；开启后在原生 Responses profile 的直连/route 模式还原镜像 GPT 行的官方 `service_tiers`/`additional_speed_tiers`，使 `service_tier = "fast"` 被 Codex 0.166 发成 `priority`；Chat 转换与 Copilot 自建目录不适用）。
-4. **DSH 主目录覆盖（2 提交）**：`81a9fa79d`（`settings.dsh_config_dir`（相当于 DSH_HOME、优先于环境变量）、`get_dsh_override_dir`、前端 `dshConfigDir`）、`420646d8a`（headless DSH profile 读 CC Switch 存的 key）。
-5. **运行时性能与维护链（4 提交）**：`50a51b867`（#9182：启动期不再跑日志清理/rollup/vacuum，`database/mod.rs` 启动清理块移除；`backup.rs` 重构为私有 `backup_if_needed` + `periodic_backup_if_needed` 先备份后清理、备份 disabled/失败也跑清理；lib.rs 维护定时器 `spawn_blocking` + `MissedTickBehavior::Skip`、首 tick 即跑启动维护；lib.rs 4 处窗口 show/hide 补 `main-window-visibility-changed`；`windowActivity.ts` 重写：隐藏/最小化暂停 Query、焦点只控心跳，`focusManager.setEventListener` 挂原生事件）、`ca58c0313`（#9181：App.tsx 用 `lazy`/`Suspense` 懒加载次级页与供应商编辑器）、`fc9b17cbf`（#9180：`dao/providers.rs` 批量读端点、跳过未变保存，新 `dao/providers_tests.rs`）、`cc4ce0386`（#9183：会话转录避免拷贝、释放轻量缓存，新 `commands/session_manager_tests.rs`）。
-6. **同步命令 off UI thread（1 提交）**：`98777515d`（#9178：`add_custom_icon`/`rename_custom_icon`/`set_global_proxy_url`/`rename_db_backup`/`start_mcp_connectivity_checks` 改 async，`commands/mod.rs` 新增 `run_db_task` helper）。
-7. **代理链（8 提交）**：`e78784715`（#9201：classifier 重试循环停止，新 `proxy/classifier_guard.rs`）、`44c7fa9bc`（classifier-loop 早退补 `outbound_model`）、`e217bfcbb`（#9161：转发分配与 failover 库读减少）、`a990c81a1`（IPv6 上游不可达时 race IPv4）、`7c250c423`（系统代理劫持本地路由时警告，新 `proxy/loopback_probe.rs`）、`80ad02c5f`（失败请求日志带映射后上游模型）、`abf441fe2`（Codex chat 保留 turn-start developer 消息位置）、`38efe1099`（Codex chat call_id 缓存按客户端会话隔离）。
-8. **Copilot Responses（2 提交）**：`02a136413`（#7989：复用 Grok 兼容层，新 `proxy/providers/copilot_responses.rs`）、`1adb3cbc4`（#8025：修复回复显示两次）。
-9. **MCP 与订阅修复（2 提交）**：`65f6e682a`（401 MCP 端点显示「需要登录」而不是失败）、`1d9b448ef`（跟随登录卡刷新过期 Claude 登录）。
-10. **表单与 UI（5 提交）**：`e6e7831e8`（#9203：Claude Desktop 自动填充菜单名跟随模型编辑，新 `updateRouteModel`；从下拉选模型时留空显示名一并填上）、`0f06fed26`（对话框居中改不用 translate，1x 屏不糊）、`7a0718e15`（macOS 原始输入不自动大写）、`d16064bde`（#9109：会话阅读器工具栏与元数据换行）、`3cf79926d`（官方卡指向 claude.com/download）。
-11. **npm bin 冲突提示（2 提交）**：`1c2ed0669`/`2186b3052`（#9173/#9196：识别 EEXIST+`File exists:` 提取冲突路径，追加备份改名/改用原安装方式提示并警告不要盲目 `--force`，新 `tests/components/npmBinCollision.test.ts`）。
-12. **其他修复（3 提交）**：`df3a9072a`（#9197：WebDAV skills 归档保留文件符号链接名）、`b8fa4199c`（#9148：子 agent 并发上限评审跟进）、`51fce968b`（#9193：预设默认模型刷新 grok-4.7/kimi-k3.1-pro/qwen3.7-plus）。
-13. **预设域名（1 提交）**：`a5100e0e6`（TeamoRouter .cn→.com，6 个预设目录）。
-14. **CI、发布与文档（4 提交）**：`c70d61de0`（#9229：`@tauri-apps/cli ^2.12.4` + release.yml Linux AppImage 排除 libwayland-client）、`7afceec14`（stapler 重试 ×2）、`8c05b6226`（版本号 4.0.26）、`f621d4216`（`docs/release-notes/v4.0.26-{en,zh,ja}.md`）。
+1. **FTS5 会话正文搜索（1 提交，v4.0.27）**：`deb6d5a19`（新 `session_manager/search.rs`、`search_revision.rs`；独立索引文件 `session-index.db`，不进备份不参与云同步，关闭开关即删除；新命令 `sync_session_index`/`search_session_content`/`clear_session_index` 注册进 `lib.rs` invoke_handler；前端 `useSessionContentSearch.ts`、SessionManagerPage 搜索入口（⋯ 菜单）、命中片段列表；默认关）。
+2. **界面密度与缩放（1 提交）**：`4e7413c5a`（新 `src/lib/interfacePrefs.ts`：密度 compact/comfortable 与缩放 90/100/110/125%，仅本机保存；`index.css` 密度 token、`tailwind.config.cjs` 新 `min-h-card`/`py-card-y`/`h-nav-row` 等命名 token、`main.tsx` 启动应用、`lib/utils.ts`；App.tsx Ctrl/⌘ +/-/0 快捷键；GeneralSection 外观区两项设置；托盘快捷面板保持紧凑；`capabilities/default.json` 加 `core:webview:allow-set-webview-zoom`）。
+3. **Codex 会话分组适配（5 提交，v4.0.28 主轴）**：`905c91485`（路由/聚合模式下本机有 ChatGPT 登录且未开统一历史时，第三方供应商也写成内置 `openai` 标识，请求经本地路由替换 Key 并剥离 ChatGPT identity headers；重试/流重试/流空闲/远程压缩等配置仍写 `custom`；`8ff9e3b50` 剥离 `chatgpt-account-id`/`organization`/`originator` 等 identity 头）、`c7f7caf26`（直连切换分桶时提示只读会话数量，`SwitchResult.codex_history_split` + `codexHistorySplitHint.ts`）、`e499d1f03`（提示并进切换成功 toast）、`2c5e5d2c2`（统一历史下每次启动持续把 openai 桶会话迁进 custom）、`6a0acf075`（后台迁移完成发 `codex-unify-migration-finished` 事件，App.tsx 提示重启 Codex）。
+4. **暂停官方登录与额度保护（2 提交）**：`b0e452ff2`（新设置 `codex_proxy_without_official_login`；官方额度保护默认开启；`e6256c50d` 开关从全局设置迁到路由/聚合设置的 `CodexPauseOfficialLogin.tsx`，变更即重写 Codex 配置、失败回滚）。
+5. **应用页安装进度（1 提交）**：`810775eb2`（新 `commands/tool_lifecycle_progress.rs`：单任务队列状态「排队中/运行中 + 已用时间 + 命令输出最新一行」事件流；AppsPage 行内展示、离开页面回来进度还在）。
+6. **代理与 Codex 修复（8 提交）**：`e9285cf18`（故障转移换家按目标映射模型，新 `model_mapper.rs::map_codex_failover_model`）、`cac921f5d`（图片/搜索请求不换模型）、`49f2882ef`/`71dbcfa2d`（Kimi/DeepSeek 原生 Responses 工具调用历史修复，新 `transform_codex_responses_kimi_history.rs`）、`0e49c8813`（压缩被拒时去 `tool_choice` 重试）、`4a8f113f0`（熔断探测 permit 归还）、`883382f1c`（熔断日志带「应用:供应商 id」与拒绝日志）、`13af7fc94`（Codex catalog 绝对路径指针）、`5f2f527d5`（不再写 `disable_response_storage`：`provider.rs`/`deeplink/provider.rs`/预设模板/金标快照联动清理）。
+7. **Skills 与杂项修复（约 10 提交）**：`65106ce6c`（已安装页重排：名称列固定 + 横向滚动、工具栏筛选、去掉页头 N 个可更新链接）、`5bfca714f`/`747b13278`/`66e4362b6`（skill 哈希忽略 `__pycache__`/`.pyc` 与旧记录换算）、`a94226b16`（仓库计数按实际分支、失败写明原因）、`92ca821e4`（软链接配置写真实文件）、`05218b118`（右键禁 WebView 默认菜单，新 `disableContextMenu.ts`）、`566448f06`（对话框打开时窗口可拖动）、`c39db7df0`（图标首字代理对）、`e66441d80`（图标随主题去白底）、`8dab4ed47`（Windows Python pi.exe 不误识别）、`f3c88da99`（models.dev 60s 超时）、`07a10b9ce`（DSH YAML 报错带文件名）、`506f3cf83`/`e1f8acf64`（usage 文件 ID 兼容）、`44e7d3ef7`（deeplink 风险分类 IPv4-compatible/SIIT/NAT64）、`4aa554ad2`（AGY 每周 Argon 额度）、`b184a88c9`（WSL uninstall unused mut）、`97e6d82ad`（Codex 状态库备份单步化）、`40b602a3f`/`4e13413ff`（文档）。
+8. **数据库与性能（1 提交）**：`6f9fa06dd`（`schema.rs` 新 `in_savepoint` helper；`create_tables_on_conn` 与 `ensure_model_pricing_seeded_on_conn` 包进 savepoint，Windows 新库首启快约 6s）。
+9. **预设（4 提交）**：`4ed410ad8`（TokenPlus：codex/hermes/openclaw/opencode/pi 5 目录 + `piModelCatalog.ts` + tokenplus 图标）、`cd15a1642` + `2360631f5`（Genesis：claude/codex/pi + `model-fetch` 支持，随后内联样式对齐并删除 `genesisModels.ts`）、`b9fd5d99a`（Mistral AI 默认模型 `mistral-large-4` 并在 claude/codex/claude-desktop/hermes/openclaw 解隐藏，「获取 API Key」指向 Vibe CLI 密钥页，`presetSearchAliases` 加 Vibe）。fork 白名单维持过滤（D3），三族预设不在 `forkOfficialAllowlist.ts` 中。
+10. **CI、发布与文档（5 提交）**：`b3594905f`（ci.yml：concurrency 按 PR/运行分组、`CARGO_PROFILE_DEV_DEBUG: line-tables-only`、fmt-check 移到 Linux 独占前置、rust-cache `save-if: main`、pnpm 改 `pnpm/action-setup` + `setup-node cache: pnpm`、后端 `timeout-minutes: 45`；release.yml 移除 4 段 pnpm store cache）、`c65a523ca`（前端单测 4 shards）、`07798d56f`（wsl2-nightly 稳定 test root + UNC catalog 指针）、`2aeb27d8e`/`3321cb9eb`（版本号）、`26629ff49`/`8656ebd91`（release notes）、`c6a5a789f`（`tests/support.rs` → `tests/support/mod.rs` 重命名，不再单独编译成测试二进制）、`62de0f3e9`（crate-type 收敛 rlib）。
 
-新增文件 15 个（`git diff --name-status --diff-filter=A v4.0.25 v4.0.26` 的全部 A 项），fork 侧无自有语义、随上游整体落地：
+新增文件 35 个（`git diff --name-status --diff-filter=A v4.0.26 v4.0.28` 的全部 A 项），fork 侧无自有语义、随上游整体落地：6 个 release notes、2 个 whats-new JSON、后端 4 个（`tool_lifecycle_progress.rs`、`transform_codex_responses_kimi_history.rs`、`session_manager/{search,search_revision}.rs`）、前端 7 个（`CodexPauseOfficialLogin.tsx`、`useSessionContentSearch.ts`、`genesis.svg`、`tokenplus.png`、`disableContextMenu.ts`、`interfacePrefs.ts`、`codexHistorySplitHint.ts`）、测试 18 个。删除文件 0 个；重命名 1 个（`src-tauri/tests/support.rs` → `src-tauri/tests/support/mod.rs`）。
 
-- 后端：`src-tauri/src/commands/session_manager_tests.rs`、`src-tauri/src/database/dao/providers_tests.rs`、`src-tauri/src/proxy/classifier_guard.rs`、`src-tauri/src/proxy/loopback_probe.rs`、`src-tauri/src/proxy/providers/copilot_responses.rs`。
-- 前端：`src/lib/query/accountPlans.ts`、`src/whats-new/4.0.26.json`。
-- 测试：`tests/components/npmBinCollision.test.ts`、`tests/lib/accountPlans.test.tsx`、`tests/lib/copilotQuota.test.tsx`、`tests/lib/windowActivity.test.ts`。
-- 脚本与文档：`scripts/measure-renderer.mjs`、`docs/release-notes/v4.0.26-{en,ja,zh}.md`。
+### stream_check 孤儿豁免终态（D6）
 
-删除文件 0 个。
+- `services/stream_check.rs` 与 `proxy/http_client.rs` 的 #9253 修复按孤儿文件落地：文件内容随上游更新（保留文件与上游形态一致），但 `services/mod.rs` 不恢复 `pub mod stream_check;`，`commands/stream_check.rs` 与 `database/dao/stream_check.rs` 保持不存在，`lib.rs`/`commands/mod.rs` 无任何 stream_check 命令注册，`stream_check_provider` 全仓 0 命中。
+- `proxy/http_client.rs` 的 no-redirect helper 在 fork 内零引用（仅供孤儿 stream_check 调用），不产生编译面变化，不触发 unused 警告处理。
 
-### 维护链重构终态（D3）
+### CI 终态（D4）
 
-- 启动路径（`database/mod.rs` 的 `Database::init` 尾部）不再执行日志清理、rollup/vacuum；启动恢复后的首次维护由 lib.rs 定时器首 tick 在 `spawn_blocking` 里跑，之后每 24h 一次，`MissedTickBehavior::Skip` 避免睡眠后补 burst。
-- `backup.rs`：`backup_if_needed` 为私有备份函数；`periodic_backup_if_needed` 先跑备份再跑清理（rollup/prune + vacuum），备份 disabled 或失败不阻止清理。**fork 边界**：上游新结构中的 `cleanup_old_stream_check_logs(7)` 调用不落地（fork 已随 stream_check 链路移除该函数，`git grep 'fn cleanup_old_stream_check_logs'` 保持 0 命中）；上游新增测试里对 stream_check 清理行为的断言按 fork 移除态适配（删除或改写该断言），`stream_check_logs` 建表语句保留在 `schema.rs`，上游新测试对该表的 INSERT/SELECT 不受影响。
-- `dao/providers.rs`：上游批量端点读取与跳过未变保存落地；fork 的 `website_url_2` 列、SELECT 列序与 `row.get(N)` 偏移逐行保留。
+- `ci.yml` = 上游重构结构 + fork 裁剪语义。取上游：concurrency（PR 按 `pr-<number>` 成组且可取消；push/schedule/manual 各自独立 run 组、永不取消）、顶层 `env.CARGO_PROFILE_DEV_DEBUG: line-tables-only`、paths filter 收敛为 `.github/workflows/ci.yml`、`pnpm/action-setup` + `setup-node` 的 `cache: pnpm`、`frontend-tests` 4 shards（`pnpm test:unit --shard=N/4`）、后端 fmt-check 在 Linux 独占且前置于装依赖、rust-cache `save-if: github.ref == 'refs/heads/main'`、后端 `timeout-minutes: 45`。叠加 fork：删除 `schedule` 与 `workflow_dispatch` 触发器；frontend/frontend-tests/backend/WSL2 四个 job 的 `if` 为 `github.event_name != 'pull_request' || needs.changes.outputs.<frontend|backend> == 'true'`（push main 全量跑）；后端测试保持 `cargo nextest`；WSL2 job 保持 restore-only rust-cache（`save-if: false`）与 `continue-on-error: true` 及 fork 注释。
+- `release.yml` 保持 fork 裁剪版（只构建 macOS/Windows、无 Linux bundle、无公证 stapler 段、macOS runner 锁 `macos-14`、tag 守卫）；上游本轮 4 段 pnpm store cache 移除同步应用（fork 保留段中的「Get pnpm store directory」+「Setup pnpm cache」随上游删除）。
+- `wsl2-nightly.yml` 取上游 `07798d56f`（fork 未裁剪该文件）。
 
-### 窗口可见性与托盘契约终态（D4）
+### 构建物料终态（D5）
 
-- lib.rs 4 处 show/hide（主页面加载完成、关闭最小化到托盘、静默启动、正常启动非 Windows）在上游位置补 `main-window-visibility-changed` emit，取上游。
-- `windowActivity.ts` 整文件随上游（fork 零语义）：`focusManager.setEventListener` 接管 React Query 焦点；可见（原生 visible 且非 minimized 且 document 非 hidden）才恢复刷新，焦点只控心跳；`tests/lib/windowActivity.test.ts` 落地并通过。
-- fork 托盘左键「切换主窗口、永不弹菜单」四分支、`set_show_menu_on_left_click(false)` 与源码护栏 `tray_left_click_never_opens_the_menu` 不变；`show_main_window`/`hide_main_window` 不补 emit（上游 tray.rs 同位置不 emit，原生 focus/resize 事件已驱动 visibility 刷新）。
-- `tray.rs` 的 `tier_premium = "Credits"` 五语言文案与 `plan_line` 改动取上游；fork 在该文件的左键语义段不受影响。
-
-### 官方账号展示与 fork 卡片终态（D9）
-
-- ProviderCard：上游 `quotaPlanKey`（Copilot/Codex OAuth/xAI OAuth/Kimi 官方/AGY 官方订阅各按额度查询键）、`useQuotaPlan`、`subtitlePlan = claudeDefaultPlanLabel ?? quotaPlan`、`planSuffix` 按上游落地；fork 的副标题优先级链、模型徽章、双官网链接、右键置顶/置底逐行保留，套餐后缀与 fork 各渲染段不争用同一位置。
-- Auth Center 账户套餐（`cf3c86fe5`）与 Copilot Credits（`78971d563`）整链取上游；`tests/lib/accountPlans.test.tsx`、`tests/lib/copilotQuota.test.tsx` 落地。
-- `ClaudeDesktopProviderForm.tsx`：上游 `updateRouteModel`（菜单显示名等于原模型则跟随新模型，下拉选择时填空显示名）取上游；fork 的 `ProviderImportEntry` 接线、白名单过滤（先编号后过滤）、`websiteUrl2` 段保留。
-- `ProviderForm.tsx`：上游 `codexOfficialSpeedTiers` 状态与 `modelCatalog.officialSpeedTiers` 写盘取上游；fork 的导入入口、预设过滤与其他表单段保留。
-
-### deeplink 与跨应用导入终态
-
-- 上游 `deeplink/provider.rs` 的 app 白名单扩展、Claude Desktop 直连/映射卡分流、Pi 系单模型节点全部落地；其中新增的 `Provider { … }` 字面量必须补 fork 的 `website_url_2: None`（或对应值），否则 `cargo check --all-targets` 失败。
-- fork 跨应用导入（`ProviderImportEntry`、`useProviderImportSources`/`useProviderImportApply`、各表单接线与 `providerImport.ts`）实现与形态完全不改。
-
-### App.tsx 懒加载与 fork 门控终态
-
-- 上游 `lazy`/`Suspense` 改造落地：次级页（Settings/AuthCenter/Apps/Usage/MCP/Prompts/Skills/Sessions/Workspace/openclaw 面板等）与供应商编辑对话框按需加载。
-- fork 的 `VisibleSidebarPanels` 条件渲染与 Sidebar 过滤保持生效：被门控隐藏的面板不渲染、不因此提前加载或报错；fork 的批量检测入口门控（`visibleSidebarPanels.batchTest` 与 `shouldShowTestEntry`）不变。
+- `src-tauri/Cargo.toml`：`crate-type = ["rlib"]`（取上游 `62de0f3e9`）；fork 的 `version = "4.0.28-1"`、`repository = "https://github.com/tunecc/cc-switch"`、无 `tauri-plugin-updater`、`codegen-units = 1` 保留。
+- `package.json`：`version = "4.0.28-1"`、`dev:fork` 脚本保留、无 `@tauri-apps/plugin-updater`；本轮上游 package.json 仅版本号。
+- `src-tauri/tauri.conf.json`：版本 `4.0.28-1`（fork 侧 updater 相关裁剪保留）。
+- `src-tauri/Cargo.lock`：仅 `cc-switch` 包版本行与 crate-type 相关变动，零新增依赖；`pnpm-lock.yaml`：终态无 `@tauri-apps/plugin-updater` 三段（上游本轮零改动，fork 的 -10 行保留）。
 
 ### 数据库 schema 终态（25，本轮不升级）
 
-- 上游 `SCHEMA_VERSION` 本轮仍 24，fork 保持 25；不撞号、无迁移链合并、无新臂；`database/schema.rs` 本轮上游零改动（以实测 diff 为准）。
-- `docs/comet/specs/database-schema-migrations/spec.md` 本轮不改。
+- 上游 `SCHEMA_VERSION` 本轮仍 24，fork 保持 25；不撞号、无迁移链合并、无新臂；`database/migration.rs` 本轮上游零改动。
+- `schema.rs` 取上游 `in_savepoint` helper（SAVEPOINT/RELEASE/ROLLBACK TO 语义）与 `create_tables_on_conn`/`ensure_model_pricing_seeded_on_conn` 的 savepoint 包裹；fork 的 `stream_check_logs` 建表语句与全部迁移臂保留。
+- FTS5 会话索引是独立 `session-index.db` 文件，不进 `schema.rs`、不改 user_version、不参与 WebDAV 同步与备份。
+
+### Codex 链与 fork 快捷切换终态（D8）
+
+- 上游会话分组适配、暂停官方登录、额度保护、切换分桶提示、迁移完成事件全部落地；`SwitchResult.codex_history_split` 新字段与 fork 测试字面量的 `website_url_2` 补列共存。
+- fork 的 `ModelQuickSwitchDialog`、模型徽章、1M 改写（`strip_one_m_suffix_for_upstream` 链）保持原样；`map_codex_failover_model` 只在故障转移开启时按「目标认不认该模型」判断，与 1M 改写无调用关系。
+
+### ProviderCard 与表单叠加终态（D9）
+
+- 上游密度 token（`min-h-card`/`py-card-y`）与图标随主题（`bg-transparent text-fg-1`、`text-fg-2` fallback）按上游位置落地；fork 副标题优先级链、模型徽章、双官网链接、右键置顶/置底逐行保留。
+- `GeneralSection.tsx`：上游密度/缩放设置区（约 128-190 行区域）与 fork 面板可见性设置区（文件尾）并存；顶部 import 合并取并集。
+- `Sidebar.tsx`：上游 3 处 `h-7` → `h-nav-row` 落地；fork 的 `VisibleSidebarPanels` 过滤段不变。
+- 预设文件：上游 TokenPlus/Genesis/Mistral 条目落地；fork 各文件的 `hidden?: boolean` 接口字段保留；fork 构建下由白名单过滤（D3），上游构建零过滤。
+
+### 本地化终态（D10）
+
+- `en/ja/zh/zh-TW`：上游本轮新增键（FTS5 搜索、密度/缩放、定价搜索、Skills 重排、Codex 分组/暂停登录、排队进度、TokenPlus/Genesis/Mistral、AGY 周额度等）逐字落地；fork 键段（`provider.connectivityCheck`、`settings.general.trayStyleHelp`、侧栏面板可见性等）保留；合并后按对象作用域显式查重 `dup=0`。
+- `tr.json`：整文件随上游（本轮不在重叠面），终态与 `v4.0.28` tag 逐字节一致，不补 fork 键。
 
 ### fork 侧文档终态
 
-- `docs/HOW_TO_REBASE_UPSTREAM.md` §4 共享文件表按本轮结果增改（新增 `dao/providers.rs`、`backup.rs`、`deeplink/provider.rs`、`App.tsx`、`windowActivity.ts` 等本轮新碰撞面），追加 §4.12「v4.0.26 轮的叠加要点」（维护链重构的 fork 边界、窗口可见性事件口径、release.yml 被裁段豁免、fetch 禁 `--prune-tags`）。
-- 归档时 `docs/comet/specs/upstream-sync/spec.md` 整体重写为本规格内容。
+- `docs/HOW_TO_REBASE_UPSTREAM.md`：§4 共享文件表按本轮实测结果修订；新增 §4.13「v4.0.28 轮的叠加要点」（记录 FTS5 注册区叠加、CI 合并口径、孤儿豁免、crate-type 收敛等）。
+- `docs/comet/specs/upstream-sync/spec.md`：归档时整体重写为本轮终态（本文件）。
+- `docs/comet/specs/database-schema-migrations/spec.md`：本轮不改（schema 仍 25、无新臂）。
 
 ### 重放映射（口径与记录要求，实测数字在 Build 阶段记录，不回写本规格）
 
-- 同步前 fork 提交数以 `git rev-list --count v4.0.25..pre-sync-v426` 现取为准（写作时 203）。
-- 重放后 `git rev-list --count v4.0.26..HEAD` 与主题序列对照 `pre-sync-v426` 逐行核对；被判空丢弃的提交逐个登记 sha 与原因；patch-id 差异逐条归类。
-- 冲突停车清单在 Build 阶段实测记录到 `docs/HOW_TO_REBASE_UPSTREAM.md` §4.12，不写死在本规格。
+- 重放前后提交数之差只允许「被判空丢弃」或「本轮新增」；主题序列 diff 为 0；patch-id 差异逐条归类「冲突停车」或「仅上下文位移/被上游同名声明消化」；冲突停车清单逐条记录文件、双方语义与解法。
+- `.comet/config.yaml` 在 rebase 中途被历史提交改回旧内容时，按 `git checkout ORIG_HEAD -- .comet/config.yaml` 恢复并纳入提交；终态与同步前一致。
 
 ### 落地保真核对（口径，最终态复算）
 
-- 在最终态提交之后，用 `v4.0.26` / `pre-sync-v426` / `HEAD` / `v4.0.25` 四个 ref 计算行多重集差集：上游 184 文件与 fork 侧 148 个代码文件全部参与；非重叠上游文件在 fork 侧缺失为 0；重叠 38 文件的两侧缺失行逐行归因并带重数。
-- 归因只允许「刻意取舍」一类：版本行、fork 专属文案、release.yml 裁剪段、stream_check/updater 移除链路、白名单条目、`website_url_2` 字面量补齐。出现无法归类的缺失行即判定失败。
-- 修复类提交会改变保真数字，文档登记一律用现取口径。
-
-### 冲突解决（遵循 docs/HOW_TO_REBASE_UPSTREAM.md §3）
-
-#### 版本与仓库根（5 个）
-
-- `package.json` / `src-tauri/tauri.conf.json` / `src-tauri/Cargo.toml` / `src-tauri/Cargo.lock`：版本号终态 `4.0.26-1`；禁止 `git checkout --ours` 整体取侧；`Cargo.lock` 本轮上游零新增依赖，只允许 `cc-switch` 版本行变动；`pnpm-lock.yaml` 只取上游 `@tauri-apps/cli` 变动，fork 移除的 updater 三段不得带回。
-- `README.md`：fork 重写版整文件保留。
-
-#### 后端（13 个）
-
-- `lib.rs`：可见性事件 4 处与维护定时器取上游；invoke_handler 本轮上游零改动，重放停车时确认 fork 两个 connectivity 注册 + 上游两个 mcp connectivity 注册同时在位、`stream_check_provider` 0 命中、无 updater 注册。
-- `tray.rs`：TrayTexts/plan_line 的 Credits 段取上游；fork 左键契约段保留。
-- `settings.rs`：上游 `dsh_config_dir` 三处（字段、Default、normalize）+ `get_dsh_override_dir` 取上游；fork 的 `VisibleSidebarPanels` 字段段保留。
-- `commands/misc.rs`：上游 npm bin 提示等 +105 取上游；fork 的 4 处 tunecc URL 与两个测试断言保留（`farion1231/cc-switch/releases` 0 命中）。
-- `commands/mod.rs`：上游 `run_db_task` helper 取上游；fork 声明保留。
-- `database/mod.rs`：启动清理块随上游移除；fork 的 SCHEMA_VERSION 25 与迁移臂不变。
-- `database/backup.rs`：上游新维护结构取上游，去掉 `cleanup_old_stream_check_logs` 调用与对应行为断言（D3）。
-- `database/dao/providers.rs`：上游批量读/跳过未变保存取上游；`website_url_2` 列与行偏移保留。
-- `deeplink/provider.rs`：上游导入扩展取上游；新 `Provider` 字面量补 `website_url_2`。
-- `proxy/forwarder.rs`：上游 classifier guard、loopback、IPv4 race、分配优化取上游；fork 语义段（如有）叠加。
-- `proxy/providers/codex.rs`：Fast 档位与 call_id 缓存取上游。
-- `proxy/providers/mod.rs` / `proxy/mod.rs`：模块声明取并集（上游新增 `copilot_responses`、`classifier_guard`、`loopback_probe`；fork 既有声明保留）。
-
-#### 前端（12 个）
-
-- `App.tsx`：懒加载取上游；fork 门控段叠加保留。
-- `ProviderCard.tsx`：套餐后缀取上游；fork 副标题链/徽章/双链接保留。
-- `forms/ProviderForm.tsx` / `forms/ClaudeDesktopProviderForm.tsx`：上游新接线取上游；fork 导入入口/白名单过滤/websiteUrl2 保留。
-- `types.ts`：上游新字段（`dshConfigDir`、`officialSpeedTiers` 等）取上游；fork 字段（`websiteUrl2`、`visibleSidebarPanels` 等）保留。
-- 6 个预设 config：模型刷新与域名取上游；fork 白名单过滤不动。
-- 4 个 locale：上游新增逐字落地；fork 键段保留；对象作用域查重 dup=0。
-
-#### 本地化（`tr.json`，不在重叠面）
-
-- 整文件随上游、与 `v4.0.26` tag 逐字节一致、不补 fork 键。
-
-#### fork 自有文件（不在重叠面，仅需核对不被上游形态带偏）
-
-- `forkOfficialAllowlist.ts`、`forkPresetFilter.ts`、`devpanel/`、`services/connectivity_test/`、`commands/connectivity_test.rs`、`ModelQuickSwitch/`、`providerModelUtils.ts`、`providerImport.ts`、`ProviderImportEntry.tsx`、`connectivityTestSettings.ts`、`Sidebar.tsx`、`GeneralSection.tsx`（trayStyleHelp）、`AboutSection.tsx`（fork 标识）、`.github/workflows/ci.yml`、`.github/workflows/release.yml`（裁剪版，虽然 upstream 改了它但 hunks 落在被裁段——重放时整文件保留 fork 侧）。
-
-#### 冲突停车清单（Build 阶段实测记录）
-
-- 以实测为准登记到 `docs/HOW_TO_REBASE_UPSTREAM.md` §4.12；预期高危区：版本四文件、`lib.rs`、`tray.rs`、`settings.rs`、`backup.rs`、`database/mod.rs`、`dao/providers.rs`、`ProviderCard.tsx`、`App.tsx`、两个表单、4 个 locale、release.yml。
-
-### fork 取舍清单
-
-- 保留 fork：全部魔改（见保留清单）、release.yml 裁剪版、README 重写版、`stream_check_logs` 建表语句、schema 25。
-- 取上游：本轮全部新功能与修复（除落在被裁/已移除段的部分）、`@tauri-apps/cli ^2.12.4`、`tr.json` 整文件。
-- 不落地：release.yml 的 Linux AppImage env 与 stapler 重试段（fork 无对应段）、`cleanup_old_stream_check_logs` 调用与行为断言（fork 已移除）、upstream/main tag 后提交。
+- 四 ref 行多重集差集：`v4.0.28` / `main(=pre-sync-v428)` / `HEAD` 与上游基线；214 个上游文件与 fork 侧 145 个代码文件全部参与；非重叠上游文件在 fork 侧缺失为 0；重叠 37 文件的两侧缺失行逐行归因并带重数；归因只允许「刻意取舍（版本行 / fork 专属文案 / 裁剪段 / 移除链路 / 白名单条目）」；出现无法归类的缺失行即判定失败。
+- 复算必须在最终态提交之后进行；修复类提交会改变保真数字，规格与文档中的数字随修复刷新或改为现取口径。
 
 ### 预设 id 编号契约（延续）
 
-- 编号（原数组下标）→ 过滤上游 `hidden` → 过滤 fork 白名单的顺序不变；本轮上游无净新增预设，白名单条目集合不变。
-
-### 本地化状态
-
-- 4 个既有 locale（en/ja/zh/zh-TW）：上游新增（Credits、套餐、deeplink、DSH、npm 提示、whats-new 等）逐字落地，fork 专属键段保留；对象作用域显式查重 dup=0。
-- `tr.json`：与上游 tag 逐字节一致。
+- 预设条目 id 数字必须等于原始数组下标：编号 → 过滤上游 `hidden` → 过滤 fork 白名单的顺序不得改变。
 
 ### `.comet/config.yaml` 保护
 
-- rebase 中途被历史提交改写时按 `git checkout ORIG_HEAD -- .comet/config.yaml` 恢复并 `git add`；终态与同步前一致（native+classic 启用、artifact_root docs、clarification_mode batch）。
-
-### 已知流程坑位（沿用 + 本轮新增）
-
-- 沿用：版本/锁文件禁整体取侧；`.comet/config.yaml` 中途恢复；`Provider` 字面量补 `website_url_2`；locale 静默重复键；预设 id 下标契约；cargo fmt 必须进正式检查；时间敏感 flaky 用例判定口径；绝对条数用现取口径。
-- 本轮新增：取证 fetch 禁 `--prune-tags`（Shape 期实测删光 fork 本地 tag，已从 origin 恢复）；release.yml 上游 hunks 落在被裁段时整文件保留 fork 侧并在保真归因中登记「裁剪段」；`backup.rs` 新维护结构中的 stream_check 调用不复活。
+- 该文件是 fork 专属文件且会被重放的历史提交改回旧内容；rebase 中途显式恢复并纳入提交，否则 Native Hook 拒绝写入；终态与同步前一致。
 
 ### 版本号
 
-- `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-tauri/Cargo.lock`（cc-switch 包）四处终态统一 `4.0.26-1`。
+- 四处版本文件（`package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml`、`src-tauri/Cargo.lock` 的 cc-switch 包）终态统一 `4.0.28-1`；本地 annotated tag `v4.0.28-1` 在验收通过、用户接受归档并单独授权交付后创建并推送。
 
 ### 交付（归档后单独授权）
 
-- 验收通过、用户接受并归档后，向用户单独请求授权执行：`git push --force-with-lease origin main` + 创建并推送 annotated tag `v4.0.26-1`。不创建 PR；不推送 `pre-sync-v426`。
+- Build/Verify 不执行任何远端写操作；归档完成后向用户单独请求授权，再执行 `git push --force-with-lease origin main` 与 annotated tag `v4.0.28-1` 的推送；只授权这两项远端动作，不创建 PR。
 
 ### fork 魔改保留清单（同步后必须仍然存在且可用）
 
-- `IS_FORK_BUILD`/`forkBuild` 构建标识与 About 面板 fork 标识。
-- `forkOfficialAllowlist.ts` + `forkPresetFilter.ts` 白名单过滤（编号→hidden→白名单顺序）。
-- `devpanel/`  DevPanel 全链路。
-- 供应商逐模型连通性测试：`services/connectivity_test/`、`commands/connectivity_test.rs`、`connectivity_test_provider_models`/`connectivity_probe_provider` 注册、`ConnectivityBadge`/`ConnectivityTestDialog`/`ConnectivityDetailDialog`、批量检测入口门控、`connectivityTestSettings.ts`、`connectivityTest`/`provider.connectivityCheck` 键段。
-- 模型徽章与快捷切换（`ModelQuickSwitch/`、`providerModelUtils.ts` 精确键名读取）。
-- `websiteUrl2`/`website_url_2` 全链路（类型、表单、DAO 列、deeplink 字面量）。
-- `VisibleSidebarPanels`/`visible_sidebar_panels` 与 Sidebar 过滤、批量检测门控。
-- 托盘左键切换主窗口、永不弹菜单（四分支、`set_show_menu_on_left_click(false)`、`tray_left_click_never_opens_the_menu` 护栏）。
-- 跨应用导入（`ProviderImportEntry`、`useProviderImportSources`/`useProviderImportApply`、各表单接线）。
-- 右键置顶/置底（`ProviderCardActions`）。
-- 无更新器（`tauri_plugin_updater`/`@tauri-apps/plugin-updater`/`install_update_and_restart` 0 命中）、无 `stream_check` 接线（模块声明、命令注册、`cleanup_old_stream_check_logs` 0 命中）。
-- fork CI 裁剪（release.yml 无 Linux/公证段、macos-14）与 4 处 tunecc URL。
+- `IS_FORK_BUILD`/`forkBuild`、`forkOfficialAllowlist.ts`、`forkPresetFilter.ts`、`devpanel/`、连通性测试前后端链路（`services/connectivity_test/`、`commands/connectivity_test.rs`、两个命令注册、`ConnectivityBadge`/对话框/批量检测、`useConnectivityProbe`、`shouldShowTestEntry`）、模型徽章与 `ModelQuickSwitch/`、`websiteUrl2` 全链路（`Provider`/`UniversalProvider` 字段、表单、DB 列、`SELECT` 列序与行偏移）、`VisibleSidebarPanels` 与 Sidebar 过滤、托盘左键四分支与 `set_show_menu_on_left_click(false)` 及源码护栏 `tray_left_click_never_opens_the_menu`、跨应用导入接线（`ProviderImportEntry`、`useProviderImportSources`/`useProviderImportApply`、`providerImport.ts`）、右键置顶/置底、DevPanel 与 fork 构建标识、tunecc 4 处 URL 与两个测试断言、无更新器（`install_update_and_restart` 桩 + `check_app_update_available` 桩）、无 `stream_check` 接线。
+- 移除清单取证口径：`git grep -I -n 'tauri_plugin_updater\|plugin-updater\|install_update_and_restart' HEAD -- src-tauri/src`（实现零命中，命令桩除外）、`git grep -rn 'stream_check_provider' HEAD -- src-tauri/src/lib.rs src-tauri/src/commands/mod.rs` 零命中；保留清单以 `git grep -I -l` 逐项在位。
 
-### fork 魔改保留清单落地取证（`git grep -I -l … HEAD -- src src-tauri tests`）
+### 已知流程坑位（沿用 + 本轮新增）
 
-- 保留清单逐项命中数 > 0（以 Build 阶段实测脚本为准）；移除清单（updater、`stream_check_provider`、`fn cleanup_old_stream_check_logs`、`farion1231/cc-switch/releases`）逐项 0 命中。
+- 沿用：取证 fetch 禁 `--prune-tags`；`.comet/config.yaml` rebase 保护；预设 id 编号契约；locale 对象作用域查重；`cargo fmt --check` 进正式检查计划；时间敏感用例 flaky 边界（SessionManagerPage 00:00–00:30、AppsPage CI 并发竞态）按「与上游逐字节比对 + 本地重复跑」判定；绝对条数会被后续提交作废，一律用现取口径。
+- 本轮新增：①上游 CI 重构与 fork 裁剪合并时，`if` 条件必须覆盖上游新增的 `frontend-tests` job（fork push-main 全量语义不能漏掉新 job）；②`GeneralSection.tsx` 顶部 import 行两侧都改，rebase 预期停车，合并取并集；③`model_mapper.rs` 上游新测试用 `..create_provider_without_mapping()` 结构更新语法，不产生 `website_url_2` 缺列，但 `forwarder.rs`/`services/provider/mod.rs` 等 37 重叠文件中的任何上游新增 `Provider { … }` 字面量仍须补列；④Comet Hook 版本偏差（项目脚本落后于 CLI）在 Shape 期已用 `comet doctor --repair` + 补齐 `comet-hook-router-guard.mjs` 修复，重放中途 hook 拒绝写入时先核对 hook 脚本版本再怀疑流程。
