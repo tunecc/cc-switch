@@ -25,7 +25,12 @@ jobs:
       matrix:
         include:
           - os: windows-2022
-          - os: macos-14
+          # 2026-11-09 实测：GitHub 已下线 macos-14（"The configuration
+          # 'macos-14-arm64-us-default' is not supported"，macOS job 1 秒即
+          # cancelled、Windows job 正常跑完 21m）。上游 v4.0.28 的 macOS job
+          # 也已用 macos-15；v4.0.24 轮的 macos-15 cancelled 是当时平台池问题
+          # （runner:null 零日志），现上游稳定在用，fork 跟改。
+          - os: macos-15
 
     steps:
       - name: Checkout
