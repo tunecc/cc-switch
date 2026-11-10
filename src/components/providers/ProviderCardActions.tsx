@@ -264,9 +264,7 @@ export function ProviderMenuItems({
           {t("provider.configureUsage")}
         </DropdownMenuItem>
       )}
-      {(onDuplicate || onTest || onConfigureUsage) && (
-        <DropdownMenuSeparator />
-      )}
+      {(onDuplicate || onTest || onConfigureUsage) && <DropdownMenuSeparator />}
       <DropdownMenuItem
         disabled={Boolean(presentation.deleteDisabledReason)}
         onSelect={onDelete}
