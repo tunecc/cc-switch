@@ -57,6 +57,24 @@ describe("ConnectivityTestDialog", () => {
     expect(screen.getByRole("button", { name: /start/i })).toBeEnabled();
   });
 
+  it("renders the dialog with a wide layout and internal scroll container", () => {
+    render(
+      <ConnectivityTestDialog
+        provider={provider}
+        appId="claude"
+        open
+        onOpenChange={() => {}}
+      />,
+    );
+    // 弹窗内容容器：内容区带内部滚动，弹窗本身有明确的高度约束
+    const dialog = screen.getByRole("dialog");
+    const scrollArea = dialog.querySelector(
+      ".overflow-y-auto",
+    ) as HTMLElement | null;
+    expect(scrollArea).not.toBeNull();
+    expect(dialog.className).toMatch(/h-\[/);
+  });
+
   it("blocks start after the user deselects the auto-selected model", () => {
     render(
       <ConnectivityTestDialog
