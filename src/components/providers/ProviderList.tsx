@@ -44,6 +44,14 @@ import type {
 } from "@/hooks/useConnectivityProbe";
 import { shouldShowTestEntry } from "@/components/providers/connectivityEntry";
 import { ProviderCard } from "@/components/providers/ProviderCard";
+import { ProviderMenuItems } from "@/components/providers/ProviderCardActions";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ProviderEmptyState } from "@/components/providers/ProviderEmptyState";
 import { ConnectivityTestDialog } from "@/components/providers/ConnectivityTestDialog";
 import {
@@ -238,8 +246,8 @@ export function ProviderList({
 
   const queryClient = useQueryClient();
 
-  // 供应商右键菜单（一键置顶 / 一键置底）。菜单定位到右键位置，点击外部、
-  // 滚动、缩放或按 Esc 时关闭。
+  // 供应商右键菜单（一键置顶 / 一键置底 + 「更多」全部菜单项合并）。菜单定位到
+  // 右键位置，点击外部、滚动、缩放或按 Esc 时关闭。
   const [contextMenu, setContextMenu] = useState<{
     providerId: string;
     x: number;
@@ -888,39 +896,27 @@ export function ProviderList({
       )}
 
       {contextMenu && (
-        <div
-          className="fixed z-50 min-w-[140px] rounded-md border border-border bg-popover p-1 shadow-md"
-          style={{
-            left: Math.min(contextMenu.x, window.innerWidth - 156),
-            top: Math.min(contextMenu.y, window.innerHeight - 96),
-          }}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            className="flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
-            onClick={() => {
-              void moveProviderToTopQuick(contextMenu.providerId);
-              closeContextMenu();
-            }}
-          >
-            {t("provider.quickMoveTop", {
-              defaultValue: "一键置顶",
-            })}
-          </button>
-          <button
-            type="button"
-            className="flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
-            onClick={() => {
-              void moveProviderToBottomQuick(contextMenu.providerId);
-              closeContextMenu();
-            }}
-          >
-            {t("provider.quickMoveBottom", {
-              defaultValue: "一键置底",
-            })}
-          </button>
-        </div>
+        <ProviderContextMenu
+          menu={contextMenu}
+          items={(() => {
+            const entry = sections
+              .flatMap((section) => section.items)
+              .find((item) => item.provider.id === contextMenu.providerId);
+            if (!entry) return null;
+            return {
+              provider: entry.provider,
+              presentation: entry.presentation,
+            };
+          })()}
+          onMoveTop={() => moveProviderToTopQuick(contextMenu.providerId)}
+          onMoveBottom={() => moveProviderToBottomQuick(contextMenu.providerId)}
+          onClose={closeContextMenu}
+          onDelete={onDelete}
+          onDuplicate={onDuplicate}
+          onTest={handleTest}
+          isTesting={probeResults[contextMenu.providerId]?.status === "running"}
+          onConfigureUsage={onConfigureUsage}
+        />
       )}
     </div>
   );
@@ -967,5 +963,77 @@ function SortableProviderCard(props: SortableProviderCardProps) {
         dragHandleProps={{ attributes, listeners, isDragging }}
       />
     </div>
+  );
+}
+
+interface ProviderContextMenuProps {
+  menu: { providerId: string; x: number; y: number };
+  items: { provider: Provider; presentation: CardPresentation } | null;
+  onMoveTop: () => void;
+  onMoveBottom: () => void;
+  onClose: () => void;
+  onDelete: (provider: Provider) => void;
+  onDuplicate: (provider: Provider) => void;
+  onTest: (provider: Provider) => void;
+  isTesting: boolean;
+  onConfigureUsage?: (provider: Provider) => void;
+}
+
+/**
+ * 供应商右键完整菜单：一键置顶 / 一键置底 + 卡片「更多」菜单的全部项。
+ * 用受控 DropdownMenu，虚拟触发点固定在右键坐标上，使菜单出现在鼠标位置。
+ */
+function ProviderContextMenu({
+  menu,
+  items,
+  onMoveTop,
+  onMoveBottom,
+  onClose,
+  onDelete,
+  onDuplicate,
+  onTest,
+  isTesting,
+  onConfigureUsage,
+}: ProviderContextMenuProps) {
+  const { t } = useTranslation();
+
+  return (
+    <DropdownMenu open onOpenChange={(open) => !open && onClose()}>
+      <DropdownMenuTrigger asChild>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none fixed z-40 h-px w-px"
+          style={{ left: menu.x, top: menu.y }}
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        side="right"
+        className="min-w-[180px]"
+        onContextMenu={(event) => event.preventDefault()}
+      >
+        <DropdownMenuItem onSelect={onMoveTop}>
+          {t("provider.quickMoveTop", { defaultValue: "一键置顶" })}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onMoveBottom}>
+          {t("provider.quickMoveBottom", { defaultValue: "一键置底" })}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {items && (
+          <ProviderMenuItems
+            presentation={items.presentation}
+            onDelete={() => onDelete(items.provider)}
+            onDuplicate={() => onDuplicate(items.provider)}
+            onTest={() => onTest(items.provider)}
+            isTesting={isTesting}
+            onConfigureUsage={
+              onConfigureUsage
+                ? () => onConfigureUsage(items.provider)
+                : undefined
+            }
+          />
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

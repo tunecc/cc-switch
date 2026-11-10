@@ -1607,4 +1607,85 @@ describe("ProviderList Component", () => {
       expect(screen.queryByText(menuText)).not.toBeInTheDocument();
     });
   });
+
+  it("right-click menu merges the quick-sort items with the full More-menu actions", async () => {
+    const providerA = createProvider({ id: "a", name: "A", sortIndex: 0 });
+    const providerB = createProvider({ id: "b", name: "B", sortIndex: 1 });
+
+    useDragSortMock.mockReturnValue({
+      sortedProviders: [providerA, providerB],
+      sensors: [],
+      handleDragEnd: vi.fn(),
+    });
+
+    const onDuplicate = vi.fn();
+    const onDelete = vi.fn();
+    const onConfigureUsage = vi.fn();
+
+    renderWithQueryClient(
+      <ProviderList
+        providers={{ a: providerA, b: providerB }}
+        currentProviderId="a"
+        appId="claude"
+        onSwitch={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={onDelete}
+        onDuplicate={onDuplicate}
+        onOpenWebsite={vi.fn()}
+        onConfigureUsage={onConfigureUsage}
+      />,
+    );
+
+    fireEvent.contextMenu(screen.getByTestId("provider-card-a"), {
+      clientX: 10,
+      clientY: 10,
+    });
+
+    // 一键置顶 / 置底 + 「更多」的全部项同时可见，无需先点「更多」
+    expect(
+      await screen.findByText(/一键置顶|provider.quickMoveTop/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/一键置底|provider.quickMoveBottom/),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByText(/provider.duplicate|复制/),
+    );
+    expect(onDuplicate).toHaveBeenCalled();
+  });
+
+  it("right-click menu delete uses the provider delete handler", async () => {
+    const providerA = createProvider({ id: "a", name: "A", sortIndex: 0 });
+
+    useDragSortMock.mockReturnValue({
+      sortedProviders: [providerA],
+      sensors: [],
+      handleDragEnd: vi.fn(),
+    });
+
+    const onDelete = vi.fn();
+
+    renderWithQueryClient(
+      <ProviderList
+        providers={{ a: providerA }}
+        currentProviderId="a"
+        appId="claude"
+        onSwitch={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={onDelete}
+        onDuplicate={vi.fn()}
+        onOpenWebsite={vi.fn()}
+      />,
+    );
+
+    fireEvent.contextMenu(screen.getByTestId("provider-card-a"), {
+      clientX: 10,
+      clientY: 10,
+    });
+
+    fireEvent.click(await screen.findByText(/common.delete|删除/));
+    expect(onDelete).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "a" }),
+    );
+  });
 });

@@ -97,7 +97,7 @@ export function ProviderCardActions({
   openTerminalIsolated,
 }: ProviderCardActionsProps) {
   const { t } = useTranslation();
-  const { status, buttons, move, menuItems = [] } = presentation;
+  const { status, buttons, move } = presentation;
 
   return (
     <div className="flex shrink-0 items-center gap-2">
@@ -203,44 +203,79 @@ export function ProviderCardActions({
           </DropdownMenuTrigger>
         </HoverTip>
         <DropdownMenuContent align="end" className="min-w-[180px]">
-          {menuItems.map((item) => (
-            <ModeMenuItem key={item.key} item={item} />
-          ))}
-          {menuItems.length > 0 && <DropdownMenuSeparator />}
-          {onDuplicate && (
-            <DropdownMenuItem onSelect={onDuplicate}>
-              {t("provider.duplicate")}
-            </DropdownMenuItem>
-          )}
-          {onTest && (
-            <DropdownMenuItem disabled={isTesting} onSelect={onTest}>
-              {isTesting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              {t("provider.connectivityCheck")}
-            </DropdownMenuItem>
-          )}
-          {onConfigureUsage && (
-            <DropdownMenuItem onSelect={onConfigureUsage}>
-              {t("provider.configureUsage")}
-            </DropdownMenuItem>
-          )}
-          {(onDuplicate || onTest || onConfigureUsage) && (
-            <DropdownMenuSeparator />
-          )}
-          <DropdownMenuItem
-            disabled={Boolean(presentation.deleteDisabledReason)}
-            onSelect={onDelete}
-            className="flex-col items-start gap-0.5 text-danger-text focus:text-danger-text"
-          >
-            {t("common.delete")}
-            {presentation.deleteDisabledReason && (
-              <span className="text-caption text-fg-3">
-                {presentation.deleteDisabledReason}
-              </span>
-            )}
-          </DropdownMenuItem>
+          <ProviderMenuItems
+            presentation={presentation}
+            onDelete={onDelete}
+            onDuplicate={onDuplicate}
+            onTest={onTest}
+            isTesting={isTesting}
+            onConfigureUsage={onConfigureUsage}
+          />
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
+  );
+}
+
+/**
+ * 供应商菜单公共内容：模式相关项在最前，然后是复制、连通性测试、用量配置、
+ * 删除。卡片「更多」下拉与列表右键菜单共用，保证两处项、顺序与禁用态一致。
+ */
+export function ProviderMenuItems({
+  presentation,
+  onDelete,
+  onDuplicate,
+  onTest,
+  isTesting,
+  onConfigureUsage,
+}: {
+  presentation: CardPresentation;
+  onDelete: () => void;
+  onDuplicate?: () => void;
+  onTest?: () => void;
+  isTesting?: boolean;
+  onConfigureUsage?: () => void;
+}) {
+  const { t } = useTranslation();
+  const { menuItems = [] } = presentation;
+  return (
+    <>
+      {menuItems.map((item) => (
+        <ModeMenuItem key={item.key} item={item} />
+      ))}
+      {menuItems.length > 0 && <DropdownMenuSeparator />}
+      {onDuplicate && (
+        <DropdownMenuItem onSelect={onDuplicate}>
+          {t("provider.duplicate")}
+        </DropdownMenuItem>
+      )}
+      {onTest && (
+        <DropdownMenuItem disabled={isTesting} onSelect={onTest}>
+          {isTesting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          {t("provider.connectivityCheck")}
+        </DropdownMenuItem>
+      )}
+      {onConfigureUsage && (
+        <DropdownMenuItem onSelect={onConfigureUsage}>
+          {t("provider.configureUsage")}
+        </DropdownMenuItem>
+      )}
+      {(onDuplicate || onTest || onConfigureUsage) && (
+        <DropdownMenuSeparator />
+      )}
+      <DropdownMenuItem
+        disabled={Boolean(presentation.deleteDisabledReason)}
+        onSelect={onDelete}
+        className="flex-col items-start gap-0.5 text-danger-text focus:text-danger-text"
+      >
+        {t("common.delete")}
+        {presentation.deleteDisabledReason && (
+          <span className="text-caption text-fg-3">
+            {presentation.deleteDisabledReason}
+          </span>
+        )}
+      </DropdownMenuItem>
+    </>
   );
 }
 
