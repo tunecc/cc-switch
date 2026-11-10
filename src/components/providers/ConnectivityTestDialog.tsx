@@ -500,7 +500,10 @@ export function ConnectivityTestDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl gap-0" zIndex="alert">
+      <DialogContent
+        className="flex h-[min(85vh,56rem)] max-h-[min(85vh,56rem)] w-[min(72rem,calc(100vw-4rem))] max-w-none flex-col gap-0"
+        zIndex="alert"
+      >
         <DialogHeader>
           <DialogTitle>
             {t("connectivityTest.title", { defaultValue: "连通性测试" })}
@@ -508,7 +511,7 @@ export function ConnectivityTestDialog({
           <DialogDescription>{provider.name}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-4">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-4">
           {/* 基础参数 */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
