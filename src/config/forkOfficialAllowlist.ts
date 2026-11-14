@@ -52,4 +52,8 @@ export const forkOfficialAllowlist: Record<AppId, string[]> = {
   mcode: [],
   // Kimi 只保留 4 条官方预设；本机推理（Ollama/LM Studio/vLLM）在 Kimi 的所有入口一律隐藏
   kimi: ["Kimi", "Kimi Global", "Kimi For Coding", "Kimi For Coding Global"],
+  // copilot（GitHub Copilot CLI）与 workbuddy（腾讯 WorkBuddy）的 BYOK 目录由 Pi 目录派生
+  // （上游 v4.0.29 / v4.0.31 新增），白名单与 pi 一致；两家的官方登录卡属于「账号登录」组，不参与目录过滤
+  copilot: ["Ollama", "LM Studio", "vLLM"],
+  workbuddy: ["Ollama", "LM Studio", "vLLM"],
 };

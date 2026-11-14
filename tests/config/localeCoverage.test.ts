@@ -6,6 +6,7 @@ import en from "@/i18n/locales/en.json";
 import ja from "@/i18n/locales/ja.json";
 import zhTW from "@/i18n/locales/zh-TW.json";
 import zh from "@/i18n/locales/zh.json";
+import { isForkLocaleKeyExempt } from "@/config/forkOnlyLocaleKeys";
 
 type TranslationTree = Record<string, unknown>;
 
@@ -31,7 +32,11 @@ function interpolationVariables(value: string): string[] {
   ).sort();
 }
 
-const reference = flattenStrings(en);
+// fork 专属键与 fork 已移除的键（streamCheck.*）不参与「与英文对齐」的校验，见
+// `@/config/forkOnlyLocaleKeys`；其余键仍严格对齐。
+const reference = new Map(
+  [...flattenStrings(en)].filter(([key]) => !isForkLocaleKeyExempt(key)),
+);
 const piKeysOutsideNamespace = new Set([
   "apps.pi",
   "deeplink.api",
@@ -272,9 +277,11 @@ describe("Russian locale", () => {
   const translations = flattenStrings(ru);
 
   it("only keeps keys that still exist in English", () => {
-    expect([...translations.keys()].filter((key) => !reference.has(key))).toEqual(
-      [],
-    );
+    expect(
+      [...translations.keys()].filter(
+        (key) => !reference.has(key) && !isForkLocaleKeyExempt(key),
+      ),
+    ).toEqual([]);
   });
 
   it("keeps every existing translation non-empty", () => {
