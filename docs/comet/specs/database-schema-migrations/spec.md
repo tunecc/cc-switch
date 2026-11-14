@@ -91,3 +91,14 @@ fork 在 v4.0.22 轮同步中 SHALL 把 `SCHEMA_VERSION` 升到 25：上游 `v4.
 #### Scenario: 同步后 schema 为 25 且两种 v24 库都可升级
 - **WHEN** 在同步到 `v4.0.22` 的 fork 终态上检查 `SCHEMA_VERSION` 并分别用 fork v4.0.20-1 的 v24 库与上游 v4.0.22 的 v24 库执行迁移
 - **THEN** `SCHEMA_VERSION == 25`；两种库都升到 25，前者补齐 `enabled_dsh`（两表）与 `parser_state`、后者既有值不变；`cargo test` 中 v21/v22/v23→24 与 v24→25 的各形状与幂等用例全部通过
+
+### Requirement: v4.0.31 轮升到 schema 26
+fork 在 v4.0.31 轮同步中 SHALL 把 `SCHEMA_VERSION` 升到 26：上游 `v4.0.29` 把 24→25 定义为补 `enabled_copilot`（两表），`v4.0.31` 把 25→26 定义为补 `enabled_workbuddy` 并幂等回补 `enabled_omp`/`enabled_dsh`/`enabled_copilot`；fork 原为 25（v24→v25 臂补 DSH 与 `parser_state`）。合并口径：fork 的 DSH/`parser_state` 并入上游的 `24 =>` 臂（同一臂内先幂等补 `enabled_dsh`，再补 `enabled_copilot`，最后补 `parser_state`，全部走 `add_column_if_missing`），`25 =>` 取上游 workbuddy 臂原样，`create_tables` 的 `mcp_servers`/`skills` 含 `enabled_copilot`/`enabled_workbuddy`，`stream_check_logs` 建表与全部既有迁移臂保留。
+
+#### Scenario: 两种 25 库都能升到 26
+- **WHEN** 分别用 fork v4.0.28 建/升的 v25 库（有 DSH/`parser_state`、无 copilot/workbuddy 列）与上游 v4.0.29 升的 v25 库（有 copilot 列、无 workbuddy 列）启动应用
+- **THEN** 两者都升到 `user_version=26`：前者补 `enabled_copilot`（两表）与 `enabled_workbuddy`，后者补 `enabled_workbuddy`；既有开关值不变；重复执行迁移为 no-op
+
+#### Scenario: 终态版本与列集
+- **WHEN** 检查同步终态的 `SCHEMA_VERSION` 与 `create_tables` 的列集
+- **THEN** `SCHEMA_VERSION == 26`；`mcp_servers`/`skills` 均含 `enabled_copilot` 与 `enabled_workbuddy`；`cargo test` 中 v21/v22/v23→24、v24→25、v25→26 的各形状与幂等用例全部通过

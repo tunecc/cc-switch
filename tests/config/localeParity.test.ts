@@ -7,9 +7,13 @@ import ru from "@/i18n/locales/ru.json";
 import tr from "@/i18n/locales/tr.json";
 import zhTW from "@/i18n/locales/zh-TW.json";
 import zh from "@/i18n/locales/zh.json";
+import { isForkLocaleKeyExempt } from "@/config/forkOnlyLocaleKeys";
 
 // All eight UI languages are maintained together: every English key must exist
 // in every other locale, with the same interpolation variables and tags.
+//
+// Fork 构建额外维护一批上游没有的界面文案键（见 `@/config/forkOnlyLocaleKeys`）。它们只随
+// en/zh（部分 ja/zh-TW）维护，不参与一致性校验；上游键的校验强度保持不变。
 const locales = [
   ["zh", zh],
   ["zh-TW", zhTW],
@@ -48,18 +52,23 @@ function tags(value: string): string {
     .join(" ");
 }
 
-const reference = flattenStrings(en);
+const withoutForkOnly = (strings: Map<string, string>) =>
+  new Map(
+    [...strings].filter(([key]) => !isForkLocaleKeyExempt(key)),
+  );
+
+const reference = withoutForkOnly(flattenStrings(en));
 
 describe("locale parity", () => {
   it.each(locales)("defines every English key in %s", (_name, tree) => {
-    const translations = flattenStrings(tree);
+    const translations = withoutForkOnly(flattenStrings(tree));
     expect(
       [...reference.keys()].filter((key) => !translations.has(key)),
     ).toEqual([]);
   });
 
   it.each(locales)("has no keys that English removed in %s", (_name, tree) => {
-    const translations = flattenStrings(tree);
+    const translations = withoutForkOnly(flattenStrings(tree));
     expect(
       [...translations.keys()].filter((key) => !reference.has(key)),
     ).toEqual([]);
@@ -78,7 +87,7 @@ describe("locale parity", () => {
   // locale uses it too. A variable no other locale uses is a typo or a leftover
   // the caller no longer passes, and would render as literal "{{name}}".
   const all = [["en", en] as const, ...locales].map(
-    ([name, tree]) => [name, flattenStrings(tree)] as const,
+    ([name, tree]) => [name, withoutForkOnly(flattenStrings(tree))] as const,
   );
   it.each(locales)("uses only known interpolation variables in %s", (name) => {
     const own = all.find(([n]) => n === name)![1];
@@ -98,7 +107,7 @@ describe("locale parity", () => {
 
   it.each(locales)("keeps rich-text tags in %s", (_name, tree) => {
     expect(
-      [...flattenStrings(tree)]
+      [...withoutForkOnly(flattenStrings(tree))]
         .filter(([key, value]) => {
           const expected = reference.get(key);
           return expected !== undefined && tags(value) !== tags(expected);
