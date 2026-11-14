@@ -41,3 +41,6 @@ native:
   archive_confirmation: automatic
   # 同一个已确认验收目标最多允许的 Verify 失败次数；达到上限后停止完成循环。
   max_verify_failures: 5
+# 是否生成可直接打开的 HTML 变更说明，同时作用于 Native 和 Classic；开启会增加讲解内容的 token 消耗。
+# change_walkthrough: true | false（默认 true）
+change_walkthrough: true
