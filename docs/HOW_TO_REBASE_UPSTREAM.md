@@ -478,7 +478,7 @@ rebase 时需 **保留 fork 侧改动** 的文件清单：
 - **locale：8 语种 + 上游新增的一致性测试**：上游 `v4.0.31` 加入 `tests/config/localeParity.test.ts`（8 语种键集合必须与 `en.json` 一致）与 `tests/config/readmeParity.test.ts`（8 份 README 结构对齐）。fork 的处理（用户 2026-11-14 确认）：
   - `src/config/forkOnlyLocaleKeys.ts` 维护两份清单：`FORK_ONLY_LOCALE_KEYS`（284 个 fork 专属键，由 `en.json` 减 `git show v4.0.31:src/i18n/locales/en.json` 生成）与 `FORK_REMOVED_LOCALE_KEYS`（5 个 `streamCheck.*`，fork 已移除该功能但上游语种文件仍带）。两个测试（`localeParity`、`localeCoverage`）都经 `isForkLocaleKeyExempt` 跳过这两类键，上游键的校验强度不变。**每次同步后重新生成 fork 专属键清单**，否则新文案会被误判为缺失。
   - `readmeParity` 不再校验 `README.md`：fork 的英文 README 是专属页面（结构与上游完全不同），测试以「`README.md` 是否含 `## Why CC Switch?`」判断英文原版是否存在，缺失时只保留「文件存在」与「语言切换器链接齐全」两项；换回上游英文 README 时三项结构校验自动恢复。
-  - `tr.json` 本轮起不再与上游 tag 逐字节一致（多出 `streamCheck.*` 五键，属上游保留、fork 已移除的键），这是接受一致性测试后的预期偏离；`ko`/`ru`/`de` 整文件随上游。
+  - `tr.json` 仍与上游 tag **逐字节一致**（不补 fork 键）；它带着上游保留的 `streamCheck.*` 五键，靠 `FORK_REMOVED_LOCALE_KEYS` 豁免。`ko`/`ru`/`de` 整文件随上游。
 - **孤儿 stream_check 豁免延续**：上游为 `stream_check.rs` 加 `AppType::Copilot` 分支与用例（+20），随文件落地；fork 仍不恢复 `pub mod stream_check;`、不建 `commands/stream_check.rs` 与 dao 文件、`stream_check_provider` 全仓 0 命中。
 - **CI 与物料**：`ci.yml` 上游本轮仅 1 行（`README*.md` 进 frontend paths filter），fork 裁剪语义全部保留；`release.yml`/`wsl2-nightly.yml` 上游零改动。`Cargo.toml` 新增 `aho-corasick = "1.1"`（隐私过滤器 secrets 匹配）——**注意**：版本冲突时若整文件取 fork 侧会丢掉这条依赖，需手工补回。macOS runner 维持 `macos-15`（§4.10 的 `macos-14` 结论已被 GitHub 下线 macos-14 反转）。
 - **版本号冲突**：重放中途的版本提交一律取 fork 侧（`4.0.22-1` → … → `4.0.28-2`），最终由同步终态提交统一 bump 到 `4.0.31-1`。
