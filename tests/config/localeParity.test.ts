@@ -3,6 +3,7 @@ import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import en from "@/i18n/locales/en.json";
+import { isForkLocaleKeyExempt } from "@/config/forkOnlyLocaleKeys";
 
 // Include every translation file, so adding a locale immediately tests its
 // keys, interpolation variables, and rich-text tags against English.
@@ -48,21 +49,30 @@ describe("locale parity", () => {
   it.each(locales)("defines every English key in %s", (_name, tree) => {
     const translations = flattenStrings(tree);
     expect(
-      [...reference.keys()].filter((key) => !translations.has(key)),
+      [...reference.keys()].filter(
+        (key) => !isForkLocaleKeyExempt(key) && !translations.has(key),
+      ),
     ).toEqual([]);
   });
 
   it.each(locales)("has no keys that English removed in %s", (_name, tree) => {
     const translations = flattenStrings(tree);
     expect(
-      [...translations.keys()].filter((key) => !reference.has(key)),
+      [...translations.keys()].filter(
+        (key) => !isForkLocaleKeyExempt(key) && !reference.has(key),
+      ),
     ).toEqual([]);
   });
 
   it.each(locales)("keeps every translation non-empty in %s", (_name, tree) => {
     expect(
       [...flattenStrings(tree)]
-        .filter(([key, value]) => reference.get(key)?.trim() && !value.trim())
+        .filter(
+          ([key, value]) =>
+            !isForkLocaleKeyExempt(key) &&
+            reference.get(key)?.trim() &&
+            !value.trim(),
+        )
         .map(([key]) => key),
     ).toEqual([]);
   });
@@ -93,6 +103,7 @@ describe("locale parity", () => {
     const own = all.find(([n]) => n === name)![1];
     const unknown: string[] = [];
     for (const [key, value] of own) {
+      if (isForkLocaleKeyExempt(key)) continue;
       const known = new Set(
         all
           .filter(([n]) => n !== name)
@@ -134,6 +145,7 @@ describe("locale parity", () => {
           const expected = reference.get(k);
           return (
             expected !== undefined &&
+            !isForkLocaleKeyExempt(k) &&
             !exempt.has(k) &&
             key(value) !== key(expected)
           );
@@ -147,7 +159,11 @@ describe("locale parity", () => {
       [...flattenStrings(tree)]
         .filter(([key, value]) => {
           const expected = reference.get(key);
-          return expected !== undefined && tags(value) !== tags(expected);
+          return (
+            expected !== undefined &&
+            !isForkLocaleKeyExempt(key) &&
+            tags(value) !== tags(expected)
+          );
         })
         .map(([key]) => key),
     ).toEqual([]);
