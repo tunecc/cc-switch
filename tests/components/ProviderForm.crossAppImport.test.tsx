@@ -44,6 +44,8 @@ const allAppsVisible: VisibleApps = {
   agy: true,
   kimi: true,
   omp: true,
+  copilot: true,
+  workbuddy: true,
 };
 
 const onlyCodexVisible: VisibleApps = {
@@ -60,6 +62,8 @@ const onlyCodexVisible: VisibleApps = {
   agy: false,
   kimi: false,
   omp: false,
+  copilot: false,
+  workbuddy: false,
 };
 
 beforeAll(async () => {
