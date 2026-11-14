@@ -6,6 +6,7 @@ import en from "@/i18n/locales/en.json";
 import ja from "@/i18n/locales/ja.json";
 import zhTW from "@/i18n/locales/zh-TW.json";
 import zh from "@/i18n/locales/zh.json";
+import { isForkLocaleKeyExempt } from "@/config/forkOnlyLocaleKeys";
 
 type TranslationTree = Record<string, unknown>;
 
@@ -24,7 +25,9 @@ function flattenStrings(
   return result;
 }
 
-const reference = flattenStrings(en);
+const reference = new Map(
+  [...flattenStrings(en)].filter(([key]) => !isForkLocaleKeyExempt(key)),
+);
 const piProductReferences = new Map(
   [...reference].filter(([, value]) => /\bPi\b/.test(value)),
 );
