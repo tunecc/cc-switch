@@ -63,7 +63,11 @@ import { isWorkBuddyOfficial } from "@/components/providers/workbuddyOfficial";
 import { WorkBuddyOfficialAccountLine } from "@/components/providers/WorkBuddyOfficialAccountLine";
 import { WorkBuddyQuotaFooter } from "@/components/providers/WorkBuddyQuotaFooter";
 import { ProviderCardActions } from "./ProviderCardActions";
-import { terminalIsIsolated, terminalNeedsRoute } from "./OpenTerminalDialog";
+import {
+  terminalAvailable,
+  terminalIsIsolated,
+  terminalNeedsRoute,
+} from "./OpenTerminalDialog";
 import type { CardChip, CardPresentation, CardTone } from "./presentation";
 import { appHas } from "@/config/appSpecs";
 import {
@@ -85,9 +89,8 @@ interface ProviderCardProps {
   appId: AppId;
   /** 卡片怎么画：模式色、状态 / 按钮、徽标（由列表按模式算好） */
   presentation: CardPresentation;
-  /** 用来决定额度是否自动查询（共存式应用看 isInConfig） */
+  /** 用来决定官方订阅 / OAuth 额度是否自动查询 */
   isCurrent: boolean;
-  isInConfig?: boolean;
   onEdit: (provider: Provider) => void;
   onDelete: (provider: Provider) => void;
   onConfigureUsage: (provider: Provider) => void;
@@ -231,7 +234,6 @@ export function ProviderCard({
   appId,
   presentation,
   isCurrent,
-  isInConfig = true,
   onEdit,
   onDelete,
   onConfigureUsage,
@@ -1003,7 +1005,9 @@ export function ProviderCard({
                 : () => onConfigureUsage(provider)
             }
             onOpenTerminal={
-              onOpenTerminal ? () => onOpenTerminal(provider) : undefined
+              onOpenTerminal && terminalAvailable(provider, appId, isCurrent)
+                ? () => onOpenTerminal(provider)
+                : undefined
             }
             openTerminalIsolated={terminalIsIsolated(provider, appId)}
             openTerminalDisabledReason={
