@@ -3,14 +3,15 @@
  *
  * 上游 v4.0.31 起有 `tests/config/localeParity.test.ts` 要求 8 个语种的键集合与 en.json 完全一致；
  * fork 自有功能的文案只随 en/zh（部分 ja/zh-TW）维护，因此该测试用这份清单跳过 fork 专属键。
+ * `FORK_REMOVED_LOCALE_KEYS` 收录「fork 的 en.json 有意不含、但上游/历史语种文件仍带着」的键：
+ * streamCheck.*（fork 已移除该功能）与 autoUpdate.*（fork 不启用应用内更新器，见同步轮 Q1）。
  * 上游键仍按上游口径严格校验，不做任何放宽。
  *
  * 重新生成（新增/删除 fork 专属文案后执行一次）：
- *   git show v4.0.31:src/i18n/locales/en.json > /tmp/up_en.json
- *   node -e '...'  # 见 docs/HOW_TO_REBASE_UPSTREAM.md §4.14
+ *   git show v4.0.32:src/i18n/locales/en.json > /tmp/up_en.json
+ *   node -e '...'  # 见 docs/HOW_TO_REBASE_UPSTREAM.md §4.14 / §4.15
  */
 export const FORK_ONLY_LOCALE_KEYS: ReadonlySet<string> = new Set([
-  "agents.title",
   "claudeConfig.commonConfigHint",
   "claudeConfig.editCommonConfig",
   "claudeConfig.editCommonConfigTitle",
@@ -27,13 +28,6 @@ export const FORK_ONLY_LOCALE_KEYS: ReadonlySet<string> = new Set([
   "codexConfig.noCommonConfigToApply",
   "codexConfig.writeCommonConfig",
   "codexOauth.reauthTitle",
-  "commonConfig.emptyHint",
-  "commonConfig.emptyTitle",
-  "commonConfig.guidePurpose",
-  "commonConfig.guideReExtract",
-  "commonConfig.guideReassurance",
-  "commonConfig.guideTitle",
-  "commonConfig.guideUsage",
   "confirm.commonConfig.confirm",
   "confirm.commonConfig.message",
   "confirm.commonConfig.title",
@@ -164,17 +158,6 @@ export const FORK_ONLY_LOCALE_KEYS: ReadonlySet<string> = new Set([
   "provider.quickMoveTop",
   "provider.websiteUrl2",
   "provider.writeCommonConfig",
-  "providerAdvanced.costMultiplier",
-  "providerAdvanced.costMultiplierHint",
-  "providerAdvanced.costMultiplierPlaceholder",
-  "providerAdvanced.pricingConfig",
-  "providerAdvanced.pricingConfigDesc",
-  "providerAdvanced.pricingModelSourceHint",
-  "providerAdvanced.pricingModelSourceInherit",
-  "providerAdvanced.pricingModelSourceLabel",
-  "providerAdvanced.pricingModelSourceRequest",
-  "providerAdvanced.pricingModelSourceResponse",
-  "providerAdvanced.useCustomPricing",
   "providerCard.action.quickModel",
   "providerForm.modelOneMToggleAll",
   "providerForm.noModelsFound",
@@ -277,33 +260,21 @@ export const FORK_ONLY_LOCALE_KEYS: ReadonlySet<string> = new Set([
   "settings.sidebarPanels.sessions",
   "settings.sidebarPanels.skills",
   "settings.sidebarPanels.title",
-  "settings.skillStorage.ccSwitch",
-  "settings.skillStorage.ccSwitchHint",
-  "settings.skillStorage.confirmMessage",
-  "settings.skillStorage.confirmTitle",
-  "settings.skillStorage.description",
-  "settings.skillStorage.migrationPartial",
-  "settings.skillStorage.migrationSuccess",
-  "settings.skillStorage.title",
-  "settings.skillStorage.unified",
-  "settings.skillStorage.unifiedHint",
-  "settings.skillSync.copy",
-  "settings.skillSync.description",
-  "settings.skillSync.symlink",
-  "settings.skillSync.symlinkHint",
-  "settings.skillSync.title",
   "universalProvider.websiteUrl2",
   "universalProvider.websiteUrl2Placeholder",
 ]);
 
-/**
- * 上游保留、但 fork 已随功能移除而从 en/zh 删掉的界面文案键。
- *
- * fork 移除了 stream_check 可达链路（见 docs/comet/specs/upstream-* 与孤儿豁免口径），
- * 因此 en/zh/ja/zh-TW 不再有 `streamCheck.*`；上游维护的 ko/tr/ru/de 仍带着这些键。
- * 一致性测试同样跳过这批键，避免每次同步都要改上游维护的语种文件。
- */
+/** fork 的 en.json 已不含、但其他语种文件（整文件随上游）仍保留的上游键。 */
 export const FORK_REMOVED_LOCALE_KEYS: ReadonlySet<string> = new Set([
+  "autoUpdate.installFailed",
+  "autoUpdate.installNow",
+  "autoUpdate.later",
+  "autoUpdate.readyBody",
+  "autoUpdate.readyBodyRouting",
+  "autoUpdate.readyTitle",
+  "autoUpdate.toggle",
+  "autoUpdate.toggleHelp",
+  "autoUpdate.unsupported",
   "streamCheck.error",
   "streamCheck.reachable",
   "streamCheck.reachableSlow",

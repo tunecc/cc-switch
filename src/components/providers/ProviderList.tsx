@@ -29,7 +29,6 @@ import {
   translatePiProviderMutationError,
 } from "@/utils/errorUtils";
 import { useDragSort } from "@/hooks/useDragSort";
-import { isProxyAppId } from "@/config/appConfig";
 import {
   useOpenClawLiveProviderIds,
   useOpenClawDefaultModel,
@@ -323,7 +322,7 @@ export function ProviderList({
           queryKey: ["providers", appId],
         });
         // 路由类应用的故障转移顺序派生自 sort_index，需要同步刷新。
-        if (isProxyAppId(appId)) {
+        if (appHas(appId, "localProxy")) {
           await queryClient.invalidateQueries({
             queryKey: ["failoverQueue", appId],
           });

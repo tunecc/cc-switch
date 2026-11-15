@@ -8,7 +8,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { AppId } from "@/lib/api/types";
 import type { Provider, Settings, VisibleApps } from "@/types";
-import { APP_IDS, DEFAULT_VISIBLE_APPS } from "@/config/appConfig";
+import { DEFAULT_VISIBLE_APPS } from "@/config/appConfig";
+import { APP_IDS } from "@/config/appSpecs";
 import { providersApi, settingsApi } from "@/lib/api";
 
 export interface ProviderImportSource {

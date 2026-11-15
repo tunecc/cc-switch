@@ -129,7 +129,7 @@ describe("ProviderCard xAI OAuth account subtitle", () => {
     authGetStatus.mockReset();
   });
 
-  it("shows the bound xAI account and plan instead of the website URL", async () => {
+  it("shows the bound xAI account and plan alongside the website URL", async () => {
     authGetStatus.mockResolvedValue(
       status([account("xai-1", "grok@x.ai")], "xai-1"),
     );
@@ -138,7 +138,33 @@ describe("ProviderCard xAI OAuth account subtitle", () => {
 
     expect(await screen.findByText("grok@x.ai")).toBeInTheDocument();
     expect(screen.getByText("· SuperGrok")).toBeInTheDocument();
-    expect(screen.queryByText(XAI_URL)).not.toBeInTheDocument();
+    expect(screen.getByText(XAI_URL)).toBeInTheDocument();
+  });
+
+  it("keeps both website links on a separate row from the xAI account", async () => {
+    authGetStatus.mockResolvedValue(
+      status([account("xai-1", "grok@x.ai", true)], "xai-1"),
+    );
+
+    renderCard(
+      xaiProvider("xai-1", {
+        websiteUrl: XAI_URL,
+        websiteUrl2: "https://grok.com",
+      }),
+      "SuperGrok",
+    );
+
+    const accountLabel = await screen.findByText("grok@x.ai");
+    const accountRow = accountLabel.parentElement;
+    const websiteRow = screen.getByTestId("website-links");
+    expect(accountRow).not.toBeNull();
+    expect(accountRow).not.toContainElement(websiteRow);
+    expect(websiteRow).not.toContainElement(accountLabel);
+    expect(websiteRow.textContent).toBe(
+      "https://x.ai/grok  https://grok.com",
+    );
+    expect(screen.getByText("· SuperGrok")).toBeInTheDocument();
+    expect(screen.getByText("xaiOauth.reauthRequired")).toBeInTheDocument();
   });
 
   it("falls back to the xAI account when the legacy Copilot template has no account", async () => {

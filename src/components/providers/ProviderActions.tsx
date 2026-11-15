@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { AppId } from "@/lib/api";
-import { isAdditiveAppId, isPiFamilyApp } from "@/config/appConfig";
+import { appHas } from "@/config/appSpecs";
 
 interface OpenClawDefaultModelOption {
   id: string;
@@ -109,7 +109,7 @@ export function ProviderActions({
 
   // Additive provider membership: providers can coexist in the native config.
   const isAdditiveMode =
-    Boolean(appId && isAdditiveAppId(appId)) &&
+    Boolean(appId && appHas(appId, "additive")) &&
     !(appId === "opencode" && isOmo);
 
   // 故障转移模式下的按钮逻辑（累加模式和 OMO 应用不支持故障转移）
@@ -201,7 +201,7 @@ export function ProviderActions({
           "bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700",
         icon: <Plus className="h-4 w-4" />,
         text:
-          appId && isPiFamilyApp(appId)
+          appId && appHas(appId, "piFamily")
             ? t("provider.enable", { defaultValue: "启用" })
             : t("provider.addToConfig", { defaultValue: "添加" }),
       };
@@ -264,7 +264,7 @@ export function ProviderActions({
   const buttonState = getMainButtonState();
   const canDelete =
     !isReadOnly &&
-    (appId && isPiFamilyApp(appId)
+    (appId && appHas(appId, "piFamily")
       ? !isStateChangeProtected
       : isOmo || isAdditiveMode
         ? true
@@ -273,7 +273,7 @@ export function ProviderActions({
     defaultValue: "由 Hermes 管理，请在 Hermes Web UI 中编辑",
   });
   const deleteHint =
-    appId && isPiFamilyApp(appId) && isStateChangeProtected
+    appId && appHas(appId, "piFamily") && isStateChangeProtected
       ? piStateChangeHint
       : isReadOnly
         ? readOnlyHint
