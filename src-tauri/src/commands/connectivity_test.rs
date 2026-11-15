@@ -9,6 +9,7 @@
 use crate::app_config::AppType;
 use crate::error::AppError;
 use crate::provider::Provider;
+use crate::provider_kind::ProviderKind;
 use crate::services::connectivity_test::model_ids::model_ids_from_settings;
 use crate::services::connectivity_test::{
     ConnectivityTestParams, ConnectivityTestResult, ConnectivityTestService,
@@ -41,11 +42,10 @@ fn is_probe_capable(provider: &Provider, _app_type: &AppType) -> bool {
         return false;
     }
     !matches!(
-        provider
-            .meta
-            .as_ref()
-            .and_then(|meta| meta.provider_type.as_deref()),
-        Some("codex_oauth") | Some("xai_oauth") | Some("github_copilot")
+        crate::provider_kind::ProviderKind::declared(provider),
+        Some(ProviderKind::CodexOAuth)
+            | Some(ProviderKind::XaiOAuth)
+            | Some(ProviderKind::GitHubCopilot)
     )
 }
 
