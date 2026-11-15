@@ -60,11 +60,7 @@ import { isWorkBuddyOfficial } from "@/components/providers/workbuddyOfficial";
 import { WorkBuddyOfficialAccountLine } from "@/components/providers/WorkBuddyOfficialAccountLine";
 import { WorkBuddyQuotaFooter } from "@/components/providers/WorkBuddyQuotaFooter";
 import { ProviderCardActions } from "./ProviderCardActions";
-import {
-  terminalAvailable,
-  terminalIsIsolated,
-  terminalNeedsRoute,
-} from "./OpenTerminalDialog";
+import { terminalIsIsolated, terminalNeedsRoute } from "./OpenTerminalDialog";
 import type { CardChip, CardPresentation, CardTone } from "./presentation";
 import { appHas } from "@/config/appSpecs";
 import {
@@ -444,12 +440,8 @@ export function ProviderCard({
     subtitlePlan ? (
       <span className={cn("shrink-0", className)}>· {subtitlePlan}</span>
     ) : null;
-  // 获取用量数据以判断是否有多套餐
-  // 累加模式应用：使用 isInConfig 代替 isCurrent
-  const shouldAutoQuery = appHas(appId, "additive") ? isInConfig : isCurrent;
-  const autoQueryInterval = shouldAutoQuery
-    ? provider.meta?.usage_script?.autoQueryInterval || 0
-    : 0;
+  // 获取用量数据以判断是否有多套餐，按用户配置刷新，不依赖供应商启用状态。
+  const autoQueryInterval = provider.meta?.usage_script?.autoQueryInterval ?? 0;
 
   // 脚本用量只在「已启用 + 非官方 + 非官方订阅模板」时才查询；展开判定必须复用同一谓词，
   // 因为禁用的 React Query observer 仍会返回同 key 的旧缓存。
@@ -681,6 +673,30 @@ export function ProviderCard({
               </span>
               {planSuffix("-ms-0.5")}
             </div>
+          ) : isCopilot && copilotAccount ? (
+            <div className="mt-0.5 flex min-w-0 items-center gap-2 text-caption text-fg-2">
+              <span
+                className="min-w-0 truncate"
+                title={manualNote ?? copilotAccount.login}
+              >
+                {manualNote ??
+                  (providerNameIncludesCopilotLogin
+                    ? t("copilot.githubAccount", {
+                        defaultValue: "GitHub 账号",
+                      })
+                    : copilotAccount.login)}
+              </span>
+              {planSuffix()}
+            </div>
+          ) : isCopilot && copilotAccountId && isCopilotAuthStatusSuccess ? (
+            <div className="mt-0.5 flex min-w-0 items-center gap-1 text-caption text-warning-text">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 truncate">
+                {t("copilot.statusUnavailable", {
+                  defaultValue: "状态不可用",
+                })}
+              </span>
+            </div>
           ) : websiteLinks.length > 0 ? (
             <div
               className="mt-0.5 flex min-w-0 max-w-full items-center overflow-hidden text-left text-caption text-fg-2"
@@ -711,30 +727,6 @@ export function ProviderCard({
                   · {claudeDefaultPlanLabel}
                 </span>
               )}
-            </div>
-          ) : isCopilot && copilotAccount ? (
-            <div className="mt-0.5 flex min-w-0 items-center gap-2 text-caption text-fg-2">
-              <span
-                className="min-w-0 truncate"
-                title={manualNote ?? copilotAccount.login}
-              >
-                {manualNote ??
-                  (providerNameIncludesCopilotLogin
-                    ? t("copilot.githubAccount", {
-                        defaultValue: "GitHub 账号",
-                      })
-                    : copilotAccount.login)}
-              </span>
-              {planSuffix()}
-            </div>
-          ) : isCopilot && copilotAccountId && isCopilotAuthStatusSuccess ? (
-            <div className="mt-0.5 flex min-w-0 items-center gap-1 text-caption text-warning-text">
-              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0 truncate">
-                {t("copilot.statusUnavailable", {
-                  defaultValue: "状态不可用",
-                })}
-              </span>
             </div>
           ) : displayUrl && subtitlePlan ? (
             <div className="mt-0.5 flex min-w-0 items-center gap-2 text-caption text-fg-2">
@@ -863,8 +855,6 @@ export function ProviderCard({
                   providerId={provider.id}
                   appId={appId}
                   usageEnabled={usageEnabled}
-                  isCurrent={isCurrent}
-                  isInConfig={isInConfig}
                   inline={true}
                 />
               )}
@@ -940,8 +930,6 @@ export function ProviderCard({
             providerId={provider.id}
             appId={appId}
             usageEnabled={usageEnabled}
-            isCurrent={isCurrent}
-            isInConfig={isInConfig}
             inline={false}
           />
         </div>
