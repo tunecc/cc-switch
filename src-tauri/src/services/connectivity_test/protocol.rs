@@ -233,6 +233,7 @@ pub fn build_codex(
         body = transform_codex_chat::responses_to_chat_completions_with_reasoning(
             body,
             reasoning_config.as_ref(),
+            true,
         )
         .map_err(|e| AppError::Message(format!("转换 Codex 请求为 Chat Completions 失败: {e}")))?;
         (body, "/chat/completions")
