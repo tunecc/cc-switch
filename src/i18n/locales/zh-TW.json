@@ -2614,6 +2614,7 @@
       "volcengine": "火山引擎",
       "tencent": "騰訊雲"
     },
+    "version": {},
     "switchVersionTitle": "切換到 {{version}}？",
     "switchVersionMessage": "表單會按新版本重新填寫，已填的 API Key 和其他修改會清空。",
     "switchVersionConfirm": "切換",
@@ -3385,10 +3386,7 @@
     "disableFailed": "停用失敗",
     "importSuccess": "匯入成功",
     "importFailed": "匯入失敗",
-    "confirm": {
-      "deleteTitle": "確認刪除",
-      "deleteMessage": "確定要刪除提示詞 \"{{name}}\" 嗎？"
-    },
+    "confirm": {},
     "appSelect": "選擇應用",
     "helpTitle": "提示詞怎麼生效",
     "helpText": "每個應用同時只啟用一條，它就是目標檔案的內容。在別處改了檔案，下次開啟本頁時會收進啟用中的那條；檔案裡有本頁沒有的內容，啟用前先存成「原始提示詞」。",
