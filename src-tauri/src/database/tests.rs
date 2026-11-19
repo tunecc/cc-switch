@@ -1598,12 +1598,12 @@ fn provider_website_url_2_round_trips_through_dao() {
         icon_color: None,
         in_failover_queue: false,
     };
-    db.save_provider("claude", &provider)
+    db.save_provider(&AppType::Claude, &provider)
         .expect("save provider");
 
     // 新建路径：两个字段各自读回（A9）
     let loaded = db
-        .get_provider_by_id("dual-links", "claude")
+        .get_provider_by_id("dual-links", &AppType::Claude)
         .expect("load provider")
         .expect("provider exists");
     assert_eq!(
@@ -1616,7 +1616,9 @@ fn provider_website_url_2_round_trips_through_dao() {
     );
 
     // 列表路径同样带出
-    let all = db.get_all_providers("claude").expect("list providers");
+    let all = db
+        .get_all_providers(&AppType::Claude)
+        .expect("list providers");
     let listed = all.get("dual-links").expect("provider in list");
     assert_eq!(
         listed.website_url_2.as_deref(),
@@ -1626,10 +1628,10 @@ fn provider_website_url_2_round_trips_through_dao() {
     // 更新路径：清空第二链接后更新，字段应变为 NULL（A13/A8）
     let mut updated = loaded.clone();
     updated.website_url_2 = None;
-    db.save_provider("claude", &updated)
+    db.save_provider(&AppType::Claude, &updated)
         .expect("update provider");
     let reloaded = db
-        .get_provider_by_id("dual-links", "claude")
+        .get_provider_by_id("dual-links", &AppType::Claude)
         .expect("reload provider")
         .expect("provider exists");
     assert_eq!(reloaded.website_url_2, None);
