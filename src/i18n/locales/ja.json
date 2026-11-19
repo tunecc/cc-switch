@@ -2588,6 +2588,7 @@
       "volcengine": "Volcengine",
       "tencent": "Tencent Cloud"
     },
+    "version": {},
     "switchVersionTitle": "{{version}} に切り替えますか？",
     "switchVersionMessage": "フォームは新しいバージョンの内容で入力し直され、入力済みの API Key やその他の変更は消去されます。",
     "switchVersionConfirm": "切り替える",
@@ -3362,10 +3363,7 @@
     "disableFailed": "無効化に失敗しました",
     "importSuccess": "インポートしました",
     "importFailed": "インポートに失敗しました",
-    "confirm": {
-      "deleteTitle": "削除の確認",
-      "deleteMessage": "プロンプト「{{name}}」を削除してもよろしいですか？"
-    },
+    "confirm": {},
     "appSelect": "アプリを選択",
     "helpTitle": "プロンプトの反映のしかた",
     "helpText": "各アプリで同時に有効にできるのは 1 件で、その内容が対象ファイルになります。ほかで編集した内容は次にこのページを開いたとき有効なプロンプトに取り込まれます。ここにない内容がファイルにある場合は、別のプロンプトを有効にする前に「元のプロンプト」として保存されます。",
