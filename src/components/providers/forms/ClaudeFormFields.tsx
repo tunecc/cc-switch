@@ -1496,8 +1496,6 @@ export function ClaudeFormFields({
               )}
             </div>
 
-
-
             {/* Copilot 的请求由转发层按 Copilot 客户端的样子发，UA 和请求覆盖都会被跳过 */}
             {!isCopilotPreset && (
               <div className="space-y-4 border-t border-border pt-4">
