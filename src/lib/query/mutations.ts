@@ -121,9 +121,9 @@ export const useAddProviderMutation = (appId: AppId) => {
       };
       delete (newProvider as any).providerKey;
 
-      // 新增供应商默认插入到第二位（index 1），便于立即调整和使用。仅在调用方
-      // 未显式指定 sortIndex 时生效（复制路径会显式传 sortIndex，保持原语义）。
-      // 让位时把现有第 0 项保持 sortIndex=0、其余项 +1，从而把位置 1 腾空给新项，
+      // 新增供应商默认插入到列表顶部（index 0），符合「新加的先看到」的直觉。
+      // 仅在调用方未显式指定 sortIndex 时生效（复制路径会显式传 sortIndex，
+      // 保持原语义）。让位时把所有现有项 sortIndex +1，把位置 0 腾空给新项，
       // 同时让所有现有项 sortIndex 显式化，避免 defined-first 排序把新项排到最前。
       if (newProvider.sortIndex === undefined) {
         let existingProviders =
@@ -145,12 +145,12 @@ export const useAddProviderMutation = (appId: AppId) => {
         if (orderedProviders.length > 0) {
           const updates = orderedProviders.map((provider, index) => ({
             id: provider.id,
-            sortIndex: index === 0 ? 0 : index + 1,
+            sortIndex: index + 1,
           }));
 
           try {
             await providersApi.updateSortOrder(updates, appId);
-            newProvider.sortIndex = 1;
+            newProvider.sortIndex = 0;
           } catch (error) {
             console.error(
               "Failed to update sort order before adding provider",
