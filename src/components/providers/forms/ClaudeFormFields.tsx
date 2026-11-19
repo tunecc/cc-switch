@@ -730,6 +730,9 @@ export function ClaudeFormFields({
     handleRoleModelChange(row, setClaudeOneMMarker(row.model, enabled));
   };
 
+  // Copilot 取到模型列表后才知道哪些模型有 1M 版本；没有的不让勾，已勾的提示取消。
+  const copilotLacksOneM = (model: string) =>
+    isCopilotPreset && copilotOneMAvailable(model, copilotModels) === false;
   // 兜底模型常和某一档相同，去重后再列。
   const copilotOneMMismatches = [
     ...new Set(
@@ -1087,9 +1090,17 @@ export function ClaudeFormFields({
                   setClaudeOneMMarker(value, fallbackUsesOneM),
                 ),
             )}
-            <label className="flex h-9 items-center gap-2 text-sm text-muted-foreground">
+            <label
+              className={`flex h-9 items-center gap-2 text-sm text-muted-foreground${
+                fallbackOneMBlocked ? " opacity-50" : ""
+              }`}
+              title={
+                fallbackOneMBlocked ? copilotOneMUnavailableTip : undefined
+              }
+            >
               <Checkbox
                 checked={fallbackUsesOneM}
+                disabled={fallbackOneMBlocked}
                 onCheckedChange={(checked) => {
                   const base = stripClaudeOneMMarker(claudeModel).trim();
                   if (!base) return;
@@ -1352,69 +1363,6 @@ export function ClaudeFormFields({
                   <HelpTip title={t("providerForm.modelMappingLabel")}>
                     {t("providerForm.modelMappingHint")}
                   </HelpTip>
-                </div>
-                <div className="flex gap-2">
-                  {/* 一键设置按钮 */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      // 按面板从上到下取值，默认兜底模型最后使用。
-                      const value =
-                        defaultSonnetModel ||
-                        defaultOpusModel ||
-                        defaultFableModel ||
-                        defaultHaikuModel ||
-                        subagentModel ||
-                        claudeModel;
-                      if (value) {
-                        for (const row of modelRoleRows) {
-                          onModelChange(row.modelField, value);
-                          if (row.displayNameField) {
-                            onModelChange(
-                              row.displayNameField,
-                              stripClaudeOneMMarker(value),
-                            );
-                          }
-                        }
-                        toast.success(
-                          t("providerForm.quickSetSuccess", {
-                            defaultValue: "已将模型名称应用到所有角色",
-                          }),
-                        );
-                      }
-                    }}
-                    disabled={
-                      !claudeModel &&
-                      !defaultHaikuModel &&
-                      !defaultSonnetModel &&
-                      !defaultOpusModel &&
-                      !defaultFableModel &&
-                      !subagentModel
-                    }
-                    className="h-7 gap-1"
-                  >
-                    <Wand2 className="h-3.5 w-3.5" />
-                    {t("providerForm.quickSetModels", {
-                      defaultValue: "一键设置",
-                    })}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleModelFetchClick}
-                    disabled={modelFetchLoading}
-                    className="h-7 gap-1"
-                  >
-                    {modelFetchLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Download className="h-3.5 w-3.5" />
-                    )}
-                    {t("providerForm.fetchModels")}
-                  </Button>
                 </div>
               </div>
             </div>

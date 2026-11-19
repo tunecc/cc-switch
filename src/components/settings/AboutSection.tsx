@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  CheckCircle2,
   Download,
   ExternalLink,
   Github,
