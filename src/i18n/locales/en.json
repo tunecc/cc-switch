@@ -2626,6 +2626,7 @@
       "volcengine": "Volcengine",
       "tencent": "Tencent Cloud"
     },
+    "version": {},
     "switchVersionTitle": "Switch to {{version}}?",
     "switchVersionMessage": "The form will be refilled for the new version. The API key you entered and any other changes will be cleared.",
     "switchVersionConfirm": "Switch",
@@ -3397,10 +3398,7 @@
     "disableFailed": "Failed to disable",
     "importSuccess": "Imported successfully",
     "importFailed": "Failed to import",
-    "confirm": {
-      "deleteTitle": "Confirm Delete",
-      "deleteMessage": "Are you sure you want to delete prompt \"{{name}}\"?"
-    },
+    "confirm": {},
     "appSelect": "Choose app",
     "helpTitle": "How prompts take effect",
     "helpText": "Each app has one enabled prompt at a time, and it becomes the target file. Edits made elsewhere are pulled into the enabled prompt the next time you open this page; file content that isn't here yet is saved as an \"Original prompt\" before another one is enabled.",
