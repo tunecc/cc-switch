@@ -167,6 +167,7 @@ fn test_provider_with_type(provider_type: Option<&str>) -> Provider {
         name: "Provider 1".to_string(),
         settings_config: json!({}),
         website_url: None,
+        website_url_2: None,
         category: None,
         created_at: None,
         sort_index: None,
