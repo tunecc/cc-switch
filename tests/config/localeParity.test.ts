@@ -186,10 +186,14 @@ describe("translation keys used in code", () => {
   // The session reader passes its scoped translator (keys under
   // sessionManager.reader) to helpers as `t`.
   const readerDir = path.join("components", "sessions", "reader");
+  // 这里必须用**完整** en.json，不能用上面剔除 fork 专属键的 reference：本检查问的是
+  // 「英文有没有这个键」，而 fork 专属文案确实只随 en 维护。若用 reference，en 里真实
+  // 存在的 fork 键（connectivityTest.*、devpanel.*、providerModel.* …）会被误判为缺失。
+  const englishKeys = flattenStrings(en);
   const exists = (key: string) =>
-    reference.has(key) ||
-    reference.has(`${key}_one`) ||
-    reference.has(`${key}_other`);
+    englishKeys.has(key) ||
+    englishKeys.has(`${key}_one`) ||
+    englishKeys.has(`${key}_other`);
 
   it("defines every literal key passed to t() or i18nKey in English", () => {
     const missing: string[] = [];

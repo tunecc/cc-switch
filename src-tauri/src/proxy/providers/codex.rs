@@ -1313,6 +1313,4 @@ impl ProviderAdapter for CodexAdapter {
 }
 
 #[cfg(test)]
-<<<<<<< HEAD
 mod tests;
-=======

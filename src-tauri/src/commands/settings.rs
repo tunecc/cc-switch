@@ -344,12 +344,6 @@ pub async fn restart_app(app: AppHandle) -> Result<bool, String> {
     Ok(true)
 }
 
-/// fork 已关闭内置更新：保留命令接口兼容旧前端调用，但不再执行安装流程。
-#[tauri::command]
-pub async fn install_update_and_restart(_app: AppHandle) -> Result<bool, String> {
-    Ok(false)
-}
-
 /// fork 已关闭内置更新：恢复界面统一引导用户打开 GitHub Releases 手动下载。
 #[tauri::command]
 pub async fn check_app_update_available(_app: AppHandle) -> Result<Option<String>, String> {

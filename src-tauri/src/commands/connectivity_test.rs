@@ -16,6 +16,7 @@ use crate::services::connectivity_test::{
 };
 use crate::store::AppState;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use tauri::State;
 
 /// 多模型连通性测试响应（前端读取 `response.results`）。
@@ -55,7 +56,7 @@ fn lookup_provider(
     app_type: &AppType,
     provider_id: &str,
 ) -> Result<Provider, AppError> {
-    let providers = state.db.get_all_providers(app_type.as_str())?;
+    let providers = state.db.get_all_providers(app_type)?;
     providers
         .get(provider_id)
         .cloned()
@@ -96,11 +97,13 @@ fn resolve_test_model_ids(
 #[tauri::command]
 pub async fn connectivity_test_provider_models(
     state: State<'_, AppState>,
-    app_type: AppType,
+    app_type: String,
     provider_id: String,
     params: Option<ConnectivityTestParams>,
     model_ids: Option<Vec<String>>,
 ) -> Result<ConnectivityTestResponse, AppError> {
+    // AppType 不走 serde（见 `app_config`）：命令层收字符串，在此唯一入口解析。
+    let app_type = AppType::from_str(&app_type)?;
     let provider = lookup_provider(&state, &app_type, &provider_id)?;
     if !is_probe_capable(&provider, &app_type) {
         return Err(AppError::Message(format!(
@@ -127,11 +130,13 @@ pub async fn connectivity_test_provider_models(
 #[tauri::command]
 pub async fn connectivity_probe_provider(
     state: State<'_, AppState>,
-    app_type: AppType,
+    app_type: String,
     provider_id: String,
     model_id: String,
     timeout_secs: Option<u64>,
 ) -> Result<ConnectivityTestResult, AppError> {
+    // AppType 不走 serde（见 `app_config`）：命令层收字符串，在此唯一入口解析。
+    let app_type = AppType::from_str(&app_type)?;
     let provider = lookup_provider(&state, &app_type, &provider_id)?;
     if !is_probe_capable(&provider, &app_type) {
         return Err(AppError::Message(format!(

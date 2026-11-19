@@ -49,10 +49,6 @@ vi.mock("@/components/providers/ProviderCard", () => ({
   ),
 }));
 
-vi.mock("@/hooks/useStreamCheck", () => ({
-  useStreamCheck: () => ({ checkProvider: vi.fn(), isChecking: () => false }),
-}));
-
 const TAURI_ENDPOINT = "http://tauri.local";
 
 const provider = (id: string): Provider => ({

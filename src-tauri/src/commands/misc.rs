@@ -80,46 +80,6 @@ pub async fn copy_text_to_clipboard(text: String) -> Result<bool, String> {
     .map_err(|e| format!("剪贴板任务执行失败: {e}"))?
 }
 
-#[tauri::command]
-pub async fn check_for_updates(handle: AppHandle) -> Result<bool, String> {
-    crate::host_open::open_url(&handle, "https://github.com/tunecc/cc-switch/releases")
-        .map_err(|e| format!("打开更新页面失败: {e}"))?;
-
-    Ok(true)
-}
-
-/// 便携版新版本压缩包的下载地址，命名与 release.yml 的「Prepare Windows Assets」一致：
-/// `CC-Switch-v<版本>-Windows[-arm64]-Portable.zip`。版本号不像版本号时返回 None。
-fn portable_zip_url(version: &str, arm64: bool) -> Option<String> {
-    let version = version.trim().trim_start_matches('v');
-    let looks_like_version = version.starts_with(|c: char| c.is_ascii_digit())
-        && version
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+'));
-    if !looks_like_version {
-        return None;
-    }
-    let suffix = if arm64 { "-arm64" } else { "" };
-    // fork：便携包与 check_for_updates 一律指 tunecc，选中直链时落点不能错仓库。
-    Some(format!(
-        "https://github.com/tunecc/cc-switch/releases/download/v{version}/CC-Switch-v{version}-Windows{suffix}-Portable.zip"
-    ))
-}
-
-/// 便携版更新：直接下载对应架构的新版压缩包（解压覆盖即可，数据在 ~/.cc-switch 不受影响）。
-/// 不做原地替换自身 exe：那样很容易被杀毒软件当成病毒拦截。
-#[tauri::command]
-pub async fn open_portable_update_download(
-    handle: AppHandle,
-    version: String,
-) -> Result<bool, String> {
-    let url = portable_zip_url(&version, cfg!(target_arch = "aarch64"))
-        .unwrap_or_else(|| "https://github.com/tunecc/cc-switch/releases".to_string());
-    crate::host_open::open_url(&handle, &url).map_err(|e| format!("打开更新页面失败: {e}"))?;
-
-    Ok(true)
-}
-
 /// 判断是否为便携版（绿色版）运行
 #[tauri::command]
 pub async fn is_portable_mode() -> Result<bool, String> {
@@ -1181,21 +1141,6 @@ mod tests {
             actual, expected,
             "tests/config/tools.json 和 TOOLS 不一致；确认改动后用 CC_SWITCH_UPDATE_GOLDEN=1 重新生成，再同步前端 TOOL_DISPLAY_NAMES"
         );
-    }
-
-    #[test]
-    fn portable_zip_url_matches_release_asset_names() {
-        assert_eq!(
-            portable_zip_url("4.0.12", false).as_deref(),
-            Some("https://github.com/tunecc/cc-switch/releases/download/v4.0.12/CC-Switch-v4.0.12-Windows-Portable.zip")
-        );
-        assert_eq!(
-            portable_zip_url("v4.1.0-beta.1", true).as_deref(),
-            Some("https://github.com/tunecc/cc-switch/releases/download/v4.1.0-beta.1/CC-Switch-v4.1.0-beta.1-Windows-arm64-Portable.zip")
-        );
-        for bad in ["", "v", "latest", "4.0/../x", "4.0.0?x=1"] {
-            assert!(portable_zip_url(bad, false).is_none(), "{bad}");
-        }
     }
 
     #[test]
