@@ -1741,6 +1741,85 @@ describe("ProviderList Component", () => {
     expect(updateSortOrderMock).not.toHaveBeenCalled();
   });
 
+  it("invokes onDelete from the right-click context menu", async () => {
+    const providerA = createProvider({ id: "a", name: "A", sortIndex: 0 });
+    const providerB = createProvider({ id: "b", name: "B", sortIndex: 1 });
+    const onDelete = vi.fn();
+
+    useDragSortMock.mockReturnValue({
+      sortedProviders: [providerA, providerB],
+      sensors: [],
+      handleDragEnd: vi.fn(),
+    });
+
+    renderWithQueryClient(
+      <ProviderList
+        providers={{ a: providerA, b: providerB }}
+        currentProviderId="a"
+        appId="claude"
+        onSwitch={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={onDelete}
+        onDuplicate={vi.fn()}
+        onOpenWebsite={vi.fn()}
+      />,
+    );
+
+    // 右键非当前供应商：删除项应可点，且 onSelect 必须真正触发确认流程。
+    // 该用例锁定受控 DropdownMenu 的 onSelect 与 onClose 卸载竞态。
+    fireEvent.contextMenu(screen.getByTestId("provider-card-b"), {
+      clientX: 10,
+      clientY: 10,
+    });
+    // 右键菜单项点击走完整 pointer 序列：pointerdown 不能先卸载菜单
+    // （回归护栏：window 级 pointerdown 关闭会让 onSelect 随 DOM 一起丢失）。
+    const item = await screen.findByRole("menuitem", { name: /common.delete|删除/ });
+    fireEvent.pointerDown(item, { button: 0 });
+    fireEvent.pointerUp(item, { button: 0 });
+    fireEvent.click(item);
+
+    await waitFor(() => {
+      expect(onDelete).toHaveBeenCalledTimes(1);
+    });
+    expect(onDelete).toHaveBeenCalledWith(providerB);
+  });
+
+  it("keeps the right-click delete item enabled for a non-current provider", async () => {
+    const providerA = createProvider({ id: "a", name: "A", sortIndex: 0 });
+    const providerB = createProvider({ id: "b", name: "B", sortIndex: 1 });
+
+    useDragSortMock.mockReturnValue({
+      sortedProviders: [providerA, providerB],
+      sensors: [],
+      handleDragEnd: vi.fn(),
+    });
+
+    renderWithQueryClient(
+      <ProviderList
+        providers={{ a: providerA, b: providerB }}
+        currentProviderId="a"
+        appId="claude"
+        onSwitch={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+        onOpenWebsite={vi.fn()}
+      />,
+    );
+
+    fireEvent.contextMenu(screen.getByTestId("provider-card-b"), {
+      clientX: 10,
+      clientY: 10,
+    });
+    const deleteItem = await screen.findByRole("menuitem", {
+      name: /common.delete|删除/,
+    });
+    expect(deleteItem).toBeEnabled();
+    expect(deleteItem.textContent).not.toMatch(
+      /inUseCannotDelete|正在使用|providerCard\.reason/,
+    );
+  });
+
   it("does not call updateSortOrder when moving an already-bottom provider to bottom", async () => {
     const providerA = createProvider({ id: "a", name: "A", sortIndex: 0 });
     const providerB = createProvider({ id: "b", name: "B", sortIndex: 1 });
@@ -1807,7 +1886,10 @@ describe("ProviderList Component", () => {
     const menuText = /一键置顶|provider.quickMoveTop/;
     expect(await screen.findByText(menuText)).toBeInTheDocument();
 
-    fireEvent.pointerDown(window);
+    // 点外部：真实用户点在 body/卡片等文档元素上，事件冒泡到 document，
+    // Radix DismissableLayer 据此关菜单。（窗口级 pointerdown 收不到：
+    // Radix 的 dismiss listener 挂在 document，而 window 不在传播路径上。）
+    fireEvent.pointerDown(document.body);
     await waitFor(() => {
       expect(screen.queryByText(menuText)).not.toBeInTheDocument();
     });

@@ -275,7 +275,11 @@ export function ProviderList({
   useEffect(() => {
     if (!contextMenu) return;
 
-    const handleWindowPointerDown = () => closeContextMenu();
+    // 注意：不能在 window 上裸监听 pointerdown 来关菜单——点在菜单项上的
+    // pointerdown 也会先把它关掉，Radix MenuItem 的 onSelect 随 DOM 卸载丢失，
+    // 表现为「点删除没反应」。点外部/Escape 关闭交给 Radix 的
+    // onOpenChange(false)（DismissableLayer 能区分菜单内外）；这里只兜底
+    // 布局类变化和 Escape。
     const handleWindowResize = () => closeContextMenu();
     const handleWindowScroll = () => closeContextMenu();
     const handleWindowKeyDown = (event: KeyboardEvent) => {
@@ -284,12 +288,10 @@ export function ProviderList({
       }
     };
 
-    window.addEventListener("pointerdown", handleWindowPointerDown);
     window.addEventListener("resize", handleWindowResize);
     window.addEventListener("scroll", handleWindowScroll, true);
     window.addEventListener("keydown", handleWindowKeyDown);
     return () => {
-      window.removeEventListener("pointerdown", handleWindowPointerDown);
       window.removeEventListener("resize", handleWindowResize);
       window.removeEventListener("scroll", handleWindowScroll, true);
       window.removeEventListener("keydown", handleWindowKeyDown);

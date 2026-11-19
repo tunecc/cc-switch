@@ -166,7 +166,7 @@ describe("useAddProviderMutation", () => {
 
   it("adds a managed Codex account as a separate official card", async () => {
     const { wrapper, queryClient } = createWrapper();
-    // 预置已有供应商，使新增走"插入第二位"的缓存路径而不触发 getAll 拉取。
+    // 预置已有供应商，使新增走"插入顶部第一位"的缓存路径而不触发 getAll 拉取。
     queryClient.setQueryData(["providers", "codex"], {
       providers: {
         "existing-codex": {
@@ -204,7 +204,7 @@ describe("useAddProviderMutation", () => {
       expect.objectContaining({
         id: "generated-uuid",
         category: "official",
-        sortIndex: 1,
+        sortIndex: 0,
         meta: {
           providerType: "codex_oauth",
           authBinding: {
@@ -349,7 +349,7 @@ describe("useAddProviderMutation", () => {
     expect(toastMocks.warning).not.toHaveBeenCalled();
   });
 
-  it("inserts a new provider at the second position and shifts existing items", async () => {
+  it("inserts a new provider at the top position and shifts existing items", async () => {
     const { wrapper, queryClient } = createWrapper();
     // 现有列表 [A, B, C]，sortIndex 分别 0/1/2
     queryClient.setQueryData(["providers", "claude"], {
@@ -390,19 +390,19 @@ describe("useAddProviderMutation", () => {
       }),
     );
 
-    // 让位：第 0 项保持 0，其余 +1；新项 sortIndex=1（插入第二位）
+    // 让位：所有现有项 +1；新项 sortIndex=0（插入顶部第一位）
     expect(apiMocks.updateSortOrder).toHaveBeenCalledTimes(1);
     expect(apiMocks.updateSortOrder).toHaveBeenCalledWith(
       [
-        { id: "a", sortIndex: 0 },
+        { id: "a", sortIndex: 1 },
         { id: "b", sortIndex: 2 },
         { id: "c", sortIndex: 3 },
       ],
       "claude",
     );
-    expect(newProvider.sortIndex).toBe(1);
+    expect(newProvider.sortIndex).toBe(0);
     expect(apiMocks.add).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "generated-uuid", sortIndex: 1 }),
+      expect.objectContaining({ id: "generated-uuid", sortIndex: 0 }),
       "claude",
       undefined,
       undefined,
@@ -437,7 +437,7 @@ describe("useAddProviderMutation", () => {
     );
   });
 
-  it("explicitly assigned sortIndex bypasses the insert-at-second logic", async () => {
+  it("explicitly assigned sortIndex bypasses the insert-at-top logic", async () => {
     const { wrapper, queryClient } = createWrapper();
     queryClient.setQueryData(["providers", "claude"], {
       providers: {
@@ -492,12 +492,12 @@ describe("useAddProviderMutation", () => {
     expect(apiMocks.getAll).toHaveBeenCalledWith("claude");
     expect(apiMocks.updateSortOrder).toHaveBeenCalledTimes(1);
     expect(apiMocks.updateSortOrder).toHaveBeenCalledWith(
-      [{ id: "a", sortIndex: 0 }],
+      [{ id: "a", sortIndex: 1 }],
       "claude",
     );
   });
 
-  it("materializes sortIndex for undefined-sortIndex items so the new item lands second", async () => {
+  it("materializes sortIndex for undefined-sortIndex items so the new item lands first", async () => {
     const { wrapper, queryClient } = createWrapper();
     // 所有现有项 sortIndex 未定义：经 useDragSort 排序后顺序为 A,B,C
     queryClient.setQueryData(["providers", "claude"], {
@@ -520,15 +520,15 @@ describe("useAddProviderMutation", () => {
       }),
     );
 
-    // 让位把所有现有项显式化：A→0, B→2, C→3；新项 sortIndex=1
+    // 让位把所有现有项显式化并整体后移：A→1, B→2, C→3；新项 sortIndex=0
     expect(apiMocks.updateSortOrder).toHaveBeenCalledWith(
       [
-        { id: "a", sortIndex: 0 },
+        { id: "a", sortIndex: 1 },
         { id: "b", sortIndex: 2 },
         { id: "c", sortIndex: 3 },
       ],
       "claude",
     );
-    expect(newProvider.sortIndex).toBe(1);
+    expect(newProvider.sortIndex).toBe(0);
   });
 });
