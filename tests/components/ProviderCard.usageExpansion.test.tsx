@@ -8,9 +8,6 @@ import { usageKeys } from "@/lib/query/usage";
 import type { Provider } from "@/types";
 import { createTestQueryClient } from "../utils/testQueryClient";
 
-vi.mock("@/components/providers/ProviderActions", () => ({
-  ProviderActions: () => null,
-}));
 vi.mock("@/components/ProviderIcon", () => ({ ProviderIcon: () => null }));
 vi.mock("@/components/UsageFooter", () => ({
   default: ({ inline }: { inline: boolean }) =>

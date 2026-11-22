@@ -6,8 +6,6 @@ import { ProviderCard } from "@/components/providers/ProviderCard";
 import type { Provider } from "@/types";
 import { createTestQueryClient } from "../utils/testQueryClient";
 
-
-
 vi.mock("@/components/ProviderIcon", () => ({
   ProviderIcon: () => null,
 }));
@@ -21,9 +19,12 @@ vi.mock("@/components/CodexOauthQuotaFooter", () => ({
   default: () => null,
 }));
 vi.mock("@/components/XaiOauthQuotaFooter", () => ({ default: () => null }));
-vi.mock("@/components/providers/ModelQuickSwitch/ModelQuickSwitchDialog", () => ({
-  ModelQuickSwitchDialog: () => null,
-}));
+vi.mock(
+  "@/components/providers/ModelQuickSwitch/ModelQuickSwitchDialog",
+  () => ({
+    ModelQuickSwitchDialog: () => null,
+  }),
+);
 
 vi.mock("@/lib/query/failover", () => ({
   useProviderHealth: () => ({ data: undefined }),
@@ -93,9 +94,7 @@ describe("ProviderCard website links", () => {
 
     await user.click(screen.getByText("https://second.example.com"));
     expect(onOpenWebsite).toHaveBeenCalledWith("https://second.example.com");
-    expect(onOpenWebsite).not.toHaveBeenCalledWith(
-      "https://first.example.com",
-    );
+    expect(onOpenWebsite).not.toHaveBeenCalledWith("https://first.example.com");
 
     await user.click(screen.getByText("https://first.example.com"));
     expect(onOpenWebsite).toHaveBeenCalledWith("https://first.example.com");

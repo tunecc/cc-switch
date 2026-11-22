@@ -44,11 +44,13 @@ const sources: ProviderImportSource[] = [
   { appId: "codex", providers: [codexProvider] },
 ];
 
-const renderEntry = (overrides: Partial<{
-  appId: Parameters<typeof ProviderImportEntry>[0]["appId"];
-  isEditMode: boolean;
-  onImport: (appId: string, provider: Provider) => void;
-}> = {}) => {
+const renderEntry = (
+  overrides: Partial<{
+    appId: Parameters<typeof ProviderImportEntry>[0]["appId"];
+    isEditMode: boolean;
+    onImport: (appId: string, provider: Provider) => void;
+  }> = {},
+) => {
   const onImport = overrides.onImport ?? vi.fn();
   render(
     <ProviderImportEntry

@@ -189,7 +189,11 @@ describe("ProviderCard model badge as quick-switch entry", () => {
 
   it("renders a placeholder for codex providers with an empty TOML config", () => {
     renderCard(
-      { id: "codex-official", name: "OpenAI Official", settingsConfig: { config: "" } },
+      {
+        id: "codex-official",
+        name: "OpenAI Official",
+        settingsConfig: { config: "" },
+      },
       { appId: "codex" },
     );
 

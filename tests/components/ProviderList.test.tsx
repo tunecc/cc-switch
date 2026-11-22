@@ -111,9 +111,7 @@ vi.mock("@/components/UsageFooter", () => ({
 }));
 
 vi.mock("@/lib/api/providers", async (importOriginal) => {
-  const actual = await importOriginal<
-    typeof import("@/lib/api/providers")
-  >();
+  const actual = await importOriginal<typeof import("@/lib/api/providers")>();
   return {
     providersApi: {
       ...actual.providersApi,
@@ -1824,7 +1822,9 @@ describe("ProviderList Component", () => {
     });
     // 右键菜单项点击走完整 pointer 序列：pointerdown 不能先卸载菜单
     // （回归护栏：window 级 pointerdown 关闭会让 onSelect 随 DOM 一起丢失）。
-    const item = await screen.findByRole("menuitem", { name: /common.delete|删除/ });
+    const item = await screen.findByRole("menuitem", {
+      name: /common.delete|删除/,
+    });
     fireEvent.pointerDown(item, { button: 0 });
     fireEvent.pointerUp(item, { button: 0 });
     fireEvent.click(item);
@@ -1986,9 +1986,7 @@ describe("ProviderList Component", () => {
     expect(
       screen.getByText(/一键置底|provider.quickMoveBottom/),
     ).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByText(/provider.duplicate|复制/),
-    );
+    fireEvent.click(screen.getByText(/provider.duplicate|复制/));
     expect(onDuplicate).toHaveBeenCalled();
   });
 
@@ -2022,8 +2020,6 @@ describe("ProviderList Component", () => {
     });
 
     fireEvent.click(await screen.findByText(/common.delete|删除/));
-    expect(onDelete).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "a" }),
-    );
+    expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
   });
 });
