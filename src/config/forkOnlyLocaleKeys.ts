@@ -8,8 +8,9 @@
  * 以及上游本轮删除、但其他语种文件仍残留的键（codexOauth.reauthTitle、settings.authCenter.title）。
  * 上游键仍按上游口径严格校验，不做任何放宽。
  *
- * 本轮按上游 v4.0.35 的 en.json 重新生成：fork 专属 397 个、fork 已移除 18 个。
- * 生成方法见 docs/HOW_TO_REBASE_UPSTREAM.md §4.16。
+ * v4.0.36–v4.0.38 轮按上游 v4.0.38 的 en.json 复核：fork 专属 397 个不变、fork 已移除 18 个不变；
+ * 上游本轮删除的 17 个死键已随上游从 en/zh/zh-TW/ja 删除（不进任何豁免清单）。
+ * 生成方法见 docs/HOW_TO_REBASE_UPSTREAM.md §4.17。
  */
 export const FORK_ONLY_LOCALE_KEYS: ReadonlySet<string> = new Set([
   "claudeCode.noRoutingSupport",

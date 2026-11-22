@@ -182,7 +182,7 @@ describe("applyModelToSettings (claude)", () => {
     expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe(MODEL);
     expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME).toBe(MODEL);
     // 主字段带标记，HAIKU 模型字段与显示名都不带
-    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe(`${MODEL}[1M]`);
+    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe(`${MODEL}[1m]`);
   });
 
   it("keeps a user-customized HAIKU display name", () => {
@@ -227,11 +227,11 @@ describe("applyModelToSettings (claude)", () => {
       withOneM: true,
     });
 
-    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe(`${MODEL}[1M]`);
-    expect(next.env.ANTHROPIC_DEFAULT_OPUS_MODEL).toBe(`${MODEL}[1M]`);
-    expect(next.env.ANTHROPIC_DEFAULT_FABLE_MODEL).toBe(`${MODEL}[1M]`);
-    expect(next.env.ANTHROPIC_MODEL).toBe(`${MODEL}[1M]`);
-    expect(next.env.CLAUDE_CODE_SUBAGENT_MODEL).toBe(`${MODEL}[1M]`);
+    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe(`${MODEL}[1m]`);
+    expect(next.env.ANTHROPIC_DEFAULT_OPUS_MODEL).toBe(`${MODEL}[1m]`);
+    expect(next.env.ANTHROPIC_DEFAULT_FABLE_MODEL).toBe(`${MODEL}[1m]`);
+    expect(next.env.ANTHROPIC_MODEL).toBe(`${MODEL}[1m]`);
+    expect(next.env.CLAUDE_CODE_SUBAGENT_MODEL).toBe(`${MODEL}[1m]`);
     expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe(MODEL);
   });
 
@@ -301,7 +301,7 @@ describe("applyModelToSettings (claude)", () => {
 });
 
 describe("setClaudeOneMInSettings (claude 1M 原地翻转)", () => {
-  it("enable appends [1M] to the five 1M-capable fields in place", () => {
+  it("enable appends [1m] to the five 1M-capable fields in place", () => {
     const settings = claudeSettings({
       ANTHROPIC_DEFAULT_SONNET_MODEL: "model-a",
       ANTHROPIC_DEFAULT_OPUS_MODEL: "model-b",
@@ -314,11 +314,11 @@ describe("setClaudeOneMInSettings (claude 1M 原地翻转)", () => {
     });
     const next = setClaudeOneMInSettings(settings, true);
 
-    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a[1M]");
-    expect(next.env.ANTHROPIC_DEFAULT_OPUS_MODEL).toBe("model-b[1M]");
-    expect(next.env.ANTHROPIC_DEFAULT_FABLE_MODEL).toBe("model-c[1M]");
-    expect(next.env.ANTHROPIC_MODEL).toBe("model-a[1M]");
-    expect(next.env.CLAUDE_CODE_SUBAGENT_MODEL).toBe("model-d[1M]");
+    expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a[1m]");
+    expect(next.env.ANTHROPIC_DEFAULT_OPUS_MODEL).toBe("model-b[1m]");
+    expect(next.env.ANTHROPIC_DEFAULT_FABLE_MODEL).toBe("model-c[1m]");
+    expect(next.env.ANTHROPIC_MODEL).toBe("model-a[1m]");
+    expect(next.env.CLAUDE_CODE_SUBAGENT_MODEL).toBe("model-d[1m]");
     // HAIKU 模型字段与显示名字段不动，角色差异保留
     expect(next.env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe("model-a");
     expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL_NAME).toBe("model-a");
@@ -349,9 +349,9 @@ describe("setClaudeOneMInSettings (claude 1M 原地翻转)", () => {
       ANTHROPIC_MODEL: "model-a[1M]",
     });
     const once = setClaudeOneMInSettings(settings, true);
-    expect(once.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a[1M]");
+    expect(once.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a[1m]");
     const twice = setClaudeOneMInSettings(once, true);
-    expect(twice.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a[1M]");
+    expect(twice.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("model-a[1m]");
   });
 
   it("skips empty and non-string fields instead of marking them", () => {
@@ -366,7 +366,7 @@ describe("setClaudeOneMInSettings (claude 1M 原地翻转)", () => {
     expect(next.env.ANTHROPIC_DEFAULT_SONNET_MODEL).toBe("");
     expect(next.env.ANTHROPIC_MODEL).toBe("   ");
     expect(next.env.ANTHROPIC_DEFAULT_OPUS_MODEL).toBe(42);
-    expect(next.env.ANTHROPIC_DEFAULT_FABLE_MODEL).toBe("model-c[1M]");
+    expect(next.env.ANTHROPIC_DEFAULT_FABLE_MODEL).toBe("model-c[1m]");
   });
 
   it("keeps unrelated env keys and other top-level config untouched", () => {

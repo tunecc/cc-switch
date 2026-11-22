@@ -29,13 +29,22 @@ function deferred<T>() {
 
 /** 按被测 modelId 分发的 invoke mock：每个模型一个 deferred */
 function invokeByModel() {
-  const pending = new Map<string, { promise: Promise<unknown>; resolve: (v: unknown) => void; reject: (r?: unknown) => void }>();
-  invokeMock.mockImplementation((_cmd: string, args: Record<string, unknown>) => {
-    const id = (args.modelIds as string[])[0];
-    const d = deferred<unknown>();
-    pending.set(id, d);
-    return d.promise;
-  });
+  const pending = new Map<
+    string,
+    {
+      promise: Promise<unknown>;
+      resolve: (v: unknown) => void;
+      reject: (r?: unknown) => void;
+    }
+  >();
+  invokeMock.mockImplementation(
+    (_cmd: string, args: Record<string, unknown>) => {
+      const id = (args.modelIds as string[])[0];
+      const d = deferred<unknown>();
+      pending.set(id, d);
+      return d.promise;
+    },
+  );
   return pending;
 }
 
@@ -174,22 +183,24 @@ describe("useConnectivityTest", () => {
   });
 
   it("isolates invoke failure to that model only", async () => {
-    invokeMock.mockImplementation((_cmd: string, args: Record<string, unknown>) => {
-      const id = (args.modelIds as string[])[0];
-      return id === "model-a"
-        ? Promise.reject("供应商 provider-1 不支持连通性测试")
-        : Promise.resolve({
-            results: [
-              {
-                modelId: "model-b",
-                status: "success",
-                requestUrl: "https://example.com/v1/messages",
-                requestHeaders: {},
-                requestBody: { model: "model-b" },
-              },
-            ],
-          });
-    });
+    invokeMock.mockImplementation(
+      (_cmd: string, args: Record<string, unknown>) => {
+        const id = (args.modelIds as string[])[0];
+        return id === "model-a"
+          ? Promise.reject("供应商 provider-1 不支持连通性测试")
+          : Promise.resolve({
+              results: [
+                {
+                  modelId: "model-b",
+                  status: "success",
+                  requestUrl: "https://example.com/v1/messages",
+                  requestHeaders: {},
+                  requestBody: { model: "model-b" },
+                },
+              ],
+            });
+      },
+    );
 
     const { result } = renderHook(() => useConnectivityTest(provider, "codex"));
 

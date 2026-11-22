@@ -26,9 +26,9 @@ describe("forkOfficialAllowlist", () => {
     ];
     for (const [allowed, catalog] of catalogs) {
       expect(allowed).toContain("OpenAI API");
-      expect(new Set(catalog.map((preset) => preset.name)).has("OpenAI API")).toBe(
-        true,
-      );
+      expect(
+        new Set(catalog.map((preset) => preset.name)).has("OpenAI API"),
+      ).toBe(true);
     }
   });
 
@@ -51,7 +51,9 @@ describe("forkOfficialAllowlist", () => {
       ),
     ).toBe(true);
     expect(
-      new Set(mcodeProviderPresets.map((preset) => preset.name)).has("OpenAI API"),
+      new Set(mcodeProviderPresets.map((preset) => preset.name)).has(
+        "OpenAI API",
+      ),
     ).toBe(true);
   });
 });

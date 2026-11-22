@@ -56,9 +56,7 @@ function tags(value: string): string {
 }
 
 const withoutForkOnly = (strings: Map<string, string>) =>
-  new Map(
-    [...strings].filter(([key]) => !isForkLocaleKeyExempt(key)),
-  );
+  new Map([...strings].filter(([key]) => !isForkLocaleKeyExempt(key)));
 
 const reference = withoutForkOnly(flattenStrings(en));
 

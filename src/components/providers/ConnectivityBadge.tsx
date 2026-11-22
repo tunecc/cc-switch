@@ -79,4 +79,3 @@ export function ConnectivityBadge({
   );
 }
 
-export default ConnectivityBadge;

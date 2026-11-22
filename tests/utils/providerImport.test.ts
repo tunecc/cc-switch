@@ -141,7 +141,9 @@ describe("readImportableProviderFields", () => {
     for (const appId of ["opencode", "mcode"] as const) {
       const fields = readImportableProviderFields(
         appId,
-        provider({ options: { baseURL: "https://oc.example.com/v1", apiKey: "sk-oc" } }),
+        provider({
+          options: { baseURL: "https://oc.example.com/v1", apiKey: "sk-oc" },
+        }),
       );
       expect(fields.baseUrl).toBe("https://oc.example.com/v1");
       expect(fields.apiKey).toBe("sk-oc");
@@ -150,12 +152,24 @@ describe("readImportableProviderFields", () => {
   });
 
   it("reads openclaw / hermes / pi credentials from their own keys", () => {
-    expect(readImportableProviderFields("openclaw", provider({ baseUrl: "https://oc.example.com", apiKey: "sk-claw" })))
-      .toMatchObject({ baseUrl: "https://oc.example.com", apiKey: "sk-claw" });
-    expect(readImportableProviderFields("hermes", provider({ base_url: "https://h.example.com", api_key: "sk-hermes" })))
-      .toMatchObject({ baseUrl: "https://h.example.com", apiKey: "sk-hermes" });
-    expect(readImportableProviderFields("pi", provider({ baseUrl: "https://pi.example.com", apiKey: "sk-pi" })))
-      .toMatchObject({ baseUrl: "https://pi.example.com", apiKey: "sk-pi" });
+    expect(
+      readImportableProviderFields(
+        "openclaw",
+        provider({ baseUrl: "https://oc.example.com", apiKey: "sk-claw" }),
+      ),
+    ).toMatchObject({ baseUrl: "https://oc.example.com", apiKey: "sk-claw" });
+    expect(
+      readImportableProviderFields(
+        "hermes",
+        provider({ base_url: "https://h.example.com", api_key: "sk-hermes" }),
+      ),
+    ).toMatchObject({ baseUrl: "https://h.example.com", apiKey: "sk-hermes" });
+    expect(
+      readImportableProviderFields(
+        "pi",
+        provider({ baseUrl: "https://pi.example.com", apiKey: "sk-pi" }),
+      ),
+    ).toMatchObject({ baseUrl: "https://pi.example.com", apiKey: "sk-pi" });
   });
 
   it("returns empty strings instead of undefined for missing fields", () => {
@@ -166,9 +180,14 @@ describe("readImportableProviderFields", () => {
     // apiFormat 是唯一允许缺席的字段（来源没声明就没有）
     expect(fields.apiFormat).toBeUndefined();
     expect(
-      [fields.name, fields.notes, fields.websiteUrl, fields.baseUrl, fields.apiKey, fields.defaultModel].every(
-        (value) => value !== undefined,
-      ),
+      [
+        fields.name,
+        fields.notes,
+        fields.websiteUrl,
+        fields.baseUrl,
+        fields.apiKey,
+        fields.defaultModel,
+      ].every((value) => value !== undefined),
     ).toBe(true);
   });
 
@@ -198,7 +217,14 @@ describe("resolveImportedApiFormat", () => {
   });
 
   it("returns undefined for targets that never persist apiFormat", () => {
-    for (const appId of ["gemini", "opencode", "openclaw", "hermes", "pi", "mcode"] as const) {
+    for (const appId of [
+      "gemini",
+      "opencode",
+      "openclaw",
+      "hermes",
+      "pi",
+      "mcode",
+    ] as const) {
       expect(targetSupportsApiFormat(appId)).toBe(false);
       expect(resolveImportedApiFormat(appId, "anthropic")).toBeUndefined();
     }
@@ -238,7 +264,13 @@ describe("buildImportedSettingsConfig", () => {
 
   it("matches each app's own custom template when every field is empty", () => {
     // claude 的自定义模板是 {env:{}}：缺项不落键
-    expect(buildImportedSettingsConfig("claude", { baseUrl: "", apiKey: "", defaultModel: "" })).toEqual({
+    expect(
+      buildImportedSettingsConfig("claude", {
+        baseUrl: "",
+        apiKey: "",
+        defaultModel: "",
+      }),
+    ).toEqual({
       env: {},
     });
     // codex 的模板是 {auth:{OPENAI_API_KEY:""}, config:…}：空值落空串
@@ -385,10 +417,9 @@ describe("cross-app round trips", () => {
     const asCodexProvider = provider(codexConfig, {
       name: fromClaude.name,
       meta: {
-        apiFormat: resolveImportedApiFormat(
-          "codex",
-          fromClaude.apiFormat,
-        ) as CodexApiFormat | undefined,
+        apiFormat: resolveImportedApiFormat("codex", fromClaude.apiFormat) as
+          | CodexApiFormat
+          | undefined,
       },
     });
     const fromCodex = readImportableProviderFields("codex", asCodexProvider);
@@ -401,7 +432,10 @@ describe("cross-app round trips", () => {
   it("claude -> gemini -> claude keeps the address verbatim", () => {
     const fromClaude = readImportableProviderFields("claude", claudeSource);
     const geminiConfig = buildImportedSettingsConfig("gemini", fromClaude);
-    const fromGemini = readImportableProviderFields("gemini", provider(geminiConfig));
+    const fromGemini = readImportableProviderFields(
+      "gemini",
+      provider(geminiConfig),
+    );
 
     expect(fromGemini.baseUrl).toBe(fromClaude.baseUrl);
     expect(fromGemini.apiKey).toBe(fromClaude.apiKey);
@@ -424,7 +458,10 @@ describe("cross-app round trips", () => {
   });
 
   it("hermes -> codex carries base URL and key", () => {
-    const source = provider({ base_url: "https://relay.example.com/v1", api_key: "sk-hermes" });
+    const source = provider({
+      base_url: "https://relay.example.com/v1",
+      api_key: "sk-hermes",
+    });
     const fromHermes = readImportableProviderFields("hermes", source);
     const codexConfig = buildImportedSettingsConfig("codex", fromHermes);
 
@@ -438,9 +475,9 @@ describe("cross-app round trips", () => {
     // 弹窗只读 name/notes/baseUrl；这里固定住该契约——readImportableProviderFields
     // 返回 key 供表单写入，但展示层不得引用它。
     const fields = readImportableProviderFields("claude", claudeSource);
-    expect(JSON.stringify([fields.name, fields.notes, fields.baseUrl])).not.toContain(
-      "sk-shared",
-    );
+    expect(
+      JSON.stringify([fields.name, fields.notes, fields.baseUrl]),
+    ).not.toContain("sk-shared");
   });
 });
 
@@ -488,7 +525,9 @@ describe("default model is only read where the target has a field", () => {
     expect(targetSupportsApiFormat("grokbuild")).toBe(true);
     // claude-desktop 只在 proxy 模式持久化 apiFormat，承诺写入门槛太高
     expect(targetSupportsApiFormat("claude-desktop")).toBe(false);
-    expect(resolveImportedApiFormat("claude-desktop", "openai_chat")).toBeUndefined();
+    expect(
+      resolveImportedApiFormat("claude-desktop", "openai_chat"),
+    ).toBeUndefined();
   });
 });
 
@@ -599,7 +638,9 @@ describe("patchImportedSettingsConfig", () => {
       importable,
     );
     // modelCatalog 与登录态键都必须活下来
-    expect(patched.modelCatalog).toEqual({ models: [{ model: "gpt-5.6-sol" }] });
+    expect(patched.modelCatalog).toEqual({
+      models: [{ model: "gpt-5.6-sol" }],
+    });
     expect(patched.auth).toEqual({
       OPENAI_API_KEY: "sk-shared",
       auth_mode: "chatgpt",
@@ -736,7 +777,7 @@ describe("patchImportedSettingsConfig", () => {
           'model = "grok-4-5-reasoning"',
           'base_url = "https://old.example.com/v1"',
           'api_key = "sk-old"',
-          'context_window = 500000',
+          "context_window = 500000",
         ].join("\n"),
       },
       importable,
@@ -745,61 +786,70 @@ describe("patchImportedSettingsConfig", () => {
     expect(toml).toContain('base_url = "https://relay.example.com/api"');
     expect(toml).toContain('api_key = "sk-shared"');
     expect(toml).toContain('model = "grok-4-5-reasoning"');
-    expect(toml).toContain('context_window = 500000');
+    expect(toml).toContain("context_window = 500000");
     expect(toml).not.toContain("claude-sonnet-4-5");
   });
 
   it("does not mutate the existing config object", () => {
     const existing = {
-      env: { ANTHROPIC_BASE_URL: "https://old.example.com", ANTHROPIC_AUTH_TOKEN: "sk-old" },
+      env: {
+        ANTHROPIC_BASE_URL: "https://old.example.com",
+        ANTHROPIC_AUTH_TOKEN: "sk-old",
+      },
     };
     const snapshot = JSON.stringify(existing);
     patchImportedSettingsConfig("claude", existing, importable);
     expect(JSON.stringify(existing)).toBe(snapshot);
   });
-describe("buildImportedSettingsConfig: default model never reaches a target without the field", () => {
-  const withModel = {
-    baseUrl: "https://relay.example.com/api",
-    apiKey: "sk-shared",
-    defaultModel: "claude-sonnet-4-5",
-  };
+  describe("buildImportedSettingsConfig: default model never reaches a target without the field", () => {
+    const withModel = {
+      baseUrl: "https://relay.example.com/api",
+      apiKey: "sk-shared",
+      defaultModel: "claude-sonnet-4-5",
+    };
 
-  it("claude-desktop never gets ANTHROPIC_MODEL in add mode", () => {
-    const config = buildImportedSettingsConfig("claude-desktop", withModel);
-    const env = config.env as Record<string, unknown>;
-    expect(env.ANTHROPIC_BASE_URL).toBe("https://relay.example.com/api");
-    expect(env.ANTHROPIC_AUTH_TOKEN).toBe("sk-shared");
-    expect(env.ANTHROPIC_MODEL).toBeUndefined();
-    // 与编辑路径一致：两条写路径对同一目标的字段集合必须相同
-    const patched = patchImportedSettingsConfig(
-      "claude-desktop",
-      { env: { ANTHROPIC_DEFAULT_HAIKU_MODEL: "keep" } },
-      withModel,
-    );
-    expect((patched.env as Record<string, unknown>).ANTHROPIC_MODEL).toBeUndefined();
-    expect((patched.env as Record<string, unknown>).ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe("keep");
-  });
-
-  it("every target without a default-model field stays free of the source model", () => {
-    const modelFree = [
-      "claude-desktop",
-      "grokbuild",
-      "opencode",
-      "openclaw",
-      "hermes",
-      "pi",
-      "mcode",
-    ] as const;
-    for (const appId of modelFree) {
-      expect(targetSupportsDefaultModel(appId)).toBe(false);
-      const built = buildImportedSettingsConfig(appId, withModel);
+    it("claude-desktop never gets ANTHROPIC_MODEL in add mode", () => {
+      const config = buildImportedSettingsConfig("claude-desktop", withModel);
+      const env = config.env as Record<string, unknown>;
+      expect(env.ANTHROPIC_BASE_URL).toBe("https://relay.example.com/api");
+      expect(env.ANTHROPIC_AUTH_TOKEN).toBe("sk-shared");
+      expect(env.ANTHROPIC_MODEL).toBeUndefined();
+      // 与编辑路径一致：两条写路径对同一目标的字段集合必须相同
       const patched = patchImportedSettingsConfig(
-        appId,
-        built as Record<string, unknown>,
+        "claude-desktop",
+        { env: { ANTHROPIC_DEFAULT_HAIKU_MODEL: "keep" } },
         withModel,
       );
-      expect(JSON.stringify([built, patched])).not.toContain("claude-sonnet-4-5");
-    }
+      expect(
+        (patched.env as Record<string, unknown>).ANTHROPIC_MODEL,
+      ).toBeUndefined();
+      expect(
+        (patched.env as Record<string, unknown>).ANTHROPIC_DEFAULT_HAIKU_MODEL,
+      ).toBe("keep");
+    });
+
+    it("every target without a default-model field stays free of the source model", () => {
+      const modelFree = [
+        "claude-desktop",
+        "grokbuild",
+        "opencode",
+        "openclaw",
+        "hermes",
+        "pi",
+        "mcode",
+      ] as const;
+      for (const appId of modelFree) {
+        expect(targetSupportsDefaultModel(appId)).toBe(false);
+        const built = buildImportedSettingsConfig(appId, withModel);
+        const patched = patchImportedSettingsConfig(
+          appId,
+          built as Record<string, unknown>,
+          withModel,
+        );
+        expect(JSON.stringify([built, patched])).not.toContain(
+          "claude-sonnet-4-5",
+        );
+      }
+    });
   });
-});
 });
