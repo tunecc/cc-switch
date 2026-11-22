@@ -1,4 +1,3 @@
-
 export type UpdateChannel = "stable" | "beta";
 
 export interface UpdateInfo {
