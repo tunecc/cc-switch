@@ -892,4 +892,3 @@ export function ConnectivityTestDialog({
   );
 }
 
-export default ConnectivityTestDialog;

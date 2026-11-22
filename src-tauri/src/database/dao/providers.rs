@@ -385,33 +385,36 @@ impl Database {
         if is_update {
             // Native-provider list refreshes also pass through this method. An
             // unchanged row must not dirty the database or enqueue cloud sync.
+            // fork：website_url_2 为 fork 专属列，UPDATE 与守卫都必须带上（漏守卫列会静默丢第二官网链接）。
             tx.execute(
                 "UPDATE providers SET
                     name = ?1,
                     settings_config = ?2,
                     website_url = ?3,
-                    category = ?4,
-                    created_at = ?5,
-                    sort_index = ?6,
-                    notes = ?7,
-                    icon = ?8,
-                    icon_color = ?9,
-                    meta = ?10,
-                    is_current = ?11,
-                    in_failover_queue = ?12
-                WHERE id = ?13 AND app_type = ?14
+                    website_url_2 = ?4,
+                    category = ?5,
+                    created_at = ?6,
+                    sort_index = ?7,
+                    notes = ?8,
+                    icon = ?9,
+                    icon_color = ?10,
+                    meta = ?11,
+                    is_current = ?12,
+                    in_failover_queue = ?13
+                WHERE id = ?14 AND app_type = ?15
                   AND (name IS NOT ?1 OR settings_config IS NOT ?2
-                       OR website_url IS NOT ?3 OR category IS NOT ?4
-                       OR created_at IS NOT ?5 OR sort_index IS NOT ?6
-                       OR notes IS NOT ?7 OR icon IS NOT ?8 OR icon_color IS NOT ?9
-                       OR meta IS NOT ?10 OR is_current IS NOT ?11
-                       OR in_failover_queue IS NOT ?12)",
+                       OR website_url IS NOT ?3 OR website_url_2 IS NOT ?4 OR category IS NOT ?5
+                       OR created_at IS NOT ?6 OR sort_index IS NOT ?7
+                       OR notes IS NOT ?8 OR icon IS NOT ?9 OR icon_color IS NOT ?10
+                       OR meta IS NOT ?11 OR is_current IS NOT ?12
+                       OR in_failover_queue IS NOT ?13)",
                 params![
                     provider.name,
                     serde_json::to_string(&provider.settings_config).map_err(|e| {
                         AppError::Database(format!("Failed to serialize settings_config: {e}"))
                     })?,
                     provider.website_url,
+                    provider.website_url_2,
                     provider.category,
                     provider.created_at,
                     provider.sort_index,
@@ -428,10 +431,11 @@ impl Database {
             .map_err(|e| AppError::Database(e.to_string()))?;
         } else {
             tx.execute(
+                // fork：INSERT 同步携带 website_url_2。
                 "INSERT INTO providers (
-                    id, app_type, name, settings_config, website_url, category,
+                    id, app_type, name, settings_config, website_url, website_url_2, category,
                     created_at, sort_index, notes, icon, icon_color, meta, is_current, in_failover_queue
-                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
                 params![
                     provider.id,
                     app_type,
@@ -439,6 +443,7 @@ impl Database {
                     serde_json::to_string(&provider.settings_config)
                         .map_err(|e| AppError::Database(format!("Failed to serialize settings_config: {e}")))?,
                     provider.website_url,
+                    provider.website_url_2,
                     provider.category,
                     provider.created_at,
                     provider.sort_index,
@@ -695,6 +700,7 @@ impl Database {
             name,
             settings_config,
             website_url: None,
+            website_url_2: None,
             category: Some(category.to_string()),
             created_at,
             sort_index,

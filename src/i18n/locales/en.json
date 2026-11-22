@@ -519,7 +519,6 @@
       "beta": "Beta",
       "copilotDescription": "Manage GitHub Copilot accounts",
       "codexOauthDescription": "Manage ChatGPT accounts",
-      "xaiOauthDescription": "Manage xAI / Grok accounts",
       "title": "OAuth Authentication Center"
     },
     "advanced": {
@@ -3203,7 +3202,6 @@
       "title": "MCP Server Management",
       "addServer": "Add Server",
       "editServer": "Edit Server",
-      "deleteServer": "Delete Server",
       "deleteConfirm": "Are you sure you want to delete server \"{{id}}\"? This action cannot be undone.",
       "noServers": "No servers yet",
       "enabledApps": "Enabled Apps",
@@ -3261,10 +3259,7 @@
       "jsonConfig": "Full JSON Configuration",
       "jsonConfigOrPrefix": "Full JSON configuration or use",
       "tomlConfigOrPrefix": "Full TOML configuration or use",
-      "jsonPlaceholder": "{\n  \"type\": \"stdio\",\n  \"command\": \"uvx\",\n  \"args\": [\"mcp-server-fetch\"]\n}",
-      "tomlPlaceholder": "type = \"stdio\"\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]",
       "useWizard": "Config Wizard",
-      "syncOtherSide": "Mirror to {{target}}",
       "syncOtherSideHint": "Apply the same settings to {{target}}; existing entries with the same id will be overwritten.",
       "willOverwriteWarning": "Will overwrite config with the same name in {{target}}"
     },
@@ -3272,9 +3267,7 @@
       "title": "MCP Configuration Wizard",
       "hint": "Quickly configure MCP server and auto-generate JSON configuration",
       "type": "Type",
-      "typeStdio": "stdio",
       "typeHttp": "http",
-      "typeSse": "sse",
       "command": "Command",
       "commandPlaceholder": "npx or uvx",
       "args": "Arguments",
@@ -3836,7 +3829,6 @@
       "archiveTooManyEntries": "Archive has too many entries ({{count}}); the limit is {{limit}}",
       "downloadFailed": "Download failed: HTTP {{status}}",
       "allBranchesFailed": "All branches failed, tried: {{branches}}",
-      "httpError": "HTTP error {{status}}",
       "http403": "GitHub access restricted, possibly rate limited",
       "http404": "Repository or branch not found, please check URL. Private repositories need an access token set in Manage Skill Repositories first",
       "http429": "Too many requests, please wait and retry",
@@ -3850,7 +3842,6 @@
       "getHomeDirFailed": "Unable to get user home directory",
       "noSkillsInZip": "No skills found in ZIP file (requires SKILL.md file)",
       "parseMetadataFailed": "Failed to parse skill metadata",
-      "networkError": "Network error",
       "fsError": "File system error",
       "unknownError": "Unknown error",
       "suggestion": {
@@ -3895,8 +3886,7 @@
       "addFailed": "Failed to add",
       "removeSuccess": "Repository {{owner}}/{{name}} removed",
       "removeFailed": "Failed to remove",
-      "skillCount": "{{count}} skills detected",
-      "httpsOnly": "GitLab and Gitea repositories must use an https address"
+      "skillCount": "{{count}} skills detected"
     },
     "search": "Search Skills",
     "searchPlaceholder": "Search skill name or repo...",
@@ -4187,7 +4177,6 @@
     "panel": {
       "serviceAddress": "Service Address",
       "addressCopied": "Address copied",
-      "currentProvider": "Current Provider:",
       "waitingFirstRequest": "Current Provider: Waiting for first request...",
       "stoppedTitle": "Routing Service Stopped",
       "stoppedDescription": "Use the toggle above to start the service",
@@ -4259,8 +4248,6 @@
         "addressInvalid": "Please enter a valid IP address",
         "portMin": "Port must be greater than 1024",
         "portMax": "Port must be less than 65535",
-        "retryMin": "Retry count cannot be negative",
-        "retryMax": "Retry count cannot exceed 10",
         "timeoutNonNegative": "Timeout cannot be negative",
         "timeoutMax": "Timeout cannot exceed 600 seconds",
         "timeoutRange": "Please enter 0 or a value between 10-600",

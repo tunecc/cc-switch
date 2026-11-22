@@ -519,7 +519,6 @@
       "beta": "Beta",
       "copilotDescription": "管理 GitHub Copilot 账号",
       "codexOauthDescription": "管理 ChatGPT 账号",
-      "xaiOauthDescription": "管理 xAI / Grok 账号",
       "title": "OAuth 认证中心"
     },
     "advanced": {
@@ -3203,7 +3202,6 @@
       "title": "MCP 服务器管理",
       "addServer": "添加服务器",
       "editServer": "编辑服务器",
-      "deleteServer": "删除服务器",
       "deleteConfirm": "确定要删除服务器 \"{{id}}\" 吗？此操作无法撤销。",
       "noServers": "暂无服务器",
       "enabledApps": "启用的应用",
@@ -3261,10 +3259,7 @@
       "jsonConfig": "完整的 JSON 配置",
       "jsonConfigOrPrefix": "完整的 JSON 配置或者使用",
       "tomlConfigOrPrefix": "完整的 TOML 配置或者使用",
-      "jsonPlaceholder": "{\n  \"type\": \"stdio\",\n  \"command\": \"uvx\",\n  \"args\": [\"mcp-server-fetch\"]\n}",
-      "tomlPlaceholder": "type = \"stdio\"\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]",
       "useWizard": "配置向导",
-      "syncOtherSide": "同步到 {{target}}",
       "syncOtherSideHint": "勾选后会把当前配置同时写入 {{target}}，若存在同名配置将被覆盖",
       "willOverwriteWarning": "将覆盖 {{target}} 中的同名配置"
     },
@@ -3272,9 +3267,7 @@
       "title": "MCP 配置向导",
       "hint": "快速配置 MCP 服务器，自动生成 JSON 配置",
       "type": "类型",
-      "typeStdio": "stdio",
       "typeHttp": "http",
-      "typeSse": "sse",
       "command": "命令",
       "commandPlaceholder": "npx 或 uvx",
       "args": "参数",
@@ -3836,7 +3829,6 @@
       "archiveTooManyEntries": "压缩包条目过多（{{count}}），上限 {{limit}}",
       "downloadFailed": "下载失败：HTTP {{status}}",
       "allBranchesFailed": "所有分支下载失败，尝试了：{{branches}}",
-      "httpError": "HTTP 错误 {{status}}",
       "http403": "GitHub 访问受限，可能是请求频率过高",
       "http404": "仓库或分支不存在，请检查地址；私有仓库需要先在「管理技能仓库」里设置访问令牌",
       "http429": "请求过于频繁，请等待后重试",
@@ -3850,7 +3842,6 @@
       "getHomeDirFailed": "无法获取用户主目录",
       "noSkillsInZip": "ZIP 文件中未找到技能（需包含 SKILL.md 文件）",
       "parseMetadataFailed": "解析技能元数据失败",
-      "networkError": "网络错误",
       "fsError": "文件系统错误",
       "unknownError": "未知错误",
       "suggestion": {
@@ -3895,8 +3886,7 @@
       "addFailed": "添加失败",
       "removeSuccess": "仓库 {{owner}}/{{name}} 已删除",
       "removeFailed": "删除失败",
-      "skillCount": "识别到 {{count}} 个技能",
-      "httpsOnly": "GitLab / Gitea 仓库只支持 https 地址"
+      "skillCount": "识别到 {{count}} 个技能"
     },
     "search": "搜索技能",
     "searchPlaceholder": "搜索技能名称或仓库名称...",
@@ -4187,7 +4177,6 @@
     "panel": {
       "serviceAddress": "服务地址",
       "addressCopied": "地址已复制",
-      "currentProvider": "当前 Provider：",
       "waitingFirstRequest": "当前 Provider：等待首次请求…",
       "stoppedTitle": "路由服务已停止",
       "stoppedDescription": "使用上方开关即可启动服务",
@@ -4259,8 +4248,6 @@
         "addressInvalid": "请输入有效的IP地址",
         "portMin": "端口必须大于1024",
         "portMax": "端口必须小于65535",
-        "retryMin": "重试次数不能为负",
-        "retryMax": "重试次数不能超过10",
         "timeoutNonNegative": "超时时间不能为负数",
         "timeoutMax": "超时时间最多600秒",
         "timeoutRange": "请输入 0 或 10-600 之间的数值",

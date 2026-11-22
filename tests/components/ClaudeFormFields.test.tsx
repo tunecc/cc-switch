@@ -476,11 +476,11 @@ describe("ClaudeFormFields", () => {
     // 全选切换：所有支持 1M 的角色与兜底模型都加 [1M]
     expect(onModelChange).toHaveBeenCalledWith(
       "ANTHROPIC_DEFAULT_SONNET_MODEL",
-      "sonnet-model[1M]",
+      "sonnet-model[1m]",
     );
     expect(onModelChange).toHaveBeenCalledWith(
       "ANTHROPIC_MODEL",
-      "fallback-model[1M]",
+      "fallback-model[1m]",
     );
     expect(onModelChange).not.toHaveBeenCalledWith(
       "ANTHROPIC_DEFAULT_HAIKU_MODEL",

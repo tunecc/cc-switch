@@ -1,12 +1,15 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import ConnectivityTestDialog from "@/components/providers/ConnectivityTestDialog";
+import { ConnectivityTestDialog } from "@/components/providers/ConnectivityTestDialog";
 import { providersApi } from "@/lib/api/providers";
 import {
   connectivityTestProviderModels,
   type ConnectivityTestResult,
 } from "@/lib/api/connectivity-test";
-import { fetchModelsForConfig, showFetchModelsError } from "@/lib/api/model-fetch";
+import {
+  fetchModelsForConfig,
+  showFetchModelsError,
+} from "@/lib/api/model-fetch";
 import { DEFAULT_CONNECTIVITY_TEST_SETTINGS } from "@/lib/connectivityTestSettings";
 import type { Provider } from "@/types";
 
@@ -138,8 +141,18 @@ describe("ConnectivityTestDialog behaviors", () => {
         return {
           results: [
             id === "a"
-              ? makeResult({ modelId: "a", status: "success", firstByteMs: 120, totalMs: 340 })
-              : makeResult({ modelId: "b", status: "error", totalMs: 500, errorMessage: "boom" }),
+              ? makeResult({
+                  modelId: "a",
+                  status: "success",
+                  firstByteMs: 120,
+                  totalMs: 340,
+                })
+              : makeResult({
+                  modelId: "b",
+                  status: "error",
+                  totalMs: 500,
+                  errorMessage: "boom",
+                }),
           ],
         };
       },
@@ -191,7 +204,11 @@ describe("ConnectivityTestDialog behaviors", () => {
     vi.mocked(connectivityTestProviderModels).mockImplementation(
       async (_appId, _providerId, _params, modelIds) => ({
         results: [
-          makeResult({ modelId: modelIds?.[0] ?? "a", status: "success", totalMs: 10 }),
+          makeResult({
+            modelId: modelIds?.[0] ?? "a",
+            status: "success",
+            totalMs: 10,
+          }),
         ],
       }),
     );
@@ -209,21 +226,19 @@ describe("ConnectivityTestDialog behaviors", () => {
   });
 
   it("opens the per-model detail dialog from a result row", async () => {
-    vi.mocked(connectivityTestProviderModels).mockImplementation(
-      async () => ({
-        results: [
-          makeResult({
-            modelId: "a",
-            status: "success",
-            totalMs: 340,
-            requestHeaders: { "x-api-key": "sk-***" },
-            requestBody: { model: "a", prompt: "你好，你可以帮我做什么事情" },
-            responseHeaders: { "content-type": "application/json" },
-            responseBody: { ok: true },
-          }),
-        ],
-      }),
-    );
+    vi.mocked(connectivityTestProviderModels).mockImplementation(async () => ({
+      results: [
+        makeResult({
+          modelId: "a",
+          status: "success",
+          totalMs: 340,
+          requestHeaders: { "x-api-key": "sk-***" },
+          requestBody: { model: "a", prompt: "你好，你可以帮我做什么事情" },
+          responseHeaders: { "content-type": "application/json" },
+          responseBody: { ok: true },
+        }),
+      ],
+    }));
 
     openDialog();
 
@@ -281,7 +296,9 @@ describe("ConnectivityTestDialog behaviors", () => {
       id: "cx",
       settingsConfig: {
         config: 'model = "gpt-5-codex"',
-        modelCatalog: { models: [{ model: "gpt-5-codex" }, { model: "o4-mini" }] },
+        modelCatalog: {
+          models: [{ model: "gpt-5-codex" }, { model: "o4-mini" }],
+        },
       },
     };
 
