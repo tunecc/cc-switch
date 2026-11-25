@@ -108,7 +108,8 @@ const PRESETS = [
     .map((preset, index) => ({ id: String(index), preset }))
     .filter(
       ({ preset }) =>
-        !IS_FORK_BUILD || KIMI_ALLOWED_PRESET_NAMES.has(preset.name),
+        !preset.hidden &&
+        (!IS_FORK_BUILD || KIMI_ALLOWED_PRESET_NAMES.has(preset.name)),
     ),
 ];
 

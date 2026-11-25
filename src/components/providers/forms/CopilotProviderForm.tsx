@@ -52,6 +52,7 @@ import {
   type CopilotProviderNode,
 } from "@/config/copilotProviderPresets";
 import { piPresetModelSources } from "@/config/presetModelMetadata";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 import {
   findRequestHeaderValue,
   normalizeRequestHeaders,
@@ -73,12 +74,21 @@ import { ProviderPresetSelector } from "./ProviderPresetSelector";
 import { CopilotAuthSection } from "./CopilotAuthSection";
 import type { ProviderFormProps } from "./ProviderForm";
 
+const COPILOT_ALLOWED_PRESET_NAMES = new Set(
+  filterForkPresets("copilot", copilotProviderPresets).map(
+    (preset) => preset.name,
+  ),
+);
+
 const PRESETS = [
   { id: COPILOT_OFFICIAL_PRESET_ID, preset: copilotOfficialPreset },
-  ...copilotProviderPresets.map((preset, index) => ({
-    id: String(index),
-    preset,
-  })),
+  // 先编号再过滤：id 必须保持上游原始数组下标，过滤不得改变编号。
+  ...copilotProviderPresets
+    .map((preset, index) => ({ id: String(index), preset }))
+    .filter(
+      ({ preset }) =>
+        !preset.hidden && COPILOT_ALLOWED_PRESET_NAMES.has(preset.name),
+    ),
 ];
 
 const DEFAULT_EFFORT = "default";

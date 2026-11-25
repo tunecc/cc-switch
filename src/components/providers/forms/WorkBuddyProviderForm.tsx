@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useProvidersQuery } from "@/lib/query/queries";
 import type { ProviderFormData } from "@/lib/schemas/provider";
 import { piPresetModelSources } from "@/config/presetModelMetadata";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 import {
   WORKBUDDY_ACCOUNT_AUTH_PROVIDER,
   WORKBUDDY_DEFAULT_CONFIG,
@@ -59,12 +60,21 @@ import type { ProviderFormProps } from "./ProviderForm";
 const OFFICIAL_PRESET_ID = "official";
 const MODEL_OWNERS_KEY = ["workbuddy", "modelOwners"] as const;
 
+const WORKBUDDY_ALLOWED_PRESET_NAMES = new Set(
+  filterForkPresets("workbuddy", workbuddyProviderPresets).map(
+    (preset) => preset.name,
+  ),
+);
+
 const PRESET_ENTRIES = [
   { id: OFFICIAL_PRESET_ID, preset: workbuddyOfficialPreset },
-  ...workbuddyProviderPresets.map((preset, index) => ({
-    id: String(index),
-    preset,
-  })),
+  // 先编号再过滤：id 必须保持上游原始数组下标，过滤不得改变编号。
+  ...workbuddyProviderPresets
+    .map((preset, index) => ({ id: String(index), preset }))
+    .filter(
+      ({ preset }) =>
+        !preset.hidden && WORKBUDDY_ALLOWED_PRESET_NAMES.has(preset.name),
+    ),
 ];
 
 const presetById = (id: string): WorkBuddyProviderPreset | undefined =>
