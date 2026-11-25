@@ -75,13 +75,15 @@ const grokPresetEntries: Array<{
   preset: GrokBuildProviderPreset;
 }> = [
   { id: GROKBUILD_OFFICIAL_PROVIDER_ID, preset: grokBuildOfficialPreset },
-  // 先按原数组下标编号再过滤 fork 白名单：添加对话框按 id 里的下标回查预设
+  // 先按原数组下标编号，再过滤 hidden 与 fork 白名单：添加对话框按 id 里的下标回查预设
   ...grokBuildProviderPresets
     .map((preset, index) => ({
       id: `grokbuild-${index}`,
       preset,
     }))
-    .filter((entry) => grokForkAllowed.has(entry.preset.name)),
+    .filter(
+      (entry) => !entry.preset.hidden && grokForkAllowed.has(entry.preset.name),
+    ),
 ];
 
 export function GrokBuildProviderForm({

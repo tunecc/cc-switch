@@ -81,12 +81,11 @@
 - 不做代码签名与 Apple 公证，按未签名分发（macOS 需右键打开绕过 Gatekeeper）。
 - CI 不再生成 `latest.json` 与 `.sig` 签名产物。
 
-### 9. 供应商列表右键置顶/置底 与 新增插入第二位
+### 9. 供应商列表右键完整菜单 与 新增插入顶部
 
-- 供应商列表项右键菜单提供「一键置顶」「一键置底」两个动作，复用现有 `providersApi.updateSortOrder`（后端 `update_providers_sort_order`）落库后重写全部 `sortIndex`，并 invalidate `["providers", appId]` 与 `["failoverQueue", appId]`、刷新托盘菜单——与拖拽排序路径完全一致，不新增后端命令。
-- 已在顶部/底部时 `toast.info` 提示且不重复操作；菜单点击外部 / 滚动 / 缩放 / Esc 时自动关闭。
-- 右键菜单仅含这两项，不纳入编辑/复制/删除等动作，避免与现有 hover 行内按钮重复；拖拽排序与 hover 行内按钮保持不变。
-- 新增供应商（`useAddProviderMutation`，未显式指定 `sortIndex` 的所有添加路径）默认插入到列表**第二位**（index 1）：现有第 0 项保持 `sortIndex=0`、其余项 `sortIndex+1` 让位，新供应商 `sortIndex=1`，同时把所有现有项 `sortIndex` 显式化（解决 `useDragSort` 的 defined-first 排序陷阱，避免新项被排到最前）。
+- 供应商列表项右键菜单提供「一键置顶」「一键置底」，并合并卡片「更多」菜单中的编辑、复制、删除、连通性测试、用量配置与打开终端等当前可用动作；复用现有 mutation 落库后重写全部 `sortIndex`，并 invalidate `["providers", appId]` 与 `["failoverQueue", appId]`、刷新托盘菜单，不新增后端命令。
+- 已在顶部/底部时 `toast.info` 提示且不重复操作；菜单点击外部 / 滚动 / 缩放 / Esc 时自动关闭，删除动作经同一受控菜单回调执行。
+- 新增供应商（`useAddProviderMutation`，未显式指定 `sortIndex` 的所有添加路径）默认插入到列表**顶部**（index 0）：现有各项 `sortIndex+1` 让位，新供应商 `sortIndex=0`，同时把所有现有项 `sortIndex` 显式化（解决 `useDragSort` 的 defined-first 排序陷阱，避免新项被排到最前）。
 - 空列表新增不触发让位，新供应商落库为首位；复制路径因显式传 `sortIndex` 不受影响。
 - 补齐 zh-CN / en / zh-TW / ja 四语言 `quickMove*` 文案（`quickMoveTop` / `quickMoveBottom` / `quickMoveAlreadyTop` / `quickMoveAlreadyBottom`）。
 

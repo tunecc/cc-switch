@@ -1050,13 +1050,13 @@ function ProviderFormFull({
     if (appId === "codex") {
       return entriesFor("codex", codexProviderPresets, "codex", true);
     } else if (usesGeminiStyleForm(appId)) {
-      return entriesFor(appId, geminiProviderPresets, "gemini", false);
+      return entriesFor(appId, geminiProviderPresets, "gemini", true);
     } else if (appId === "opencode") {
-      return entriesFor("opencode", opencodeProviderPresets, "opencode", false);
+      return entriesFor("opencode", opencodeProviderPresets, "opencode", true);
     } else if (appId === "openclaw") {
-      return entriesFor("openclaw", openclawProviderPresets, "openclaw", false);
+      return entriesFor("openclaw", openclawProviderPresets, "openclaw", true);
     } else if (appId === "hermes") {
-      return entriesFor("hermes", hermesProviderPresets, "hermes", false);
+      return entriesFor("hermes", hermesProviderPresets, "hermes", true);
     }
     return entriesFor("claude", providerPresets, "claude", true);
   }, [appId]);

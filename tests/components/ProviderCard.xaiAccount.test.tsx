@@ -2,7 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProviderCard } from "@/components/providers/ProviderCard";
-import type { ManagedAuthStatus } from "@/lib/api";
+import type { AppId, ManagedAuthStatus } from "@/lib/api";
 import type { Provider } from "@/types";
 import { createTestQueryClient } from "../utils/testQueryClient";
 
@@ -95,7 +95,11 @@ const status = (
   accounts,
 });
 
-function renderCard(provider: Provider, planName?: string) {
+function renderCard(
+  provider: Provider,
+  planName?: string,
+  appId: AppId = "claude",
+) {
   const queryClient = createTestQueryClient();
   if (planName) {
     queryClient.setQueryData(
@@ -111,7 +115,7 @@ function renderCard(provider: Provider, planName?: string) {
     <QueryClientProvider client={queryClient}>
       <ProviderCard
         provider={provider}
-        appId="claude"
+        appId={appId}
         isCurrent={false}
         presentation={{ chips: [], buttons: [] }}
         onEdit={vi.fn()}
@@ -160,9 +164,7 @@ describe("ProviderCard xAI OAuth account subtitle", () => {
     expect(accountRow).not.toBeNull();
     expect(accountRow).not.toContainElement(websiteRow);
     expect(websiteRow).not.toContainElement(accountLabel);
-    expect(websiteRow.textContent).toBe(
-      "https://x.ai/grok  https://grok.com",
-    );
+    expect(websiteRow.textContent).toBe("https://x.ai/grok  https://grok.com");
     expect(screen.getByText("· SuperGrok")).toBeInTheDocument();
     expect(screen.getByText("xaiOauth.reauthRequired")).toBeInTheDocument();
   });
@@ -184,6 +186,38 @@ describe("ProviderCard xAI OAuth account subtitle", () => {
     renderCard(provider);
 
     expect(await screen.findByText("grok@x.ai")).toBeInTheDocument();
+
+  it("keeps Grok Build account status and both websites on separate rows", async () => {
+    authGetStatus.mockResolvedValue(
+      status([account("xai-1", "grok@x.ai", true)], "xai-1"),
+    );
+
+    renderCard(
+      {
+        id: "grok-official",
+        name: "Grok Official",
+        category: "official",
+        websiteUrl: XAI_URL,
+        websiteUrl2: "https://grok.com",
+        settingsConfig: {},
+        meta: {
+          authBinding: {
+            source: "managed_account",
+            authProvider: "xai_oauth",
+            accountId: "xai-1",
+          },
+        },
+      },
+      "SuperGrok",
+      "grokbuild",
+    );
+
+    const accountLabel = await screen.findByText("grok@x.ai");
+    const websiteRow = screen.getByTestId("website-links");
+    expect(accountLabel.parentElement).not.toContainElement(websiteRow);
+    expect(websiteRow.textContent).toBe("https://x.ai/grok  https://grok.com");
+    expect(screen.getByText("· SuperGrok")).toBeInTheDocument();
+    expect(screen.getByText("需要重新登录")).toBeInTheDocument();
   });
 
   it("falls back to the default account when the provider is unbound", async () => {
@@ -208,8 +242,11 @@ describe("ProviderCard xAI OAuth account subtitle", () => {
     renderCard(xaiProvider("xai-1", { notes: "Work account" }), "SuperGrok");
 
     expect(await screen.findByText("Work account")).toBeInTheDocument();
+    expect(screen.getAllByText("Work account")).toHaveLength(1);
     expect(screen.getByText("· SuperGrok")).toBeInTheDocument();
     expect(screen.queryByText("grok@x.ai")).not.toBeInTheDocument();
+    expect(screen.queryByText(XAI_URL)).not.toBeInTheDocument();
+    expect(screen.queryByTestId("website-links")).not.toBeInTheDocument();
   });
 
   it.each([

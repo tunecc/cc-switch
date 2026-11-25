@@ -27,7 +27,7 @@ import { appHas } from "@/config/appSpecs";
 import type { ProvidersQueryData } from "@/lib/query/queries";
 
 // 与 useDragSort / queries 中的排序保持一致：sortIndex 缺失视为末尾，再按
-// createdAt、名称兜底。新增供应商插入第二位前需据此确定现有显示顺序。
+// createdAt、名称兜底。新增供应商插入顶部前需据此确定现有显示顺序。
 const sortProvidersForInsert = (
   providers: Record<string, Provider>,
 ): Provider[] =>

@@ -22,7 +22,7 @@ import {
   extractCodexModelName,
   setCodexBaseUrl,
   setCodexModelName,
-} from "@/utils/providerConfigUtils";
+} from "@/utils/codexConfigUtils";
 import {
   GROK_BUILD_DEFAULT_API_BACKEND,
   GROK_BUILD_DEFAULT_CONTEXT_WINDOW,

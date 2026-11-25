@@ -2,13 +2,13 @@
 //
 // 主页卡片徽章与模型快捷切换弹窗共用这一层，保证读写语义与编辑表单一致：
 // claude 走 useModelState 的 env 字段与 [1M] 标记语义，codex/grokbuild 走
-// providerConfigUtils 的 TOML 顶层 model 读写，gemini 走 env.GEMINI_MODEL。
+// codexConfigUtils 的 TOML 顶层 model 读写，gemini 走 env.GEMINI_MODEL。
 
 import { deepClone } from "@/utils/deepClone";
 import {
   extractCodexModelName,
   setCodexModelName,
-} from "@/utils/providerConfigUtils";
+} from "@/utils/codexConfigUtils";
 import {
   hasClaudeOneMMarker,
   setClaudeOneMMarker,

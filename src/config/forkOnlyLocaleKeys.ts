@@ -4,12 +4,12 @@
  * 上游 v4.0.31 起有 `tests/config/localeParity.test.ts` 要求 8 个语种的键集合与 en.json 完全一致；
  * fork 自有功能的文案只随 en/zh（部分 ja/zh-TW）维护，因此该测试用这份清单跳过 fork 专属键。
  * `FORK_REMOVED_LOCALE_KEYS` 收录「fork 的 en.json 有意不含、但上游/历史语种文件仍带着」的键：
- * streamCheck.*（fork 已移除该功能）、autoUpdate.*（fork 不启用应用内更新器，见同步轮 Q1=A），
- * 以及上游本轮删除、但其他语种文件仍残留的键（codexOauth.reauthTitle、settings.authCenter.title）。
+ * 当前仅 streamCheck.*（fork 已移除该功能）；updater 域按 Q1=A 保留 fork 现状，
+ * autoUpdate.* 与 codexOauth.reauthTitle、settings.authCenter.title 均不是 locale 删除豁免。
  * 上游键仍按上游口径严格校验，不做任何放宽。
  *
- * v4.0.36–v4.0.38 轮按上游 v4.0.38 的 en.json 复核：fork 专属 397 个不变、fork 已移除 18 个不变；
- * 上游本轮删除的 17 个死键已随上游从 en/zh/zh-TW/ja 删除（不进任何豁免清单）。
+ * v4.0.40 轮按上游 en.json 复核：fork 专属 397 个、fork 已移除 5 个。
+ * 上游本轮删除的旧账号选择文案已从 en/zh/zh-TW/ja 删除（不进任何豁免清单）。
  * 生成方法见 docs/HOW_TO_REBASE_UPSTREAM.md §4.17。
  */
 export const FORK_ONLY_LOCALE_KEYS: ReadonlySet<string> = new Set([
@@ -414,19 +414,6 @@ export const FORK_ONLY_LOCALE_KEYS: ReadonlySet<string> = new Set([
 
 /** fork 的 en.json 已不含、但其他语种文件（整文件随上游）仍保留的上游键。 */
 export const FORK_REMOVED_LOCALE_KEYS: ReadonlySet<string> = new Set([
-  "autoUpdate.downloadedInline",
-  "autoUpdate.downloadingInline",
-  "autoUpdate.installFailed",
-  "autoUpdate.installNow",
-  "autoUpdate.later",
-  "autoUpdate.readyBody",
-  "autoUpdate.readyBodyRouting",
-  "autoUpdate.readyTitle",
-  "autoUpdate.toggle",
-  "autoUpdate.toggleHelp",
-  "autoUpdate.unsupported",
-  "codexOauth.reauthTitle",
-  "settings.authCenter.title",
   "streamCheck.error",
   "streamCheck.reachable",
   "streamCheck.reachableSlow",

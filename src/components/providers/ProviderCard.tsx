@@ -583,6 +583,27 @@ export function ProviderCard({
   ) : (
     xaiSubtitle
   );
+
+  const accountWebsiteRow =
+    manualNote === undefined
+      ? (websiteLinksRow ??
+        (displayUrl ? (
+          <button
+            type="button"
+            onClick={handleOpenWebsite}
+            className={cn(
+              "mt-0.5 inline-flex max-w-full items-center overflow-hidden text-start text-caption text-fg-2",
+              isClickableUrl
+                ? "cursor-pointer decoration-border-strong underline-offset-[3px] hover:underline"
+                : "cursor-default",
+            )}
+            title={displayUrl}
+            disabled={!isClickableUrl}
+          >
+            <span className="min-w-0 truncate">{displayUrl}</span>
+          </button>
+        ) : null))
+      : null;
   return (
     <div
       className={cn(
@@ -712,12 +733,15 @@ export function ProviderCard({
               onEdit={onEdit}
             />
           ) : grokBoundAccountId ? (
-            <GrokBoundAccountLine
-              accountId={grokBoundAccountId}
-              providerName={provider.name}
-              note={manualNote}
-              plan={subtitlePlan}
-            />
+            <>
+              <GrokBoundAccountLine
+                accountId={grokBoundAccountId}
+                providerName={provider.name}
+                note={manualNote}
+                plan={subtitlePlan}
+              />
+              {accountWebsiteRow}
+            </>
           ) : claudeBoundAccountId ? (
             <ClaudeBoundAccountLine
               accountId={claudeBoundAccountId}
@@ -770,6 +794,17 @@ export function ProviderCard({
                 </span>
               )}
             </div>
+          ) : isXaiOauthProvider ? (
+            <>
+              <XaiAccountSubtitle
+                providerName={provider.name}
+                accountId={xaiAccountId}
+                manualNote={manualNote}
+                planSuffix={planSuffix()}
+                fallback={null}
+              />
+              {accountWebsiteRow}
+            </>
           ) : (
             oauthSubtitle
           )}
