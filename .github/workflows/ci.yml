@@ -286,7 +286,7 @@ jobs:
             || sudo apt-get install -y --no-install-recommends libsoup2.4-dev
 
       # 只缓存依赖：本仓库的 crate 每次都要重编，缓存它只会让缓存变大、恢复变慢。
-      # key 自带 OS、rustc 版本和 Cargo.lock；shared-key 让 wsl2-nightly 能读到 Windows 这份。
+      # key 自带 OS、rustc 版本和 Cargo.lock；shared-key 让 backend-windows-wsl2 能读取 Windows 这份。
       # backend-v2：对齐 [profile.dev.package] 优化依赖与 clippy --all-targets 的缓存指纹。
       # 只有 main 保存：PR 能读 main 的缓存，PR 自己存的别人读不到，三个系统一份 3 GB 多，
       # 存下来只会把 main 的缓存挤出仓库 10 GB 的配额。
@@ -314,28 +314,56 @@ jobs:
       - name: Run tests
         run: cargo nextest run --manifest-path src-tauri/Cargo.toml --profile ci
 
-      # WSL2 契约测试并入 Windows backend，直接复用 nextest 刚编好的 cc_switch_lib 测试二进制，
-      # 省掉独立 Windows VM、缓存恢复和重复编译；PR 仅在命中 wsl 闭包时触发，push/定时/手动必跑。
+  backend-windows-wsl2:
+    name: Backend Checks (Windows + WSL2 home)
+    runs-on: windows-2025
+    timeout-minutes: 45
+    needs: changes
+    continue-on-error: true
+    if: github.event_name != 'pull_request' || needs.changes.outputs.wsl == 'true'
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Read pinned Rust toolchain
+        id: rust-toolchain
+        shell: bash
+        run: |
+          channel=$(sed -nE 's/^channel *= *"([^"]+)".*/\1/p' rust-toolchain.toml)
+          test -n "$channel"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ steps.rust-toolchain.outputs.channel }}
+
       - name: Setup WSL2
-        if: runner.os == 'Windows' && (github.event_name != 'pull_request' || needs.changes.outputs.wsl == 'true')
         uses: Vampire/setup-wsl@d1da7f2c0322a5ee4f24975344f67fc0f5baf364 # v7
         with:
           distribution: Ubuntu-24.04
           wsl-version: 2
           additional-packages: python3
 
-      # 使用 /var/tmp 而非 /tmp（与 wsl2-nightly.yml 对齐，避免 distro 重启清空 /tmp）。
-      # 直接定位 nextest 已编好的 cc_switch_lib-*.exe，不再调用 cargo test --lib --no-run，
-      # 避免 tauri::generate_context! 共享 OUT_DIR 时间戳触发无谓重编与 UNC TEMP 下的 LNK1327。
-      - name: Prepare WSL2-backed test environment & locate test binary
-        if: runner.os == 'Windows' && (github.event_name != 'pull_request' || needs.changes.outputs.wsl == 'true')
+      # 只恢复不保存：完整 Windows 缓存由 backend 矩阵保存，避免半份缓存覆盖它。
+      - name: Restore Rust dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: src-tauri -> target
+          shared-key: backend-v2
+          save-if: false
+
+      - name: Create frontend dist placeholder
+        shell: bash
+        run: mkdir -p dist
+
+      # 使用 /var/tmp 而非 /tmp，避免 distro 重启清空测试目录。
+      - name: Prepare WSL2-backed test environment
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
           wsl.exe -d Ubuntu-24.04 -- bash -lc "rm -rf /var/tmp/cc-switch-windows-test-root && mkdir -p /var/tmp/cc-switch-windows-test-root/{home,temp} && chmod -R 0777 /var/tmp/cc-switch-windows-test-root"
-          if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-          }
           $testRoot = "\\wsl.localhost\Ubuntu-24.04\var\tmp\cc-switch-windows-test-root"
           $testHome = Join-Path $testRoot "home"
           $testTemp = Join-Path $testRoot "temp"
@@ -344,22 +372,34 @@ jobs:
               throw "WSL2-backed test path is unavailable: $path"
             }
           }
-          $bins = @(Get-ChildItem -LiteralPath "src-tauri/target/debug/deps" -Filter "cc_switch_lib-*.exe" -File)
-          if (@($bins).Count -ne 1) {
-            $found = if (@($bins).Count -eq 0) { "(none)" } else { ($bins | ForEach-Object { $_.FullName }) -join ", " }
-            throw "Expected exactly 1 cc_switch_lib-*.exe test binary in src-tauri/target/debug/deps, found $(@($bins).Count): $found"
-          }
-          $testBinary = $bins[0].FullName
-          "CC_SWITCH_TEST_EXE=$testBinary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CC_SWITCH_TEST_HOME=$testHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CC_SWITCH_WSL_TEST_DIR=$testRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CC_SWITCH_WSL_TEST_TEMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      - name: Compile backend tests with native temp
+        env:
+          TEMP: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
+        shell: pwsh
+        run: |
+          $testBinary = cargo test --lib --manifest-path src-tauri/Cargo.toml --no-run --message-format=json |
+            ForEach-Object {
+              if ($_ -match '"reason":"compiler-artifact"') {
+                $artifact = $_ | ConvertFrom-Json
+                if ($artifact.executable -and $artifact.profile.test -and $artifact.target.name -eq 'cc_switch_lib') {
+                  $artifact.executable
+                }
+              }
+            } | Select-Object -First 1 -Wait
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          if (-not $testBinary) {
+            throw "cc_switch_lib test binary not found in cargo compiler artifacts"
+          }
+          "CC_SWITCH_TEST_EXE=$testBinary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Run Windows-to-WSL2 filesystem contract
-        if: runner.os == 'Windows' && (github.event_name != 'pull_request' || needs.changes.outputs.wsl == 'true')
-        # Run the test binary built by nextest directly. Invoking cargo here
-        # with TEMP pointing at a WSL UNC path can re-link the crate, and
-        # link.exe/mt.exe cannot create manifest temp files on \\wsl.localhost.
         shell: pwsh
         run: |
           $env:TEMP = $env:CC_SWITCH_WSL_TEST_TEMP
@@ -369,8 +409,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
           }
-          $expected = "${testName}: test"
-          if ($testList -notcontains $expected) {
+          if ($testList -notcontains "${testName}: test") {
             throw "Expected ignored test was not discovered: $testName"
           }
           & $env:CC_SWITCH_TEST_EXE $testName --ignored --exact --nocapture
@@ -379,7 +418,6 @@ jobs:
           }
 
       - name: Run Hermes live WAL reads inside WSL2
-        if: runner.os == 'Windows' && (github.event_name != 'pull_request' || needs.changes.outputs.wsl == 'true')
         env:
           CC_SWITCH_WSL_DISTRO: Ubuntu-24.04
         shell: pwsh
@@ -397,7 +435,7 @@ jobs:
   ci-gate:
     name: CI gate
     runs-on: ubuntu-latest
-    needs: [changes, frontend, frontend-tests, readme-parity, frontend-contracts, backend]
+    needs: [changes, frontend, frontend-tests, readme-parity, frontend-contracts, backend, backend-windows-wsl2]
     if: always()
     permissions: {}
     steps:

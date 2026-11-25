@@ -5,7 +5,7 @@
 import {
   extractCodexBaseUrl,
   extractCodexExperimentalBearerToken,
-} from "@/utils/providerConfigUtils";
+} from "@/utils/codexConfigUtils";
 import { parseGrokBuildConfig } from "@/utils/grokBuildConfig";
 
 /** 凭据预检结果：base_url + api_key，缺任一则拉取按钮禁用 */

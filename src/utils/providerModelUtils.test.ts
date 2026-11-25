@@ -6,7 +6,7 @@ import {
   MODEL_CAPABLE_APPS,
   setClaudeOneMInSettings,
 } from "./providerModelUtils";
-import { extractCodexModelName } from "./providerConfigUtils";
+import { extractCodexModelName } from "./codexConfigUtils";
 
 const claudeSettings = (env: Record<string, any> = {}) => ({
   env,

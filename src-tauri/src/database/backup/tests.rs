@@ -2416,8 +2416,8 @@ fn startup_defers_cleanup_to_maintenance_even_when_auto_backup_disabled() -> Res
         "old request logs should still be pruned when auto backup is disabled"
     );
     assert_eq!(
-        stream_logs, 0,
-        "old stream check logs should still be pruned when auto backup is disabled"
+        stream_logs, 1,
+        "fork keeps the orphan stream_check_logs table without its removed DAO cleanup"
     );
     assert_eq!(rollups, 1, "old request logs should be rolled up");
 
@@ -2455,238 +2455,238 @@ fn maintenance_prunes_logs_even_when_backup_destination_is_invalid() -> Result<(
         conn.query_row("SELECT COUNT(*) FROM usage_daily_rollups", [], |r| r.get(0))?;
     assert_eq!((logs, rollups), (0, 1));
     Ok(())
+}
 
-    /// 性能基准（不是回归测试）：用接近重度代理用户的行数测量
-    /// 导出 / 本地文件导入 / 同步导入三条路径的耗时与产物大小。
-    ///
-    /// 手动运行：`cargo test --lib perf_backup -- --ignored --nocapture`
-    #[test]
-    #[ignore = "perf harness, run explicitly"]
-    #[serial]
-    fn perf_backup_export_import_paths() -> Result<(), AppError> {
-        use std::time::Instant;
+/// 性能基准（不是回归测试）：用接近重度代理用户的行数测量
+/// 导出 / 本地文件导入 / 同步导入三条路径的耗时与产物大小。
+///
+/// 手动运行：`cargo test --lib perf_backup -- --ignored --nocapture`
+#[test]
+#[ignore = "perf harness, run explicitly"]
+#[serial]
+fn perf_backup_export_import_paths() -> Result<(), AppError> {
+    use std::time::Instant;
 
-        const LOG_ROWS: usize = 20_000;
-        const ROLLUP_ROWS: usize = 1_000;
+    const LOG_ROWS: usize = 20_000;
+    const ROLLUP_ROWS: usize = 1_000;
 
-        let _test_home = TestHomeGuard::new();
+    let _test_home = TestHomeGuard::new();
 
-        fn populate(db: &Database, log_rows: usize, rollup_rows: usize) -> Result<(), AppError> {
-            let mut conn = crate::database::lock_conn!(db.conn);
-            let tx = conn.transaction()?;
-            for i in 0..50 {
-                tx.execute(
-                    "INSERT INTO providers (id, app_type, name, settings_config, meta)
+    fn populate(db: &Database, log_rows: usize, rollup_rows: usize) -> Result<(), AppError> {
+        let mut conn = crate::database::lock_conn!(db.conn);
+        let tx = conn.transaction()?;
+        for i in 0..50 {
+            tx.execute(
+                "INSERT INTO providers (id, app_type, name, settings_config, meta)
                      VALUES (?1, 'claude', ?2, '{}', '{}')",
-                    rusqlite::params![format!("p{i}"), format!("Provider {i}")],
-                )?;
-            }
-            for i in 0..log_rows {
-                tx.execute(
-                    "INSERT INTO proxy_request_logs (
+                rusqlite::params![format!("p{i}"), format!("Provider {i}")],
+            )?;
+        }
+        for i in 0..log_rows {
+            tx.execute(
+                "INSERT INTO proxy_request_logs (
                         request_id, provider_id, app_type, model,
                         input_tokens, output_tokens, total_cost_usd,
                         latency_ms, status_code, created_at
                     ) VALUES (?1, 'p1', 'claude', 'claude-3', 100, 50, '0.01', 120, 200, 1000)",
-                    [format!("req-{i}")],
-                )?;
-            }
-            for i in 0..rollup_rows {
-                // (date, app_type, provider_id, model, request_model, pricing_model)
-                // 上有 UNIQUE 约束，日期必须逐行唯一。
-                let date = format!(
-                    "{:04}-{:02}-{:02}",
-                    2025 + i / 336,
-                    i / 28 % 12 + 1,
-                    i % 28 + 1
-                );
-                tx.execute(
-                    "INSERT INTO usage_daily_rollups (
+                [format!("req-{i}")],
+            )?;
+        }
+        for i in 0..rollup_rows {
+            // (date, app_type, provider_id, model, request_model, pricing_model)
+            // 上有 UNIQUE 约束，日期必须逐行唯一。
+            let date = format!(
+                "{:04}-{:02}-{:02}",
+                2025 + i / 336,
+                i / 28 % 12 + 1,
+                i % 28 + 1
+            );
+            tx.execute(
+                "INSERT INTO usage_daily_rollups (
                         date, app_type, provider_id, model, request_count, success_count,
                         input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
                         total_cost_usd, avg_latency_ms
                     ) VALUES (?1, 'claude', 'p1', 'claude-3', 7, 7, 700, 350, 0, 0, '0.07', 120)",
-                    [date],
-                )?;
-            }
-            tx.commit()?;
-            Ok(())
-        }
-
-        let source = Database::memory()?;
-        populate(&source, LOG_ROWS, ROLLUP_ROWS)?;
-
-        let t = Instant::now();
-        let full_sql = source.export_sql_string()?;
-        println!(
-            "export_sql_string (full): {:?}, {} bytes",
-            t.elapsed(),
-            full_sql.len()
-        );
-
-        let t = Instant::now();
-        let import_target = Database::memory()?;
-        import_target.import_sql_string(&full_sql)?;
-        println!("import_sql_string (local file path): {:?}", t.elapsed());
-        {
-            let conn = crate::database::lock_conn!(import_target.conn);
-            let counts: (i64, i64, i64) = conn.query_row(
-                "SELECT
-                    (SELECT COUNT(*) FROM providers),
-                    (SELECT COUNT(*) FROM proxy_request_logs),
-                    (SELECT COUNT(*) FROM usage_daily_rollups)",
-                [],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                [date],
             )?;
-            assert_eq!(counts, (50, LOG_ROWS as i64, ROLLUP_ROWS as i64));
         }
-
-        let sync_sql = source.export_sql_string_for_sync()?;
-        println!("sync payload: {} bytes", sync_sql.len());
-
-        // 同步导入的耗时大头在"保留本机日志表"——本机库必须带同样规模的日志行。
-        let local = Database::memory()?;
-        populate(&local, LOG_ROWS, ROLLUP_ROWS)?;
-        let t = Instant::now();
-        local.import_sql_string_for_sync(&sync_sql)?;
-        println!(
-            "import_sql_string_for_sync ({} preserved log rows): {:?}",
-            LOG_ROWS + ROLLUP_ROWS,
-            t.elapsed()
-        );
-        {
-            let conn = crate::database::lock_conn!(local.conn);
-            let counts: (i64, i64) = conn.query_row(
-                "SELECT
-                    (SELECT COUNT(*) FROM proxy_request_logs),
-                    (SELECT COUNT(*) FROM usage_daily_rollups)",
-                [],
-                |row| Ok((row.get(0)?, row.get(1)?)),
-            )?;
-            assert_eq!(counts, (LOG_ROWS as i64, ROLLUP_ROWS as i64));
-        }
+        tx.commit()?;
         Ok(())
     }
 
-    /// 分阶段拆解 import_sql_string 的耗时，定位慢在哪一步。
-    ///
-    /// 手动运行：`cargo test --lib perf_import_phases -- --ignored --nocapture`
-    #[test]
-    #[ignore = "perf diagnostic, run explicitly"]
-    fn perf_import_phases() -> Result<(), AppError> {
-        use rusqlite::Connection;
-        use std::time::Instant;
-        use tempfile::NamedTempFile;
+    let source = Database::memory()?;
+    populate(&source, LOG_ROWS, ROLLUP_ROWS)?;
 
-        const LOG_ROWS: usize = 20_000;
+    let t = Instant::now();
+    let full_sql = source.export_sql_string()?;
+    println!(
+        "export_sql_string (full): {:?}, {} bytes",
+        t.elapsed(),
+        full_sql.len()
+    );
 
-        let source = Database::memory()?;
-        {
-            let mut conn = crate::database::lock_conn!(source.conn);
-            let tx = conn.transaction()?;
-            for i in 0..50 {
-                tx.execute(
-                    "INSERT INTO providers (id, app_type, name, settings_config, meta)
+    let t = Instant::now();
+    let import_target = Database::memory()?;
+    import_target.import_sql_string(&full_sql)?;
+    println!("import_sql_string (local file path): {:?}", t.elapsed());
+    {
+        let conn = crate::database::lock_conn!(import_target.conn);
+        let counts: (i64, i64, i64) = conn.query_row(
+            "SELECT
+                    (SELECT COUNT(*) FROM providers),
+                    (SELECT COUNT(*) FROM proxy_request_logs),
+                    (SELECT COUNT(*) FROM usage_daily_rollups)",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+        assert_eq!(counts, (50, LOG_ROWS as i64, ROLLUP_ROWS as i64));
+    }
+
+    let sync_sql = source.export_sql_string_for_sync()?;
+    println!("sync payload: {} bytes", sync_sql.len());
+
+    // 同步导入的耗时大头在"保留本机日志表"——本机库必须带同样规模的日志行。
+    let local = Database::memory()?;
+    populate(&local, LOG_ROWS, ROLLUP_ROWS)?;
+    let t = Instant::now();
+    local.import_sql_string_for_sync(&sync_sql)?;
+    println!(
+        "import_sql_string_for_sync ({} preserved log rows): {:?}",
+        LOG_ROWS + ROLLUP_ROWS,
+        t.elapsed()
+    );
+    {
+        let conn = crate::database::lock_conn!(local.conn);
+        let counts: (i64, i64) = conn.query_row(
+            "SELECT
+                    (SELECT COUNT(*) FROM proxy_request_logs),
+                    (SELECT COUNT(*) FROM usage_daily_rollups)",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        assert_eq!(counts, (LOG_ROWS as i64, ROLLUP_ROWS as i64));
+    }
+    Ok(())
+}
+
+/// 分阶段拆解 import_sql_string 的耗时，定位慢在哪一步。
+///
+/// 手动运行：`cargo test --lib perf_import_phases -- --ignored --nocapture`
+#[test]
+#[ignore = "perf diagnostic, run explicitly"]
+fn perf_import_phases() -> Result<(), AppError> {
+    use rusqlite::Connection;
+    use std::time::Instant;
+    use tempfile::NamedTempFile;
+
+    const LOG_ROWS: usize = 20_000;
+
+    let source = Database::memory()?;
+    {
+        let mut conn = crate::database::lock_conn!(source.conn);
+        let tx = conn.transaction()?;
+        for i in 0..50 {
+            tx.execute(
+                "INSERT INTO providers (id, app_type, name, settings_config, meta)
                      VALUES (?1, 'claude', ?2, '{}', '{}')",
-                    rusqlite::params![format!("p{i}"), format!("Provider {i}")],
-                )?;
-            }
-            for i in 0..LOG_ROWS {
-                tx.execute(
-                    "INSERT INTO proxy_request_logs (
+                rusqlite::params![format!("p{i}"), format!("Provider {i}")],
+            )?;
+        }
+        for i in 0..LOG_ROWS {
+            tx.execute(
+                "INSERT INTO proxy_request_logs (
                         request_id, provider_id, app_type, model,
                         input_tokens, output_tokens, total_cost_usd,
                         latency_ms, status_code, created_at
                     ) VALUES (?1, 'p1', 'claude', 'claude-3', 100, 50, '0.01', 120, 200, 1000)",
-                    [format!("req-{i}")],
-                )?;
-            }
-            tx.commit()?;
+                [format!("req-{i}")],
+            )?;
         }
-        let sql = source.export_sql_string()?;
-        println!("payload: {} bytes, {LOG_ROWS} log rows", sql.len());
+        tx.commit()?;
+    }
+    let sql = source.export_sql_string()?;
+    println!("payload: {} bytes, {LOG_ROWS} log rows", sql.len());
 
-        let temp_file = NamedTempFile::new().expect("temp file");
-        let temp_conn = Connection::open(temp_file.path()).expect("open temp conn");
+    let temp_file = NamedTempFile::new().expect("temp file");
+    let temp_conn = Connection::open(temp_file.path()).expect("open temp conn");
 
-        let t = Instant::now();
-        temp_conn
-            .execute_batch(&sql)
-            .expect("execute_batch should succeed");
-        println!("phase execute_batch: {:?}", t.elapsed());
+    let t = Instant::now();
+    temp_conn
+        .execute_batch(&sql)
+        .expect("execute_batch should succeed");
+    println!("phase execute_batch: {:?}", t.elapsed());
 
-        let t = Instant::now();
-        Database::create_tables_on_conn(&temp_conn)?;
-        Database::apply_schema_migrations_on_conn(&temp_conn)?;
-        println!("phase schema+migrations: {:?}", t.elapsed());
+    let t = Instant::now();
+    Database::create_tables_on_conn(&temp_conn)?;
+    Database::apply_schema_migrations_on_conn(&temp_conn)?;
+    println!("phase schema+migrations: {:?}", t.elapsed());
 
-        let t = Instant::now();
-        let target = Database::memory()?;
-        {
-            let mut main_conn = crate::database::lock_conn!(target.conn);
-            let backup =
-                rusqlite::backup::Backup::new(&temp_conn, &mut main_conn).expect("backup init");
-            backup.step(-1).expect("backup step");
-        }
-        println!("phase backup-to-main: {:?}", t.elapsed());
+    let t = Instant::now();
+    let target = Database::memory()?;
+    {
+        let mut main_conn = crate::database::lock_conn!(target.conn);
+        let backup =
+            rusqlite::backup::Backup::new(&temp_conn, &mut main_conn).expect("backup init");
+        backup.step(-1).expect("backup step");
+    }
+    println!("phase backup-to-main: {:?}", t.elapsed());
 
-        // 对照组：同样的语句但临时库关掉 journal / synchronous。
-        let temp_file2 = NamedTempFile::new().expect("temp file 2");
-        let temp_conn2 = Connection::open(temp_file2.path()).expect("open temp conn 2");
-        temp_conn2
-            .execute_batch("PRAGMA journal_mode=MEMORY; PRAGMA synchronous=OFF;")
-            .expect("pragmas");
-        let t = Instant::now();
-        temp_conn2
-            .execute_batch(&sql)
-            .expect("execute_batch should succeed");
-        println!(
-            "phase execute_batch (journal=MEMORY, sync=OFF): {:?}",
-            t.elapsed()
-        );
+    // 对照组：同样的语句但临时库关掉 journal / synchronous。
+    let temp_file2 = NamedTempFile::new().expect("temp file 2");
+    let temp_conn2 = Connection::open(temp_file2.path()).expect("open temp conn 2");
+    temp_conn2
+        .execute_batch("PRAGMA journal_mode=MEMORY; PRAGMA synchronous=OFF;")
+        .expect("pragmas");
+    let t = Instant::now();
+    temp_conn2
+        .execute_batch(&sql)
+        .expect("execute_batch should succeed");
+    println!(
+        "phase execute_batch (journal=MEMORY, sync=OFF): {:?}",
+        t.elapsed()
+    );
 
-        // 对照组 B：同一份脚本跑在内存库上，区分“纯 CPU/解析”还是“文件 I/O”。
-        let mem_conn = Connection::open_in_memory().expect("open mem conn");
-        let t = Instant::now();
-        mem_conn
-            .execute_batch(&sql)
-            .expect("execute_batch mem should succeed");
-        println!("phase execute_batch (in-memory): {:?}", t.elapsed());
+    // 对照组 B：同一份脚本跑在内存库上，区分“纯 CPU/解析”还是“文件 I/O”。
+    let mem_conn = Connection::open_in_memory().expect("open mem conn");
+    let t = Instant::now();
+    mem_conn
+        .execute_batch(&sql)
+        .expect("execute_batch mem should succeed");
+    println!("phase execute_batch (in-memory): {:?}", t.elapsed());
 
-        // 对照组 C：同样的数据改成多行 VALUES（每 200 行一条 INSERT），
-        // 验证“每行一条语句”的解析开销占比。
-        let mut batched = String::from("PRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n");
-        batched.push_str(
-            "CREATE TABLE bench_logs (
+    // 对照组 C：同样的数据改成多行 VALUES（每 200 行一条 INSERT），
+    // 验证“每行一条语句”的解析开销占比。
+    let mut batched = String::from("PRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n");
+    batched.push_str(
+        "CREATE TABLE bench_logs (
                 request_id TEXT, provider_id TEXT, app_type TEXT, model TEXT,
                 input_tokens INTEGER, output_tokens INTEGER, total_cost_usd TEXT,
                 latency_ms INTEGER, status_code INTEGER, created_at INTEGER
             );\n",
-        );
-        const BATCH: usize = 200;
-        for chunk_start in (0..LOG_ROWS).step_by(BATCH) {
-            batched.push_str("INSERT INTO bench_logs VALUES ");
-            for i in chunk_start..(chunk_start + BATCH).min(LOG_ROWS) {
-                if i > chunk_start {
-                    batched.push(',');
-                }
-                batched.push_str(&format!(
-                    "('req-{i}','p1','claude','claude-3',100,50,'0.01',120,200,1000)"
-                ));
+    );
+    const BATCH: usize = 200;
+    for chunk_start in (0..LOG_ROWS).step_by(BATCH) {
+        batched.push_str("INSERT INTO bench_logs VALUES ");
+        for i in chunk_start..(chunk_start + BATCH).min(LOG_ROWS) {
+            if i > chunk_start {
+                batched.push(',');
             }
-            batched.push_str(";\n");
+            batched.push_str(&format!(
+                "('req-{i}','p1','claude','claude-3',100,50,'0.01',120,200,1000)"
+            ));
         }
-        batched.push_str("COMMIT;\n");
-        let mem_conn2 = Connection::open_in_memory().expect("open mem conn 2");
-        let t = Instant::now();
-        mem_conn2
-            .execute_batch(&batched)
-            .expect("batched should succeed");
-        println!(
-            "phase execute_batch (in-memory, multi-row VALUES x{BATCH}): {:?}",
-            t.elapsed()
-        );
-
-        Ok(())
+        batched.push_str(";\n");
     }
+    batched.push_str("COMMIT;\n");
+    let mem_conn2 = Connection::open_in_memory().expect("open mem conn 2");
+    let t = Instant::now();
+    mem_conn2
+        .execute_batch(&batched)
+        .expect("batched should succeed");
+    println!(
+        "phase execute_batch (in-memory, multi-row VALUES x{BATCH}): {:?}",
+        t.elapsed()
+    );
+
+    Ok(())
 }

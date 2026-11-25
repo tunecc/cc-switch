@@ -917,7 +917,7 @@ export function PiProviderForm({
   };
 
   const presetEntries = useMemo(() => {
-    // 先按原数组下标编号再过滤 fork 白名单：添加对话框按 id 里的下标回查预设
+    // 先按原数组下标编号，再过滤 hidden 与 fork 白名单：添加对话框按 id 里的下标回查预设
     const forkAllowed = new Set(
       filterForkPresets(
         isOmp ? "omp" : "pi",
@@ -929,7 +929,9 @@ export function PiProviderForm({
         id: `pi-${index}`,
         preset,
       }))
-      .filter((entry) => forkAllowed.has(entry.preset.name));
+      .filter(
+        (entry) => !entry.preset.hidden && forkAllowed.has(entry.preset.name),
+      );
   }, [presets, isOmp]);
 
   const selectPreset = (id: string) => {

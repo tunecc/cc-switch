@@ -558,12 +558,30 @@ export function ProviderCard({
           </Fragment>
         ))}
         {claudeDefaultPlanLabel && (
-          <span className="-ms-1 shrink-0">
-            · {claudeDefaultPlanLabel}
-          </span>
+          <span className="-ms-1 shrink-0">· {claudeDefaultPlanLabel}</span>
         )}
       </div>
     ) : null;
+  const accountWebsiteRow =
+    manualNote === undefined
+      ? (websiteLinksRow ??
+        (displayUrl ? (
+          <button
+            type="button"
+            onClick={handleOpenWebsite}
+            className={cn(
+              "mt-0.5 inline-flex max-w-full items-center overflow-hidden text-start text-caption text-fg-2",
+              isClickableUrl
+                ? "cursor-pointer decoration-border-strong underline-offset-[3px] hover:underline"
+                : "cursor-default",
+            )}
+            title={displayUrl}
+            disabled={!isClickableUrl}
+          >
+            <span className="min-w-0 truncate">{displayUrl}</span>
+          </button>
+        ) : null))
+      : null;
 
   return (
     <div
@@ -733,11 +751,15 @@ export function ProviderCard({
               )}
             </div>
           ) : grokBoundAccountId ? (
-            <GrokBoundAccountLine
-              accountId={grokBoundAccountId}
-              providerName={provider.name}
-              note={manualNote}
-            />
+            <>
+              <GrokBoundAccountLine
+                accountId={grokBoundAccountId}
+                providerName={provider.name}
+                note={manualNote}
+                planLabel={subtitlePlan}
+              />
+              {accountWebsiteRow}
+            </>
           ) : claudeBoundAccountId ? (
             <ClaudeBoundAccountLine
               accountId={claudeBoundAccountId}
@@ -805,23 +827,7 @@ export function ProviderCard({
                   </span>
                 </div>
               ) : null}
-              {websiteLinksRow ??
-                (displayUrl ? (
-                  <button
-                    type="button"
-                    onClick={handleOpenWebsite}
-                    className={cn(
-                      "mt-0.5 inline-flex max-w-full items-center overflow-hidden text-start text-caption text-fg-2",
-                      isClickableUrl
-                        ? "cursor-pointer decoration-border-strong underline-offset-[3px] hover:underline"
-                        : "cursor-default",
-                    )}
-                    title={displayUrl}
-                    disabled={!isClickableUrl}
-                  >
-                    <span className="min-w-0 truncate">{displayUrl}</span>
-                  </button>
-                ) : null)}
+              {accountWebsiteRow}
             </>
           ) : websiteLinksRow ? (
             websiteLinksRow

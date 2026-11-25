@@ -22,7 +22,7 @@ type OmoProviderRow = (
     String,
 );
 
-// fork：在 website_url 之后补第二官网链接列 website_url_2（fork 专属列，见 schema v24）。
+// fork：在 website_url 之后补第二官网链接列 website_url_2。
 const PROVIDER_SELECT: &str = "SELECT id, name, settings_config, website_url, website_url_2, category, created_at, sort_index, notes, icon, icon_color, meta, in_failover_queue FROM providers";
 
 /// 按 [`PROVIDER_SELECT`] 的列序（`id, name, settings_config, website_url, website_url_2, category, created_at,

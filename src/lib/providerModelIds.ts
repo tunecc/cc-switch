@@ -1,4 +1,4 @@
-import { extractCodexModelName } from "@/utils/providerConfigUtils";
+import { extractCodexModelName } from "@/utils/codexConfigUtils";
 import { isPlainObject } from "@/lib/requestOverrides";
 import type { AppId } from "@/lib/api";
 

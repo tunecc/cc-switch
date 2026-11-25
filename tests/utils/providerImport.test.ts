@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CodexApiFormat, Provider } from "@/types";
-import { extractCodexModelName } from "@/utils/providerConfigUtils";
+import { extractCodexModelName } from "@/utils/codexConfigUtils";
 import {
   buildImportedSettingsConfig,
   patchImportedSettingsConfig,

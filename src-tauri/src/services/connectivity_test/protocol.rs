@@ -824,8 +824,10 @@ mod tests {
     }
 
     fn claude_provider_with_format(api_format: &str) -> Provider {
-        let mut meta = crate::provider::ProviderMeta::default();
-        meta.api_format = Some(api_format.to_string());
+        let meta = crate::provider::ProviderMeta {
+            api_format: Some(api_format.to_string()),
+            ..Default::default()
+        };
         provider_with_meta(
             json!({
                 "env": {
@@ -886,8 +888,10 @@ mod tests {
     #[test]
     fn claude_gemini_native_targets_model_method_url() {
         // A3: gemini_native → /v1beta/models/{model}:{method}；普通 key → x-goog-api-key
-        let mut meta = crate::provider::ProviderMeta::default();
-        meta.api_format = Some("gemini_native".to_string());
+        let meta = crate::provider::ProviderMeta {
+            api_format: Some("gemini_native".to_string()),
+            ..Default::default()
+        };
         let p = provider_with_meta(
             json!({
                 "env": {
@@ -924,8 +928,10 @@ mod tests {
     #[test]
     fn claude_gemini_native_normalizes_models_prefix_in_url() {
         // `models/` 资源名形式归一化，避免 /v1beta/models/models/... 双前缀
-        let mut meta = crate::provider::ProviderMeta::default();
-        meta.api_format = Some("gemini_native".to_string());
+        let meta = crate::provider::ProviderMeta {
+            api_format: Some("gemini_native".to_string()),
+            ..Default::default()
+        };
         let p = provider_with_meta(
             json!({
                 "env": {
@@ -949,8 +955,10 @@ mod tests {
     #[test]
     fn claude_gemini_native_oauth_uses_bearer_access_token() {
         // A6: GeminiCli OAuth 凭据（含可用 access_token）→ Bearer access_token
-        let mut meta = crate::provider::ProviderMeta::default();
-        meta.api_format = Some("gemini_native".to_string());
+        let meta = crate::provider::ProviderMeta {
+            api_format: Some("gemini_native".to_string()),
+            ..Default::default()
+        };
         let p = provider_with_meta(
             json!({
                 "env": {
@@ -1030,8 +1038,10 @@ mod tests {
     #[test]
     fn claude_full_url_uses_base_url_directly() {
         // A7: meta.isFullUrl=true → 直接使用 base_url，不拼接端点路径
-        let mut meta = crate::provider::ProviderMeta::default();
-        meta.is_full_url = Some(true);
+        let meta = crate::provider::ProviderMeta {
+            is_full_url: Some(true),
+            ..Default::default()
+        };
         let p = provider_with_meta(
             json!({
                 "env": {
@@ -1227,8 +1237,10 @@ wire_api = "chat"
     fn codex_anthropic_wire_targets_messages_and_x_api_key() {
         // A5/A6: wire_api="anthropic" → /v1/messages + Anthropic 形状；
         // apiKeyField=ANTHROPIC_API_KEY → x-api-key
-        let mut meta = crate::provider::ProviderMeta::default();
-        meta.api_key_field = Some("ANTHROPIC_API_KEY".to_string());
+        let meta = crate::provider::ProviderMeta {
+            api_key_field: Some("ANTHROPIC_API_KEY".to_string()),
+            ..Default::default()
+        };
         let p = provider_with_meta(
             json!({
                 "config": r#"model_provider = "custom"
@@ -1324,8 +1336,10 @@ wire_api = "anthropic"
     #[test]
     fn codex_anthropic_max_output_tokens_meta_is_injected() {
         // per-provider 输出上限 meta.maxOutputTokens 参与转换（对齐真实链路）
-        let mut meta = crate::provider::ProviderMeta::default();
-        meta.max_output_tokens = Some(2048);
+        let meta = crate::provider::ProviderMeta {
+            max_output_tokens: Some(2048),
+            ..Default::default()
+        };
         let p = provider_with_meta(
             json!({
                 "config": r#"model_provider = "custom"
@@ -1346,8 +1360,10 @@ wire_api = "anthropic"
     #[test]
     fn codex_full_url_uses_base_url_directly() {
         // A7: meta.isFullUrl=true → 直接使用 base_url，不拼接端点路径
-        let mut meta = crate::provider::ProviderMeta::default();
-        meta.is_full_url = Some(true);
+        let meta = crate::provider::ProviderMeta {
+            is_full_url: Some(true),
+            ..Default::default()
+        };
         let p = provider_with_meta(
             json!({
                 "config": r#"base_url = "https://relay.example.com/openai/v1/responses""#,

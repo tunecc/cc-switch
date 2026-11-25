@@ -321,4 +321,29 @@ describe("ProviderForm 预设新增行金标", () => {
       },
     );
   });
+
+  it("filters hidden presets without renumbering later rows", async () => {
+    const sourceIndex = providerPresets.findIndex(
+      (preset) => preset.name === "Nvidia",
+    );
+    expect(sourceIndex).toBeGreaterThanOrEqual(0);
+    providerPresets.unshift({
+      ...providerPresets[sourceIndex],
+      hidden: true,
+    });
+
+    try {
+      const onSubmit = vi.fn();
+      const { container } = renderForm("claude", onSubmit);
+      clickRow("Nvidia");
+      fillInputById(container, API_KEY_INPUT_ID.claude, TEST_API_KEY);
+      fireEvent.click(screen.getByRole("button", { name: SUBMIT_LABEL }));
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      const values = onSubmit.mock.calls[0][0] as ProviderFormValues;
+      expect(values.presetId).toBe(`claude-${sourceIndex + 1}`);
+    } finally {
+      providerPresets.shift();
+    }
+  });
 });

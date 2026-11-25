@@ -43,12 +43,15 @@ export function GrokBoundAccountLine(props: {
   accountId: string;
   providerName: string;
   note?: string;
+  planLabel?: string | null;
 }) {
   const { t } = useTranslation();
+  const { planLabel } = props;
   return (
     <ManagedBoundAccountLine
       {...props}
       authProvider="xai_oauth"
+      plan={planLabel ? () => planLabel : undefined}
       accountNoun={t("provider.form.grokAccount.xaiAccount", {
         defaultValue: "xAI 账号",
       })}

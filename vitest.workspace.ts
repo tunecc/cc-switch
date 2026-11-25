@@ -5,6 +5,11 @@ const SRC_ALIAS = {
   "@": path.resolve(__dirname, "./src"),
 };
 
+const FORK_BUILD_DEFINES = {
+  __CCS_FORK_BUILD__: JSON.stringify(true),
+  __CCS_DEV_PANEL__: JSON.stringify(false),
+};
+
 /**
  * Pure-Node tests with no DOM/RTL dependency and no module/global/env
  * mutations. Safe to run in `node` without `setupFiles` and without per-file
@@ -161,6 +166,7 @@ export default defineWorkspace([
     resolve: {
       alias: SRC_ALIAS,
     },
+    define: FORK_BUILD_DEFINES,
     test: {
       name: "node-unisolated",
       include: NODE_UNISOLATED_INCLUDE,
@@ -174,6 +180,7 @@ export default defineWorkspace([
     resolve: {
       alias: SRC_ALIAS,
     },
+    define: FORK_BUILD_DEFINES,
     test: {
       name: "node-isolated",
       include: NODE_ISOLATED_INCLUDE,
