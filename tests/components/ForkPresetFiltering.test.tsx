@@ -5,6 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { CopilotProviderForm } from "@/components/providers/forms/CopilotProviderForm";
 import { WorkBuddyProviderForm } from "@/components/providers/forms/WorkBuddyProviderForm";
 import { KimiProviderForm } from "@/components/providers/forms/KimiProviderForm";
+import { CodebuddyProviderForm } from "@/components/providers/forms/CodebuddyProviderForm";
 import { setProviders } from "../msw/state";
 import { renderWithQueryClient } from "../utils/testQueryClient";
 
@@ -91,6 +92,21 @@ vi.mock("@/config/kimiProviderPresets", async (importOriginal) => {
   };
 });
 
+vi.mock("@/config/codebuddyProviderPresets", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/config/codebuddyProviderPresets")>();
+  return {
+    ...actual,
+    codebuddyProviderPresets: actual.codebuddyProviderPresets.map((preset) => ({
+      ...preset,
+      providerKey:
+        preset.name === "Xiaomi MiMo"
+          ? "cc-switch-visible"
+          : preset.providerKey,
+    })),
+  };
+});
+
 vi.mock("@/components/JsonEditor", () => ({
   default: ({
     id,
@@ -123,6 +139,7 @@ beforeEach(() => {
   setProviders("copilot", {});
   setProviders("workbuddy", {});
   setProviders("kimi", {});
+  setProviders("codebuddy", {});
 });
 
 describe("fork preset filtering", () => {
@@ -193,5 +210,25 @@ describe("fork preset filtering", () => {
     expect(screen.getByLabelText("opencode.providerKey")).toHaveValue(
       "cc-switch-visible",
     );
+  });
+
+  it("keeps only the CodeBuddy official card under the fork preset policy", async () => {
+    renderForm(
+      <CodebuddyProviderForm
+        appId="codebuddy"
+        submitLabel="Save"
+        onSubmit={vi.fn()}
+        onCancel={() => {}}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /codebuddy\.official\.presetName/ }),
+    ).toBeInTheDocument();
+    for (const vendor of ["DeepSeek", "Xiaomi MiMo", "LongCat"]) {
+      expect(
+        screen.queryByRole("button", { name: vendor }),
+      ).not.toBeInTheDocument();
+    }
   });
 });

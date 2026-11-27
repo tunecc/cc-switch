@@ -215,6 +215,8 @@ pub fn describe_reqwest_error(error: reqwest::Error) -> String {
 /// 连不上的原因，给界面挑一句用户看得懂的提示用。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+// fork: stream_check 可达链已移除，分类函数仅供上游孤儿服务/后续接线使用。
+#[allow(dead_code)]
 pub enum NetworkErrorKind {
     /// 系统拒绝发起连接：多半是防火墙或安全软件拦了本程序（Windows 10013、Unix EACCES/EPERM）
     Blocked,
@@ -231,6 +233,7 @@ pub enum NetworkErrorKind {
 /// 按 `io::ErrorKind` 判断而不是匹配错误文本：系统给的错误文本是本地化的（中文 Windows 上
 /// 10013 是「以一种访问权限不允许的方式…」）。DNS 和 TLS 没有对应的 ErrorKind，只能认
 /// hyper / rustls 自己的英文文本。
+#[allow(dead_code)]
 pub fn classify_error_chain(error: &(dyn std::error::Error + 'static)) -> NetworkErrorKind {
     let (mut dns, mut blocked, mut refused, mut timeout, mut tls) =
         (false, false, false, false, false);
@@ -268,6 +271,7 @@ pub fn classify_error_chain(error: &(dyn std::error::Error + 'static)) -> Networ
     }
 }
 
+#[allow(dead_code)]
 pub fn classify_reqwest_error(error: &reqwest::Error) -> NetworkErrorKind {
     if error.is_timeout() {
         return NetworkErrorKind::Timeout;

@@ -186,6 +186,7 @@ describe("ProviderCard xAI OAuth account subtitle", () => {
     renderCard(provider);
 
     expect(await screen.findByText("grok@x.ai")).toBeInTheDocument();
+  });
 
   it("keeps Grok Build account status and both websites on separate rows", async () => {
     authGetStatus.mockResolvedValue(

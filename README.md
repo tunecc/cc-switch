@@ -35,9 +35,10 @@
 | Codex                             | OpenAI Official         |
 | Gemini                            | Google Official         |
 | Grok Build                        | Grok Official           |
+| CodeBuddy                         | CodeBuddy Official      |
 | OpenCode / OpenClaw / Hermes / Pi | 无预设，仅自定义        |
 
-由 `forkOfficialAllowlist` + `forkPresetFilter` 实现，仅在 fork 构建下生效。
+由 `forkOfficialAllowlist` + `forkPresetFilter` 实现，仅在 fork 构建下生效。CodeBuddy 只保留官方登录卡，上游目录里的 DeepSeek / Xiaomi MiMo / LongCat 三个第三方厂商预设在 fork 构建下不显示。
 
 ### 3. Claude 表单调整
 

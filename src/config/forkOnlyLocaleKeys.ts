@@ -8,7 +8,7 @@
  * autoUpdate.* 与 codexOauth.reauthTitle、settings.authCenter.title 均不是 locale 删除豁免。
  * 上游键仍按上游口径严格校验，不做任何放宽。
  *
- * v4.0.40 轮按上游 en.json 复核：fork 专属 397 个、fork 已移除 5 个。
+ * v4.0.43 轮按上游 en.json 复核：fork 专属 397 个、fork 已移除 5 个。
  * 上游本轮删除的旧账号选择文案已从 en/zh/zh-TW/ja 删除（不进任何豁免清单）。
  * 生成方法见 docs/HOW_TO_REBASE_UPSTREAM.md §4.17。
  */

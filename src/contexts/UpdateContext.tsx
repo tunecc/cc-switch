@@ -9,7 +9,6 @@ import React, {
 import type { UpdateInfo } from "../lib/updater";
 import { checkForUpdate } from "../lib/updater";
 import { extractErrorMessage } from "../utils/errorUtils";
-import { notifyBackgroundTaskFailed } from "../lib/backgroundTaskNotice";
 
 interface UpdateContextValue {
   // 更新状态

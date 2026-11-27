@@ -56,4 +56,7 @@ export const forkOfficialAllowlist: Record<AppId, string[]> = {
   // （上游 v4.0.29 / v4.0.31 新增），白名单与 pi 一致；两家的官方登录卡属于「账号登录」组，不参与目录过滤
   copilot: ["Ollama", "LM Studio", "vLLM"],
   workbuddy: ["Ollama", "LM Studio", "vLLM"],
+  // codebuddy（腾讯 CodeBuddy，上游 v4.0.41 新增）：目录里的 DeepSeek / Xiaomi MiMo /
+  // LongCat 属第三方厂商预设，默认不显示；官方登录卡单独渲染，不参与目录过滤。
+  codebuddy: [],
 };

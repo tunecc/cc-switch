@@ -525,9 +525,10 @@ export function ProviderCard({
         )}
       </div>
     ) : null;
-  const defaultUrlSubtitle = websiteLinksRow
-    ? websiteLinksRow
-    : displayUrl && subtitlePlan ? (
+  const defaultUrlSubtitle =
+    websiteLinks.length > 1 ? (
+      websiteLinksRow
+    ) : displayUrl && subtitlePlan ? (
       <div className="mt-0.5 flex min-w-0 items-center gap-2 text-caption text-fg-2">
         <button
           type="button"
@@ -763,7 +764,10 @@ export function ProviderCard({
               </span>
               {planSuffix("-ms-0.5")}
             </div>
-          ) : websiteLinks.length > 0 ? (
+          ) : !isXaiOauthProvider &&
+            !isCopilot &&
+            !subtitlePlan &&
+            websiteLinks.length > 0 ? (
             <div
               className="mt-0.5 flex min-w-0 max-w-full items-center overflow-hidden text-left text-caption text-fg-2"
               data-testid="website-links"

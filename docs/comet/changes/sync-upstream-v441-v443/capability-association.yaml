@@ -1,0 +1,13 @@
+schema: comet.capability-association.v1
+status: explicit
+workflow: native
+capability: upstream-sync
+current_spec: docs/comet/specs/upstream-sync/spec.md
+current_hash: 0512da252093c2a236c53c464d1833f919edeff111d1e32b47be912b3201a255
+confidence: high
+query: 继续同步上游更新，保留我们自己的修改。如果我们做的功能上游有增加了，询问一下并分析，看保留上游的还是我们自己的更好。
+reason: 用户显式指定能力，已直接核对当前总 Spec 路径。
+historical_sources: []
+evidence:
+  - source: docs/comet/specs/upstream-sync/spec.md
+    kind: native-spec

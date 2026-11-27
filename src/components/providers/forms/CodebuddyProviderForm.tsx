@@ -38,12 +38,23 @@ import {
   metadataFilledAnything,
 } from "./modelMetadataFill";
 import { ProviderPresetSelector } from "./ProviderPresetSelector";
+import { filterForkPresets } from "@/config/forkPresetFilter";
 import type { ProviderFormProps } from "./ProviderForm";
 
-const PRESET_ENTRIES = codebuddyProviderPresets.map((preset, index) => ({
-  id: String(index),
-  preset,
-}));
+const CODEBUDDY_ALLOWED_PRESET_NAMES = new Set(
+  filterForkPresets("codebuddy", codebuddyProviderPresets).map(
+    (preset) => preset.name,
+  ),
+);
+
+// 先按上游原数组下标编号，再应用 fork 过滤；官方登录卡始终保留。
+const PRESET_ENTRIES = codebuddyProviderPresets
+  .map((preset, index) => ({ id: String(index), preset }))
+  .filter(
+    ({ preset }) =>
+      preset.category === "official" ||
+      CODEBUDDY_ALLOWED_PRESET_NAMES.has(preset.name),
+  );
 
 const EMPTY_CONFIG: CodebuddyModelConfig = {
   vendor: "",

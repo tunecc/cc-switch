@@ -1,0 +1,234 @@
+index	original	rebased	subject	patch_id_status	attribution
+1	ac5ef5897c93b32c0b026b7944e6391ca802c374	63a9f401cfc5851e3f04d164a54c918446ccf09e	docs(fork): add upstream rebase workflow and ignore tool artifacts	identical	stable patch-id identical
+2	eb57f938a3f6ea6d9bc4726d4fc349f1b8f16f5c	fa64900a6f4035aafafd5023931d8c83ae40df35	feat(fork): bump version to 3.19.2-fork.1 and rename product to CC Switch (Fork)	identical	stable patch-id identical
+3	5638416604cd153568ae7e17605aa661a78d5142	2af38d23b285280211a1a1b67103cbc38ee39116	feat(fork): inject __CCS_FORK_BUILD__ compile-time constant	identical	stable patch-id identical
+4	8e5103ed77a792a01f35aa77c84577dab574342e	bdaf80aa381d6d74d6efde240d8f85fefd2c754c	feat(fork): set macOS window title to CC Switch (Fork) on startup	identical	stable patch-id identical
+5	524bfbc0813ac34b3b340183b33c6270ad0f2577	ba17a13233c39d64b03f06e43976866a178592e4	feat(fork): add DevPanel and settings footer entry	identical	stable patch-id identical
+6	3d21f48883a41203ff492794038717266ad4e3d2	c955da48656ac983ccd4ffa10df1b152579beca7	fix(fork): define __CCS_FORK_BUILD__ in vitest config	identical	stable patch-id identical
+7	64747de4fd1c76684728aac4b4aeb62b62655a8e	5b8406fec9b8cbb4a7621e6c00b905977152f731	fix(fork): guard setTitle with isTauri in test/non-tauri env	identical	stable patch-id identical
+8	95ffdd8b2d784b77f46fcff119e06947a73e149c	74ed7d65b1bc350e5600c31f89ef2c1b715af178	docs(fork): complete rebase whitelist with all fork-touched files	identical	stable patch-id identical
+9	37d48cf789b1d1157548a46c96604fec6ec1ad31	bb31f24cf6db63d3bc91e2f1b9974ab6f9160bca	feat(fork): add dev config with isolated identifier and config dir	identical	stable patch-id identical
+10	9ac00139f57e4a657289cb8b0817129e593bf5bf	8e3f587ef79170c4e5cd37215b8c2e4209e6de87	chore(comet): archive ccs-fork-scaffolding change	identical	stable patch-id identical
+11	c2fdfe7664243783194afc5a687d2df3bddb2950	84b4b0c24c3287bf87c333233acca4555b88aad3	feat(fork): add official preset allowlist and filter util	identical	stable patch-id identical
+12	508a7e36a2214e716db74b4693010f774e5eeb3a	4cd79156400b34dfe9bc016709c263e19ec3e450	feat(fork): add hidden field to preset interfaces	identical	stable patch-id identical
+13	518258e2527a8c9b86be08125ee57c4b454a7590	e0cfa19fc4a14f21d78e74697a10e23e59fc7e33	feat(fork): wire official preset filter into provider forms	identical	stable patch-id identical
+14	e4e746bee940b0c281475a6187cde2449930d122	8e4f8eb214174b2bdafe1858abc39e3d934a0847	test(fork): mock IS_FORK_BUILD false in unit tests for upstream-form semantics	identical	stable patch-id identical
+15	bb83633db1bf4cabdb4e342ff18384e3fd871795	a76519140d51d3ca2edab0654a3ec0196398989a	docs(fork): add presets-trim files to rebase whitelist	identical	stable patch-id identical
+16	1cdc1001b4429b1220a34ba091ab4644c92256cb	87f0110f20356a89f218622b526e2afa5ec3afcd	chore(comet): archive ccs-provider-presets-trim change	identical	stable patch-id identical
+17	33e3e95a534940425526960b582d74a87a7417c2	12402cace5ecb8e833949e37c85e3ab86e4be4fb	feat(form): move api format select next to endpoint input	identical	stable patch-id identical
+18	64bed0ed685f7a02f739e6ff1c77fe4b40468168	9a6b660d6272351d3708f85bb8bc09ca4900e68d	feat(form): add 1M toggle-all checkbox in model mapping header	different	冲突停车：1M 表头辅助函数与上游 Copilot Auto 代码并存
+19	5aa3d7b82dec195afabaf5f8a8045ff6d7bfad8e	3090177ec8db248961af087d98fd782bedba331b	fix(form): widen api format select to fit option text	identical	stable patch-id identical
+20	2ae29e9a54455c761f5d8bcf04215480388f8131	197f710e31b550e18c4fa6e505cba494ffed3133	refactor(form): move api format select into EndpointField rightSlot	identical	stable patch-id identical
+21	6897fb52f8838a972e678f13684cc3abdb6839c1	247f75055a6a380fa7fe8c1b7d72e18f45d2b235	fix(form): align 1M toggle-all checkbox with row checkboxes	identical	stable patch-id identical
+22	1af2fbb67278902b7d9d2eddbfaf27345cd61223	694cafde07e482a68958564e5e9fcdb25fa7eb16	fix(form): correct 1M toggle-all alignment direction (ml-1)	identical	stable patch-id identical
+23	4f7807438b3e3df84c0384b10c3b6c500495c865	cce27a4628009181f7aef53bb5acf00cd6268ace	fix(i18n): update advanced options hint, add ja/zh-TW toggle-all, drop dead apiFormatHint key	identical	stable patch-id identical
+24	acb08ef87ce5266af8448c5b843d5e8a0fe3121b	80ecc163573bad9502ed2727632eb08d14b87b6b	chore(comet): archive ccs-claude-form-layout change	identical	stable patch-id identical
+25	d54fc20c913deb4249b1b4bc59a30d830bcd65f4	06aacf52c4db94626457d5b13611d2dcf3eb4dcb	feat(form): port SearchableModelPicker from upstream for searchable model selection	identical	stable patch-id identical
+26	20cc91a8990a3e21d32ce7f5b16a6d7b5b4740e1	6a6dfc8b3e7b13cbe58c1e87dd96eb16b79e91db	feat(i18n): add model search picker keys for all locales	identical	stable patch-id identical
+27	0bedee636fdc686968eb7a967ed40eb2be2be85b	444dba46dd7f7f714402a8be9f938f7ff101e444	chore(comet): archive ccs-model-search-port change	identical	stable patch-id identical
+28	57b7ed2004aa64945986f48a69f2b8e610a2b49f	99c0379242ffb9129f215c0706c25968c0e96221	feat(fork): add provider model read/write utils with tests	identical	stable patch-id identical
+29	482b5cce46782eb2c3d14514c6a972b234768c2f	6a987460e150449d12a3a3963f0e9e4add3feea8	feat(fork): add model quick switch dialog	identical	stable patch-id identical
+30	9a3b7b9b9b8f0ae631c3746aa2050249adab918e	18fc4b10c32f26f0088307ea3e55894b514e8252	feat(fork): show current model badge and quick-switch entry on provider cards	identical	stable patch-id identical
+31	af89cd23b69b3d0652080eac44292606500dd79c	44c636a1d83a1c0706369d8524628dab5459bc32	feat(fork): align model badge with upstream extractModelBadge	different	仅上下文位移/自动合并等价（文件集与增删行集合一致）
+32	faf340d052061f95144b37e577111b8486b06979	7031af742032028ee7b764b480cc93ceb7758b71	fix(fork): read grokbuild api key from config TOML in quick switch dialog	identical	stable patch-id identical
+33	f2dc4fab4111c58bba55265eefbef0b3aad0748e	ae3feaeca8924d8b8ce0686cda1a8ca143bbcff1	chore(comet): archive ccs-home-model-display change	identical	stable patch-id identical
+34	ba989912c776afa7083376a190863f862b826abb	f4fb15e7cdf5a9f9dc97eb4101b7c8a957dbfc14	feat: add sidebar panel visibility settings and wire into toolbar buttons	identical	stable patch-id identical
+35	549c886685a33fed01615d6db0cd1bdfcb977c0f	855f8e6a642dfa5eaba1d5770d6189300c713178	feat: add sidebar panel visibility switches to settings	identical	stable patch-id identical
+36	14aff1a5b8f2073de1f309f06c95d5990a7eaca4	6db4ef83aaaf27dad569c15e2a7be2cebfc79d89	style: use compact pill toggles for sidebar panel visibility	identical	stable patch-id identical
+37	327fc8df63e53be2470fbe7340ef85f3981716b2	872addfc984de18a04125e3cfc1b880a19d32bf1	fix: persist visibleSidebarPanels setting in backend AppSettings	different	仅上下文位移/自动合并等价（文件集与增删行集合一致）
+38	f6130efa73ec5c8467222f5dba8c593349e22069	04f6a62c61b018dec9dec975cb204ec49ecbb2d6	feat: include prompts in sidebar panel visibility settings	identical	stable patch-id identical
+39	65f096f01ec70020d051b0ba8e6d822ddce47285	074f0476d78afbbc2bd5cb54a1c08b5a175cd8f8	chore(comet): archive ccs-sidebar-panels-visibility change	identical	stable patch-id identical
+40	695f9ea2ce8aca8250ce0ca007fccd7435debb94	1fc193aba49beecc13f16608dff67476f180fa4d	feat: gate dev panel behind dev-only env flag	identical	stable patch-id identical
+41	fd5d3a8a7d6c2553fd3cb4c36a299b52f41da554	c4143513d9afc5c28a9395de5dd9f0739deca01c	ci: build only Windows x64 and macOS arm64, unsigned	identical	stable patch-id identical
+42	c5c614e22fec342954dd4dcee6a6831406259183	8fc97e0d0b37606a4c99c80c4b1b445f596aa507	feat: disable in-app updater, point users to GitHub releases	different	冲突停车：updater 域删除与上游更新链并存
+43	693365e3adf1facab7d3da413d5f1011ec2c942b	57cb723e08f7fc685d2b7501c49c9c6c8a67d855	chore: archive ccs-model-quick-switch-ui-polish	identical	stable patch-id identical
+44	8e557dd7977b77067d93c5de62054e235da1d9cf	d9a97503fdbc46aff25842dca6a663c4597a86d9	chore: archive ccs-fork-app-name-cc-switch	identical	stable patch-id identical
+45	5bf79845c0d3769efcd716d0149426be7f2c3895	df9391184808643c59e9ce7ea6575f15f833ed83	style: apply prettier to files touched by recent comet archives	identical	stable patch-id identical
+46	8a8df6679db6dce9895f06a8d2851696e9a88f6a	c4033df5227e4890eddb539e6983d1c281e4dd64	feat: add provider right-click move-to-top/bottom and insert new providers at second position	different	仅上下文位移/自动合并等价（文件集与增删行集合一致）
+47	9d3c5f9dcdc9a6e072e38ee28a1d7eb4fad32b46	d08e624024c373ced44af3c1e1521c24117d39d2	chore: archive comet-native provider-right-click-top-bottom	identical	stable patch-id identical
+48	df49bc0b8a27242e83a8034b089b523bd58ef5cb	cd7a8ea34ec3ffb6394a61f2114c9702bb652e9a	chore: archive comet-native claude-model-quick-access	different	冲突停车：快捷直达区迁移删除旧「模型映射」按钮
+49	bd6e81299b03eb8e9b207dc6f36863495492db3b	7d7b46e3fb565175810e64134df6cf173b9b2d79	docs: update README with fork build notes and quick-move provider changes	different	冲突停车：fork README 与上游文档结构
+50	a156f6543980f0a2c9a0f94ab2b470eb961ab0ac	83e38d3d37268384e01a247f93213567e9e126d1	feat(form): surface Claude fallback model as quick-access section below endpoint	identical	stable patch-id identical
+51	41709cce2509961474de4e3b94b77b39aad0a49a	6f70ca56e41d755bc2561476a33c93c4d50a7455	fix(form): only auto-expand Claude advanced options on divergent model mapping	identical	stable patch-id identical
+52	b520a9516b157526b07016080e10702f6f300501	f5ba82cb5b7acb8dbd69b45de61f18f154ccbc90	fix: 模型快捷切换弹窗内模型列表滚轮无法滚动	identical	stable patch-id identical
+53	6233ff7d370eee3569b001368514ee0daecf8081	71671093fc42d99d89b9c6338bf5df79cdca8715	chore: model-quick-switch-picker-scroll 验证报告与状态元数据	identical	stable patch-id identical
+54	947ae807574cb22b31415b072dbb372fb7f9fe53	90eeebd1824c6a3414df205590874e062afd796b	chore: archive model-quick-switch-picker-scroll	identical	stable patch-id identical
+55	1bc201eba69dc82b40fa4ff5980daeb997819976	52339bb0abad1280180fce646dc4534fe0b41b97	feat(connectivity-test): 新增后端连通性测试服务类型/模型解析/协议构造	identical	stable patch-id identical
+56	649cd39f2e8135fef7a8e164c31734a991b6f99e	6a8780c2e720e47ffb8d6b40897e42b39b69fea6	fix(connectivity-test): claude 鉴权对齐 adapter 顶层 apiKey/api_key 兜底	identical	stable patch-id identical
+57	eb09ca0934d5c9f19663669dd55e2e6ed17defd4	76f6b3d5d36ed20c83191f6547df7712043206f7	chore(connectivity-test): 勾选 Task 1 / OpenSpec 1.1	identical	stable patch-id identical
+58	b06864173176c48f0641daa6c44e859afb6b7543	5e8ffc0a4573315e6235bb74316c9ff43abe323a	feat(connectivity-test): 后端直连执行器（reqwest+SSE，总/空闲超时，度量与错误识别）	identical	stable patch-id identical
+59	da2a9d0e2729aaf929aad4005f30eb1c83d98280	e2714a466efadc6fb24381b478bf7e7c9d8a9dfa	chore(connectivity-test): 勾选 Task 2 / OpenSpec 1.2	identical	stable patch-id identical
+60	e451c9073d3db1c95ae8721409f461f359fc41de	bff5d065a6bb5c8fade1f6940093c22753e1b463	feat(connectivity-test): Tauri 命令与注册，官方/动态端点过滤，sanitize 隔离私有字段	different	仅上下文位移/自动合并等价（文件集与增删行集合一致）
+61	f1929099b9e5d86661b1ab890c50a433c69ca4fe	791da0da06248cb23e20e4c281d44940002706ca	chore(connectivity-test): 勾选 Task 3 / OpenSpec 1.3	identical	stable patch-id identical
+62	a14c0d2461644d38b7e68a48a42131521ab72a92	334d494ea4a10be17e7f2c8b553c203d4892046e	feat(connectivity-test): 测试参数持久化纯函数（缺省即默认值）	identical	stable patch-id identical
+63	b9bcce096da7c86f1bee28321c451241514c0c99	3ef5aada646ac1e854bb6484209dd9946d4c0e0b	chore(connectivity-test): 勾选 Task 4 / OpenSpec 1.4	identical	stable patch-id identical
+64	82f45f676db937b3ba300c7187ac86f888eff8c2	d3db2708e1832a7f7aca6bae9ea12617c3eb5c4f	feat(connectivity-test): 前端命令绑定与测试/探针状态 hooks	identical	stable patch-id identical
+65	c1c2bb5fdf30796f81f6cca3204266e7fcde1211	f4dbd5f45c49b07050e63596d908e7f2234cb682	test(connectivity-test): 锁定 toBackendParams 字段映射（customHeaders/customBody 等）	identical	stable patch-id identical
+66	74a9ea52f71f2202fac17129d0021070b6c83d03	db85f8efc11748e2cd355f9a7f8b04166b632cca	chore(connectivity-test): 勾选 Task 5 / OpenSpec 2.1	identical	stable patch-id identical
+67	67caa6338ae4388438ea9806ed84b2a901d11254	25bb9f821075e6f7712fc852f8f628b9ae4ceb92	feat(connectivity-test): 连通性测试弹窗/详情/徽标组件与四语言文案	different	冲突停车：connectivity 四语言文案与上游 locale
+68	0ed4c0fa1f86ea26b7037746057191a77bc8f3ac	3b1103d2c3ffd5ce8fe32679493f124d303cd6ed	fix(connectivity-test): 模型列表解析与后端对齐（每条目首个匹配，提取共享 helper）	identical	stable patch-id identical
+69	517a90c4fe33d5d96da85ddea7e1e738a799ba57	881068e2adbfa747e4645f3125869b0e266d6909	chore(connectivity-test): 勾选 Task 6 / OpenSpec 2.2-2.3	identical	stable patch-id identical
+70	12f80f66c8b3be831b9a7d99a6bc05f757ae812f	8b5f5bb7fc7ce4f229c727a8d86a95eb3faab54f	feat(connectivity-test): 供应商列表集成（弹窗入口 + 批量探针徽标）	identical	stable patch-id identical
+71	d3aba96e89a3d402b2da5e25890661d12681f91f	f4587dae6a7899ab3361b5debc63d24570bfe36e	chore(connectivity-test): 勾选 Task 7 / OpenSpec 2.4 3.1-3.3	identical	stable patch-id identical
+72	cc63e2c44209df65d58937a4b927230c37ab2738	6551e54983ee6267eb99f40f29951debbf111676	refactor(connectivity-test): 移除旧 stream_check 可达性探测全链路（保留表结构）	different	冲突停车：stream_check 命令删除与上游新增测试
+73	5ba48ce00d8b5d6dc8db6b70b0b145ff2567743f	12da0967a864e4e1d18764ec6672c44c0f065d87	chore(connectivity-test): 勾选 Task 8 / OpenSpec 4.1-4.3	identical	stable patch-id identical
+74	cd1231f07a442e0672671e0f9f1603c41d1b308a	df47d4e0e95617a592d9ea3169d1575fe3ce6b42	chore(connectivity-test): 勾选 Task 9 / OpenSpec 5.1-5.2 + verify 报告	identical	stable patch-id identical
+75	6e7ac89649e35ca82817b454345127e6fa569ba5	626c594436eadf24fa65a83eb1db0e5cadb05559	fix(connectivity-test): shouldShowTestEntry 增判 providerType + 收尾清理	identical	stable patch-id identical
+76	c9542ae11dc6e65e3dd4b8cb699a85f20d06a029	e41b07273c132d82c15b7eafe984d65942d56160	chore: archive per-model-connectivity-test	identical	stable patch-id identical
+77	a123b4ff155ed25b1cb777b8b9cce648eda6dec3	7ededad8140671f23e5397babe9d5b02c37c2f2f	fix(connectivity-test): UI 四项修复	identical	stable patch-id identical
+78	c13c2fa0d9f40c7346f8d8daf39ba96d11e46598	36ed2a172c386e7de1ca6754b82f54fdfb4ca810	feat(connectivity-test): 单一模型表格 + 实时拉取模型 + 勾选即测试范围 + 新默认提示词	identical	stable patch-id identical
+79	eada39b78f0f6b0b249e86e08d47cefd2c11caeb	9a59e3ac43bcf97407fa7611a48fa1de532624e8	chore: archive connectivity-test-optimizations	identical	stable patch-id identical
+80	b728fc84e935567fd5427316cabc59fb3a658d32	41c5622c6946c70956fa3503fd955f02578dbb65	feat(connectivity-test): 探测目标按供应商 API 格式对齐真实转发链路	identical	stable patch-id identical
+81	91bbf4dc8aa25b58f08132c05f0d53b36d2949b7	ddee7d54a6a64020d2173ee91373307b158419fb	feat(connectivity-test): 拉取模型列表改为「搜索添加」选择器交互	identical	stable patch-id identical
+82	a81756dfb963a78489af70daa94bcb7b2c08bc39	0381a39c4cb42820e86898752c27f3ceaa073c92	feat(provider-website-links): 供应商支持第二个官网链接，主页横排双链接	different	冲突停车：双官网链接与上游 ProviderCard 副标题链
+83	e894dfc893012ca79a70a1c24248f3f8dc51f661	374bc850c619a27418f0aeccdc3d988f55838a9e	fix(model-quick-switch): 补齐 Haiku 显示名同步，支持不选模型仅翻转 1M	identical	stable patch-id identical
+84	b0ea88efc40e66ac7d4dfe7fb6099f1e45423f79	7d97222fe6d58715bc0c9aed52ce3e879643a774	chore(comet): 记录 fix-quick-switch-1m 验收通过与归档状态	identical	stable patch-id identical
+85	08961241004cc902719d687bdd6017439b23087f	85fc2bf18f4e727f4e33431b3bd111bd354c79c3	chore(native): archive fix-quick-switch-1m	identical	stable patch-id identical
+86	9b02b177176d838bf58729a709fa8c8187ac9dc4	5324d780c6011c6f106f21b6e50e4762f5692770	feat(model-quick-switch): 获取模型列表成功后自动展开选择器	identical	stable patch-id identical
+87	8b60148f627c6a890c2d4e3977c7ac86996d87bb	f3bb6ec5af9f1c2421f00b102cc735549a614408	feat(tray): 托盘图标左键单击切换主窗口显示/隐藏	identical	stable patch-id identical
+88	774fe0ae0ff7aa1e2ab34d08ded6beca22c34396	8665225b81472a96668b2aadfd5798271c0aa78e	chore(comet): 记录 tray-left-click-toggle-window 验收通过与归档状态	identical	stable patch-id identical
+89	9b392ccde52245edde7b1d5d9dd7d14378035316	36ce76a870b5470903906f63f5a593ee02095311	chore(native): archive tray-left-click-toggle-window	identical	stable patch-id identical
+90	e7652eeb6fcf3858ba88415d42118d1c5a14d924	e4e11456c565ba3ad5222e0859e83fbea27096ba	docs(fork): update rebase whitelist for connectivity-test era fork features	identical	stable patch-id identical
+91	2912208e2770666888eea370082f117b49c5ac28	a3193d0db77aff478839d9418b89b4bd6a4bcbf6	chore(native): archive sync-upstream	identical	stable patch-id identical
+92	99304cb527e656ee445466704d2701c5aef2f7b2	18f2d85f1ca160940d88b5afdb353ffbb63fe702	style: apply cargo fmt to connectivity-test era backend files	identical	stable patch-id identical
+93	71a196c83f5aaddf707a3d1fb3f062bcdec51e1b	7354946fd78efabcc269fca2a01b78fabd87dfaf	style: apply prettier to files flagged by CI format check	identical	stable patch-id identical
+94	b761e3e36b598421b4d8e02c54967b0162f05ccd	953a6631e9346e74a10f5034714c25df86997d27	chore: sync fork with upstream v3.20.3 and rebrand top-left link to GitHub	identical	stable patch-id identical
+95	51d78aad2762d7b60a9f4cb060036b5fae48d100	b7481bbf9345c63e7d8a2741affa41b6a20bf2a4	chore(native): archive sync-upstream-3203	identical	stable patch-id identical
+96	7dbc1dc45e3bfb8ab8e542284ae9d66530fa833d	4002e7a62d9e27855073347b593eff4ac05e12c7	chore(native): archive cross-app-provider-import	identical	stable patch-id identical
+97	563f118441c343890fedd8f53a8eac73f4271694	5113b91784c77198cd830677a57bec0190f6c09c	feat(provider-import): 从其他已启用应用导入供应商配置	identical	stable patch-id identical
+98	952b22ae49d51a3066a5f4bf1f17b94543b7fb23	2952e5039d409a9dc228f363c3e3ccb66bcfc082	chore: sync fork with upstream v3.20.4	identical	stable patch-id identical
+99	c4168257d41935a1a2f309e1526c6de921a684f3	b0ada9e2f5782439c5d013356b8c4ba052f4b034	chore(native): record sync-upstream-latest verification state	identical	stable patch-id identical
+100	cd4b79cf65bf271453b6d0fb465af3a3203bc670	c068f66b9ba54b13af0172df23e56c1779be1638	chore(native): archive sync-upstream-latest	identical	stable patch-id identical
+101	36ef97bf03eb483e32a96e5da554e7f644ab2679	bb025a51daaf7aa507dbc8ae19f4305f1e62c827	feat(sidebar): 侧边面板增加批量检测开关，并补记 README	identical	stable patch-id identical
+102	273c20826e31d5ae006a04463432b8c1347b3ac9	3b59a7fc27fa5923174d822b224cbbce5f1ef994	fix: 跳过上游 tag 的发版构建，并修正设置页格式	identical	stable patch-id identical
+103	1476728ffe35495ff9eaa3b7f7e4262de3376bbd	f06a508c6fa7ae1eaedc2efae5f773f6fb0ebb1c	chore: sync fork with upstream v4.0.1	identical	stable patch-id identical
+104	fbd0541bdab7e733433b1afdcd519ef6f81a268e	831d05c730ffa1383ba281b48a155ae0f233bcd4	chore: remove dead AppVisibilitySettings component	identical	stable patch-id identical
+105	c6780368dddf6ba9d6261a0434358ed70d88b702	15069fd073146ebf2c96f20b7bb52efcaa145920	chore(native): archive sync-upstream-v401	identical	stable patch-id identical
+106	6f803d89b6bc4390e0973bd854fafc6b2d59cf5e	60f7424022862184bfc34cd9a2858f4a4151564b	chore: fix CI/release failures from the v4.0.1 sync	identical	stable patch-id identical
+107	7f5211165090e1d07927b744536013bdb64f3b07	ddfaeffbd128d2af49ab97162e61f175e880788a	fix: restore tailwindcss-animate as a devDependency	identical	stable patch-id identical
+108	a2739b02219ecb9fce3b5d6cf8f575c2a6ff9003	3878c1ff52df190f27f6816db9e9d521f758f047	chore: sync fork with upstream v4.0.2	identical	stable patch-id identical
+109	31c1beeeb1250cf73a05e852b4cdb3bf381d43b0	e82c05bb7a8f5161331aeeceae7075ff9009f379	chore(native): archive sync-upstream-v402	identical	stable patch-id identical
+110	a683b3c592bda826631f2f00ce3aea501e0d88ef	d89909f2117cd659968a60f435ab071bb8a1d72f	fix(test): AddProviderDialog claude 用例等待提交按钮渲染，消除 CI 竞态	identical	stable patch-id identical
+111	7a7ffcf3d4be63c34a508192f968c1c19cacbe00	8518910ec0748e28da5d9e25f876d4d20a167220	chore: sync fork with upstream v4.0.3	identical	stable patch-id identical
+112	975e20954b84284c8d3d922b663ca32e24881094	d8cbb8632ddfa52295ac72b97d742c8b91fd0222	chore(native): archive sync-upstream-v403	identical	stable patch-id identical
+113	4e9e4d27323b62ed69bd3ecacb3d5f3450a3fb0a	82c2de052eba47d56f50ab574b2fe893ad2e4852	fix(database): v20→v21 修复迁移补齐 fork 升级路径缺失的 mcode/pi 列	different	冲突停车：mcp SELECT 列并入上游 enabled_codebuddy
+114	608ea0abc09c5866e259ae86d1b8d07141c98fb1	75fa6cf5260893e449f31c26cc583ccd7d624c7e	chore(native): archive fix-mcp-enabled-mcode-sync	identical	stable patch-id identical
+115	1c9e0fd848f67d0e2fffbe44140f57bfe18b9770	d569c082acd7755876b88fc46379b10ed28b433c	style(database): cargo fmt 修正 v21 迁移测试格式	identical	stable patch-id identical
+116	44c0abc08c962df43bf68fd9fcd46966a000fa38	166e17c8e29600e3dbdb555e1c299d5b75583c95	chore: sync fork with upstream v4.0.4	identical	stable patch-id identical
+117	591f20e3b7efeb6b6947a67ee6513c4119be19c6	6ca2f82008496b429be221fbef8658a902ac9db8	docs(comet): 交付改为归档后步骤并补记 v4.0.4 重放映射	identical	stable patch-id identical
+118	93a5b8f37224b4a9fea30a7d28dc739db4bca249	949d5ea1cb45680db9d8f11bdaa97d609cff5a10	chore(native): archive sync-upstream-v404	identical	stable patch-id identical
+119	3c402f19290085bb859cf152fd68044f20a987d1	33cf2a0c041b1e2bfef8a94838aea00d962ed7a2	docs(comet): 修正 v4.0.4 同步规格的重放计数与交付时态口径	identical	stable patch-id identical
+120	764982e76eed1990a6f275c49fc3f74bd4514d83	51882567d128cfdd6717b57298e33d688ddf4cce	chore: sync fork with upstream v4.0.5	identical	stable patch-id identical
+121	39e70db11ee69679754168deb7757dd2bcdba7dd	27e5c5684d30d9581a1e2831118f6a5c40822bec	chore(native): archive sync-upstream-v405	identical	stable patch-id identical
+122	d281c46eb40fabcea83db8c632d20c2ac06c3646	d64f92ec2b8b8b4e17a54231c4b7240fe8183516	chore(native): archive model-badge-opens-quick-switch	identical	stable patch-id identical
+123	76dadfff9803ebf0a56f4780e11c189f6e466cd0	8162e4b591357d0db1d409e6c9c265c55ebc3bc2	feat(provider-card): 模型徽章作为快捷切换入口，更多菜单移除模型项	identical	stable patch-id identical
+124	0d931f719727182997995db5ce82a4d232132d97	d82bee174146e4020bcb83497e52c37af28176eb	chore: sync fork with upstream v4.0.6	identical	stable patch-id identical
+125	3a6e11a1857acb34c130eff65a45d39dab1efef3	c3611511305822e7710ff6498b655ec18c98d404	chore(native): archive sync-upstream-v406	identical	stable patch-id identical
+126	43ea736c4fe158c60e0188483ae876b407ebd93b	cb7315e4149f1c9737c8cf7425ef1902ad06efd8	docs(comet): 修正 v4.0.6 同步规格的重叠面计数与连通性测试归属	identical	stable patch-id identical
+127	200a09d19d659aae1d2b5d9e250b26682a808977	5375b255ca471d3faa1bfcf67eb7724a3be14089	chore: sync fork with upstream v4.0.7	identical	stable patch-id identical
+128	d2f86c256f9998ccba5be90da6014a1527b25844	9f1c64d3b10c576350197928a7177965b0077fc4	chore(native): archive sync-upstream-v407	identical	stable patch-id identical
+129	fe89024c49278e89cc4121d36e477f347e71658e	487e0bb55782120995adfc6ad100f85357e71bc8	chore: sync fork with upstream v4.0.8	identical	stable patch-id identical
+130	a8ca8280efb04e543841b6ff5c04bd670e38440a	80251802f6e34f8460285a69173b47b52f2566ef	chore(native): archive sync-upstream-v408	identical	stable patch-id identical
+131	b4b5ee1b466e6ad49b6903b042c46a0c950b2c40	c77fae469474a1b1b8d12a2e3230c11e3658f663	chore: sync fork with upstream v4.0.9	identical	stable patch-id identical
+132	82f3ad7c9daa806791339e30387d3fdb2fe6686b	8c559a2efd565a9afc8239d5e24dbd0c7e908c57	fix(i18n): 删除本轮 rebase 在 zh/ja/zh-TW 引入的重复 inactiveFieldsHint 键	identical	stable patch-id identical
+133	434a1959815e70cdd54097163e77fcd81d732a5a	e66c2e5260bb92a18852e4512e2da80d8dc98c91	chore(native): archive sync-upstream-v409	identical	stable patch-id identical
+134	0bdb8ce4bd7263e7b3cde8c26dbdc1262b404d3c	e338ee538f1c4a37c04087d892867bb17c92576f	style(forms): 用 prettier 归一 ClaudeFormFields 冲突合并后的格式	identical	stable patch-id identical
+135	5875ab3ea1f6691a9112ac21e3d1945507c499bc	5be8a4ef4b0f70a53ce67e36ad7ae6c57a8bfdfc	chore: sync fork with upstream v4.0.10	identical	stable patch-id identical
+136	0a63f058935c4e11aa6003b099ef092bb6b10c80	170887c5ae0ba5f7a034ac375bf3e067a1041d4d	docs(comet): 记录 v4.0.10 同步的 Shape 共识、重放映射与落地保真核对	identical	stable patch-id identical
+137	d0692d3e1c648e9afba445367b6d0920fdb69e19	72a24831a0f77901984d90dd66344d13ccb97686	chore(native): archive sync-upstream-v410	identical	stable patch-id identical
+138	6a5948861e97fd0060674fa1986caba6402d5222	e15dc128326fcd001a7e5d7052ae2ac691b28e0f	test(deeplink): 开关初值断言改用 waitFor，消掉 fork CI 的 unchecked 竞态	identical	stable patch-id identical
+139	94b2370779275630f67ac4bac3e01325ab78b825	2438b18041c2439e4ce0a2caf664d181fae5277e	chore: sync fork with upstream v4.0.12	identical	stable patch-id identical
+140	7b6fb853d3143543dbf88c46852956add43c2b44	8f948267e1955c09eb8308bebaa2d1968511ab81	feat(presets): fork 白名单收录上游本机推理 Local 预设	identical	stable patch-id identical
+141	fed488943c18659930f20df82367f7e94e215bb2	785be1dcd184c121652346e83c62f972e33083b6	docs(rebase): 更正 v4.0.12 轮 ProviderList 归属与白名单条目记录	identical	stable patch-id identical
+142	45052b779b7881cbf47f469861f543b32bd5e806	f74534c023bfdb37858998ae7a2c2b97b0e463cc	docs(rebase): 说明段的历轮冲突统计按轮次归属，并补 v4.0.12 轮口径	identical	stable patch-id identical
+143	77d418d6913c2d95cab5553c71ddb13a69b02adc	f8de4e9f20512ff3e694bbd14fa5343aab74e830	docs(rebase): 清理第 4 节白名单里两条失效路径	identical	stable patch-id identical
+144	e4f891d9b30f47675d127427361049fb97517ae5	5df5a97de71aa116853e50f7a43e3dde15e4c76c	docs(rebase): 第 4 节各表的历轮取舍写明所属轮次	identical	stable patch-id identical
+145	1c72236fe0ff4bf91d6b2e6de128ab0788686a62	129297cc005eb448eadf8f306cb7a99ea38e0015	chore(native): archive sync-upstream-v412	identical	stable patch-id identical
+146	05f4342104acd1ad5d3dee964c7d7595914f9341	892e5d16d5f8ae0ec91e2de21203fe578720940d	test(apps): 用 waitFor 消掉 AppsPage 版本缓存用例的 CI 竞态	identical	stable patch-id identical
+147	01e07626c5b5fe47320dfc19c2b3264eb1766259	a0a8fb353808537bab8fe13be9f139d2c32d59a4	chore(native): archive fix-appspage-cache-race	identical	stable patch-id identical
+148	3513c2dd446826b402c4e9011a5ecc75fea8a309	333455ec557c483e78c569af5afaa97e01075a40	docs(comet): upstream-sync 规格登记 AppsPage 稳定性修正与单条 CI 红的判定顺序	identical	stable patch-id identical
+149	ecb98afcd99d9f0b1d6ace17718bcfde8e5908e6	dab7182a7fbeac89551b9358221a174549bb8041	chore: sync fork with upstream v4.0.15	identical	stable patch-id identical
+150	b7ffcac4094317eb2432d45540394824e7593102	3b20eeb11e5a89ebf41082469e5ff7ad649b2669	docs(comet): sync-upstream-v415 登记重放映射与落地保真实测	identical	stable patch-id identical
+151	21dd510668bc7d1314491c81cad2127826d29770	fd387747e1a663294ae0656326f2fe1cc5386ada	chore(native): archive sync-upstream-v415	identical	stable patch-id identical
+152	18b2274a9ea6f8044430dae17078a025dbc19551	71f65a00af3a78ee5ca72f163af150c37f6af2bb	chore: sync fork with upstream v4.0.16	identical	stable patch-id identical
+153	9eb3535b23203d5e0d8a245e22b8197cad3f33b1	7094e5ad050d89a8dbd805fc188455a054450e38	docs(comet): sync-upstream-v416 登记重放映射、托盘叠加方案与落地保真实测	identical	stable patch-id identical
+154	fbb50af5440fd2ef17bcf3385990bf8067dc298c	65cb35050ee35ee8f8831eabb13a4aa2a148b70d	docs(comet): upstream-sync 总规格更新为 v4.0.16 轮同步后完整状态	identical	stable patch-id identical
+155	70ae005bd156d1b20b195602a66be5b696683535	eee8de56fa899cbc1a53f490dfdaf467e16f644e	docs(comet): sync-upstream-v416 逐行列出落地保真缺失行并核对反馈行语义	identical	stable patch-id identical
+156	68ef23a4b9040f73834e83f4f7997cfca27b4c16	d3082100baf6500cf4d7fc18ef94df6b4b7ab247	docs(comet): sync-upstream-v416 落地保真合计数改为可独立复算的口径（fork 缺失 7 行 = 4 版本行 + lib.rs 3 行）	identical	stable patch-id identical
+157	28487f761ee7ebd12567b286a0541411b203cf67	cc4c4266ff33f5fc45aa41d41f759a8c1029beda	fix(fork): 托盘运行时就切原生菜单时左键不得同时弹菜单	identical	stable patch-id identical
+158	97a24d8f63a0072c7e7d8781139d99923736602f	56a89bfb4d0e9bc426ef94d6b35e47bbd23fe8c3	test(fork): 加托盘左键契约的源码级回归护栏	identical	stable patch-id identical
+159	2e07ec5f26e50b01a2242754a6f31067edaccb73	081521654b8d281be127fda93a4fb5ac3e33dcb1	docs(comet): sync-upstream-v416 落地保真上游缺失数修正为 14 行并逐行列出 tray.rs 的 4 行	identical	stable patch-id identical
+160	98e7254f6a1e72c0e2248dd495ae8c5a3d77be76	37c1c154a2a74cdd08a8c9dd5ad8643f6918e689	docs(comet): sync-upstream-v416 落地保真实测基线标注为当前 HEAD 并说明数字未变	identical	stable patch-id identical
+161	1078eaed13be7a73451a44dd6bbdd31c1ded0986	42d82daa679f8382b948514c66366b8bc54eeb16	chore(native): archive sync-upstream-v416	identical	stable patch-id identical
+162	ffba9bdb3ae837f4e1cc4bd6fb32fe6f6d356fd1	c9a9c1f0f908187caa51386f419bba67bba8080f	chore: sync fork with upstream v4.0.17	identical	stable patch-id identical
+163	6bc9c477f5ebf7f01966ef78dbfb1116937970f8	f1a75f1f9edeb2ee47a6270f00e1da1af3bd4d8d	docs(fork): 托盘左右键行为按面板样式改写	identical	stable patch-id identical
+164	86a406bb9d46bab530cae271369721a686dacee6	dc5b12bc7a531fb2dc8335b4d630f1efa84a957d	docs(comet): sync-upstream-v417 登记重放映射、左键取舍与落地保真实测	identical	stable patch-id identical
+165	4c68cb981287d30f1c5e912a6ca57735f6262f89	f73d1e9e7e21073635a85d1a63e668715ed4122a	chore(native): archive sync-upstream-v417	identical	stable patch-id identical
+166	d97f0588ca238a4a1d5a894e1155b3c8129894ac	93375c60dd26f0ce07a0b4df34e26e015f4dcc55	ci(fork): Backend Checks 与上游对齐改用 cargo nextest	identical	stable patch-id identical
+167	1ea4584fd2e954469e86a505a6efe1b2cae9ca37	ac84c66ce803e78fa374e732198887e2fb6e13dd	docs(rebase): 登记 CI 缓存耦合——矩阵换 rust-cache 时 WSL2 job 必须同步改成 restore-only	identical	stable patch-id identical
+168	7e1d91454a356e6b4dd9023ed370f418d5a16ef3	b183167d0c5f9711bd7e94d3a22d64c2521f0fe4	chore: sync fork with upstream v4.0.18	identical	stable patch-id identical
+169	9ba57bc20fdce39e8cb55706280c29bcfbeb472d	f6bb688c4bedaef19ceb1459a8e875fc04db8d76	docs(comet): sync-upstream-v418 登记重放映射、AGY 取舍与落地保真实测	identical	stable patch-id identical
+170	b86c26c2a69c2a792b970c00a6bb9b7e6f324e6a	089eed8afb71fc337c61014715dec4b04a9391d2	docs(comet): 修正重叠面实测口径（fork 侧取 pre-sync-v418，45 文件）	identical	stable patch-id identical
+171	4fc208fc24970b46b4fa31a9e4711ef84d79c644	4d90873373efe2a31766160104be83b0e305e43b	docs(comet): 修正 brief 重叠面口径为 pre-sync-v418 / fork 457 文件	identical	stable patch-id identical
+172	3cd35d020afea1620aad6c595cdcc21eae009b15	05ae6166c751244bfdac90dae6969014845057e5	chore(native): archive sync-upstream-v418	identical	stable patch-id identical
+173	a7bdd587755dfa5b1f7356fab68b536d7b984e86	5166c40fe886c27f865869aef7a361bed4628b6b	chore(native): ignore Comet managed runtime state	identical	stable patch-id identical
+174	d42e1b35a4c75ab562195d3c44a0c7def8819af5	49875b9e2f3254882ad5fbe6c48b6583c272a7cf	feat(fork): sync v4.0.19-1 with schema 23 and Kimi fork semantics	identical	stable patch-id identical
+175	04b3a7a40a93539eebfeee87a29df2e6c2a8ac62	5bd2019af1838c83632eb4884e033dba5068f0f7	docs(comet): register v4.0.19 sync fidelity, schema 23 and Kimi Q1-Q3	identical	stable patch-id identical
+176	3dc6574894a9462d4f04f778d15cdc905e5a6804	933a3a73187ce841e61ea2ec8021ac7d53885dd5	chore(native): archive sync-upstream-v419	identical	stable patch-id identical
+177	d90171e440741d95f0c1d6e2ce5be315f6cc2f20	d43c3c462e96d8b544892fb52f722dcee4686da2	feat(fork): sync v4.0.20-1 with schema 24 and Oh My Pi fork semantics	identical	stable patch-id identical
+178	3554f4b1c4c768a2e21e26f1d51cb67241315ff1	0823838cb57a9ae0ca5c362818b7562b7ea54459	docs(comet): register v4.0.20 sync fidelity, schema 24 and omp Q1-Q3	identical	stable patch-id identical
+179	ab54d17ffb9f90aa2ceb3cfdaf647439b6f02128	ee195365fc8befb6148786169763c1b3b90e92e4	chore(native): archive sync-upstream-v420	identical	stable patch-id identical
+180	7854237b27edeaac2763bc7ac8d44be75102f765	da27907bd470cc790c98766ff053951f4cd2564c	test(fork): 更多菜单断言随 v4.0.21 终端入口迁移	identical	stable patch-id identical
+181	23c08484c61b5fe841918dc74788b97a1786f27b	60f19d8ccab656e1ae3cc05dd858a86a5691699f	docs(comet): register v4.0.21 sync fidelity, claude accounts and §4.8	identical	stable patch-id identical
+182	db80a519259ed00a428d665f5ea53d0abaa5f4bc	f112bc5c87ebff7ebce01905c2692e06b117caa2	chore(native): archive sync-upstream-v421	identical	stable patch-id identical
+183	0c4a3e732fc5a21e2d2986e76612ca5d741a933e	08c6f468102008675ef0b52a084b7cff1521eb0d	feat(fork): sync v4.0.22-1 with schema 25 and DSH support	identical	stable patch-id identical
+184	77a200e8f19217c00a06b0f91df96e35eafcb097	dd63e7aaeeaa299db7c596b5b1bce7aed1a0b645	docs(comet): register v4.0.22 sync fidelity, DSH and §4.9	identical	stable patch-id identical
+185	a063f0750d5cc5a25193bba66cdff7f0318e8d8e	5a93d29abf6a67ec1ee5f13031e57106e6ff56b1	docs(comet): record D9 stream_check orphan boundary	identical	stable patch-id identical
+186	7a7e5978c263e801b8fd54e025ced9293fd8ee77	0351e8952bb276499cbd0e201c411358a6790629	chore(native): archive sync-upstream-v422	identical	stable patch-id identical
+187	cf88d7eab674dc1c1169571833748dcb667c5886	d168338fa69bdfd44cf3fbf03c8368494d0a7de1	feat(fork): sync v4.0.24-1 with native config editors and reasoning effort	identical	stable patch-id identical
+188	227612268f1cbd70e1bbfd795036cd34c51b94be	cc68f703d2691a76c4d6f01a44b426827c1804df	docs(fork): record v4.0.24 sync overlay and §4.10	identical	stable patch-id identical
+189	0966938fea863e27c2ad99dcb98a0caa585f0ff2	11169589e6a7dc3ffc8d17918b77e8cbe1baf636	docs(fork): correct §4.10 replay and fidelity facts from verification	identical	stable patch-id identical
+190	d9daf79eb3810b8ea803bcb7ec0d20b38a9ee1be	91dc82d75ccc724137fc29d8c9ba4176371adc75	docs(fork): pin exact upstream locale key paths in section 4.10	identical	stable patch-id identical
+191	808aa34aa272b2539eb110f3daa917f705b7a969	27a96f251155cd0c14e91801dd5fe9657a4dcc7b	chore(native): archive sync-upstream-v424	identical	stable patch-id identical
+192	7e70d844accbc659400ef16d6339655618580520	36121b2e24f1be29633485306b1743542082b995	chore(fork): rustfmt the fork v24→v25 schema test assertion	identical	stable patch-id identical
+193	d1112b5a6cf5f47255d61faa525a8a0e4e3fa0f1	2b7bc50ff8d3424dfdb8e6171d0a93fd5841ebb0	fix(fork): keep Release on macos-14 runner	identical	stable patch-id identical
+194	43077e82fe1eab2660753b60227b8ea79dda6e56	c56c097051b81cab81e8d1726e6a5d94fefa597a	docs(fork): record macos-15 runner evidence and final fidelity numbers	identical	stable patch-id identical
+195	418aa6c2fdb6803e59fa1b8009e8634bbcd81a2e	2d317822fa4b1fda62c7d28296478e6020ff03c5	docs(fork): register v4.0.25 sync overlay and section 4.11	identical	stable patch-id identical
+196	7f22c62a4c0b61d7089167c4a66bff160bfd89a2	2cb08aad2d0cbf818d2b21cb3f431e9bce5730d8	docs(fork): correct section 4.11 direction-B count to the measured 7 lines	identical	stable patch-id identical
+197	df9c3f9591defebc55393ec84851ef2eba8c7f46	713cf9998a43556167415702478831021f509a1a	docs(fork): refresh section 4.11 replay count and ignored-test tally	identical	stable patch-id identical
+198	5078fb50918d3830d683152820e9feba76e62413	f5a02c5fa9c33dafbd059114006536cef43aaa4a	docs(fork): state the replay total as 195 replayed plus an enumerated list	identical	stable patch-id identical
+199	6ee88c0b330bf17beeb0b69eb388fb85c8eda915	2df691a33ef82327475ee8a0d47ff71bd5d281de	docs(fork): close the four registration defects the Verifier found	identical	stable patch-id identical
+200	9c130b1bcc4fd1cd3d23f373a7406f8c6805273b	4801b87fc58f936d938f176c6d8a9bbf8b9dd35b	docs(fork): refresh the direction-B tally after completing section 4 rows	identical	stable patch-id identical
+201	aeffabbd884e8bd04afe4627ce44fb1de12444d7	32a1424a0d7487fa23cbd92a4f46179dabcff77c	chore(native): archive sync-upstream-v425	identical	stable patch-id identical
+202	3c4904de962cf91edb670379f268cf195e769ed4	c3283c87eae3fa67b3870e2b6df027b6f3aeeb43	feat(fork): sync v4.0.26-1 with plan suffixes and lazy-loaded pages	identical	stable patch-id identical
+203	f59f16d73299f7dac3ea8d8e0444bd7e71a4982b	16135b7a23274607ceb31e5d8eb4d01e02167039	docs(fork): register the v4.0.26 four-ref fidelity tally in section 4.12	identical	stable patch-id identical
+204	e834137b2b848a78a2ddfbda3e2613d1edea4f38	324ebc945f5fcff1246555f0c57ed92df37b6ba4	chore(native): archive sync-upstream-v426	identical	stable patch-id identical
+205	a02c46d20be50f94fa984ffd19307cccc0715d25	6e2224f8697fd6ae515607c5663e231ec162a8f1	feat(fork): sync v4.0.28-1 with FTS5 search, density tokens and Codex session buckets	identical	stable patch-id identical
+206	97ee7e560aaf8fa9c4c5360c5140db02e0513603	f8c09ccf1fb594b61f2fa2429e92a36d80e55292	chore(fork): add the reproducible four-ref fidelity script for v4.0.28	identical	stable patch-id identical
+207	568394f5e17923961d631525dbeadfd620cc7340	0b5f1c6b0abd1042834adc2d518c665d03286a15	chore(native): archive sync-upstream-v428	identical	stable patch-id identical
+208	754da7a1e76ed512a9fa5551623303529062d811	f8ac91581c6dab137b1a6f53ad921c545e972853	ci(release): bump macOS runner to macos-15 after GitHub retired macos-14	identical	stable patch-id identical
+209	598fb9732c98ba5a01571dc70c9f21c9dc185a5f	36eafeeb98ded819925f4ac44b1f1b7637687382	feat(ui): widen connectivity test dialog and merge provider context menu	identical	stable patch-id identical
+210	71972706c43cb9527c90c2fc47becb3a2e5e5346	1df57fdcb27db5adc0904a3472b43dc7ac073cb3	chore(release): v4.0.28-2	identical	stable patch-id identical
+211	45a7118fa7c9ae0810edfe215ef6371598559bf7	a6119be08fd335ba0ef3d618cdcdb640da272c23	style: prettier formatting in ProviderCardActions	identical	stable patch-id identical
+212	81358f5fe7ed7a4b95a97f80fbddfca1d79dade1	67d5ee6c8aa14c1d365730865a542f921de5f004	chore(comet): enable change_walkthrough in project config	identical	stable patch-id identical
+213	0097bab00ae75d84d83392832d150d8d5a069fb9	574a68974c9a04124534786e6df22e947b65a5bf	chore(sync): rebase onto upstream v4.0.31, keep all fork changes	different	冲突停车：v4.0.31 overlay 与上游 localeParity
+214	fd2797be00a3eb3920cf1601f933e68b19723495	30532dddc1f1ba62c8613f5f81a9bb330c93889c	docs(sync): correct tr.json byte-identity note in §4.14	identical	stable patch-id identical
+215	4550dcb5c212efd4993fdc5549e9d5bea698d603	a3f429126557d04e924217e78d4a784fcf3ca5d8	chore(native): archive sync-upstream-v431	identical	stable patch-id identical
+216	e72a8a9df97a2b6ac9747aa499b8cf3ea587f38b	9bd934ae481e24d9e2b0225abe16b3f8ed8dce28	chore(sync): rebase onto upstream v4.0.32, keep all fork changes	different	冲突停车：v4.0.32 overlay 与上游 ProviderCard 重构
+217	697977b5b9f9b4c1df0d77163ad8edb7b2f45027	edd6226dffe24e3ff53fb07a85d7c42cf7f00133	fix(sync): restore upstream terminal gating and drop stale isInConfig prop in ProviderCard	different	仅上下文位移/自动合并等价（文件集与增删行集合一致）
+218	cefc79d88d7cd4ebf4881a074068d7f2f1bc5605	4cae3127d2f953df39a577ddcc77847b832e2458	chore(native): archive sync-upstream-v432	identical	stable patch-id identical
+219	6d04895eaa40aabf339e96eb0d99236865bc4aa6	a4a20decafd27ecd190b61f8007a3f9f1f1419e2	chore(sync): finalize upstream v4.0.35 overlay	different	冲突停车：v4.0.35 overlay 的版本/ClaudeFormFields/stream_check
+220	f2d1f3d8d32c61540da2c37ace966f6bc3362068	fda8a32893b30531a5aaa49a4423cc43799bbe24	fix(sync): restore empty locale objects and drop dead prompts.confirm keys	identical	stable patch-id identical
+221	7f8ed7fa752ac0dc29e86e0c6a28dc9707f91289	2af86c93751f1fd7d242b2baa7c2f776a159d737	chore(native): archive sync-upstream-v433-v435	identical	stable patch-id identical
+222	a2b390283ed6a6a25eaa44da569354e4f58a4f15	-	style: prettier formatting in ClaudeFormFields	dropped	判空丢弃：Replay 后为空的 Prettier 格式化提交，主题序列仍保留
+223	4e137aeacdc84d218171ce8112e818ef31b76e97	68d1ffe70b4062cf4fbf743ae7aca99c93da2a0f	fix(provider): right-click delete no-op and default insert at top	identical	stable patch-id identical
+224	3041480e5a308ccce8c74490dece339554fccffa	9f3cb5e8195725b442afbf4859c65d9dabd56dfe	chore(native): archive fix-provider-delete-and-top-insert	identical	stable patch-id identical
+225	0386fae49b35860080cc0c3eae71e11cd984d22a	f809ffdad817e7af19fea21ade87498b961ba330	chore(sync): finalize upstream v4.0.36-v4.0.38 overlay	different	冲突停车：v4.0.36–38 overlay 与上游 localeParity
+226	e115ed65704e6368151fd056f53a679f2f199a65	4fbf9c9c38171acde747dcdcc6027d91fd5b451e	docs(sync): record v4.0.36-v4.0.38 fidelity attribution in §4.17	identical	stable patch-id identical
+227	484f8a1d39a9fc0fa6feb1a511bbe9a55bbd5b76	35adb74d1c6a2ccde8091eb4a85280469924c6a3	style(sync): drop stray blank lines left by knip cleanup (A11 format:check)	identical	stable patch-id identical
+228	d33bf0202fa564d4ac5d22efdb7093ecaad73bab	76dd23b673fc49b495c59c8c134186c57cd11135	chore(native): archive sync-upstream-v436-v438	identical	stable patch-id identical
+229	4be75b5670f8ad5d59c069d9659eb75459e2fab6	93157b67aebe032df3623cbfde84e8197ec4a996	chore(sync): finalize upstream v4.0.40 overlay	different	冲突停车：v4.0.40 overlay 的 ProviderCard/Grok/测试
+230	9d6f587b9d3d38d579a9b89843e2fbcaf557d200	0d833a42c34d5502a5df8d4220659b1cdc327fd3	docs(sync): record v4.0.39-v4.0.40 fidelity evidence	identical	stable patch-id identical
+231	35f791f60b55e799d8e44fb190e36556de2899f7	815393894909083f9f2ded24ac74c46b4efcc588	fix(sync): close v4.0.40 preset filtering and fidelity gaps	identical	stable patch-id identical
+232	6fddf79837588e74abaa79448dc31d9f99c7b14b	4bd620447f84134440ec03dbbc157c2e63ed5f2b	docs(sync): refresh final fidelity totals after preset fix	identical	stable patch-id identical
+233	e4d607a1827ca639869fe781a32da74af19c120b	3cbbb2f3a85d59a6f7be9212e1a56ee905e5415e	chore(native): archive sync-upstream-v440	identical	stable patch-id identical
